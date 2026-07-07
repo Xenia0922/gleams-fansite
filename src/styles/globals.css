@@ -16,16 +16,6 @@ body::before {
     radial-gradient(ellipse 60% 70% at 75% 50%, rgba(190, 220, 255, 0.3), transparent 60%),
     radial-gradient(ellipse 70% 50% at 50% 85%, rgba(180, 240, 210, 0.25), transparent 60%);
 }
-body::after {
-  content: '';
-  position: fixed; inset: 0; z-index: -1; opacity: 0.04;
-  background-image:
-    linear-gradient(rgba(200, 180, 220, 0.5) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(200, 180, 220, 0.5) 1px, transparent 1px);
-  background-size: 48px 48px;
-}
-
-/* dark */
 .dark body { background: #0d0d16; }
 .dark body::before {
   background:
@@ -33,7 +23,6 @@ body::after {
     radial-gradient(ellipse 60% 70% at 75% 50%, rgba(100, 160, 240, 0.06), transparent 60%),
     radial-gradient(ellipse 70% 50% at 50% 85%, rgba(100, 200, 160, 0.05), transparent 60%);
 }
-.dark body::after { opacity: 0.02; }
 
 ::selection { @apply bg-pink-200 text-pink-900; }
 
