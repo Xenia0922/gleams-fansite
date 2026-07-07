@@ -1,7 +1,7 @@
 ---
 title: "01.25 Sunday Candy Vol.03 活动结算"
 date: 2026-01-25
-image: "/images/events/live-2026-01-25.jpg"
+image: "/images/events/live-2026-01-25.webp"
 excerpt: "首演 in 广州！歌单：私シンデレラ、可愛いって言われたい、Summer Darling。成员：白菜、云团、柚子、黄鱼鱼"
 tags: ["活动结算", "广州"]
 ---

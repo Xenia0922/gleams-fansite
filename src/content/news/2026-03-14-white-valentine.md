@@ -1,7 +1,7 @@
 ---
 title: "03.14 SUMMERL∞P MINI FES 活动结算"
 date: 2026-03-14
-image: "/images/events/live-2026-03-14.jpg"
+image: "/images/events/live-2026-03-14.webp"
 excerpt: "白情与公主有个约会！歌单：ロマンティックガール、可愛いって言われたい、Summer Darling"
 tags: ["活动结算", "南宁", "白情"]
 ---

@@ -1,7 +1,7 @@
 ---
 title: "04.26 Puppy Club First Anniversary 活动结算"
 date: 2026-04-26
-image: "/images/events/live-2026-04-26.jpg"
+image: "/images/events/live-2026-04-26.webp"
 excerpt: "民歌湖福馆！歌单：ロマンティックガール、可愛いって言われたい、Summer Darling、下课铃声"
 tags: ["活动结算", "南宁"]
 ---
