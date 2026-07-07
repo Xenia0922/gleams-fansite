@@ -1,7 +1,0 @@
-name = "gleams-fansite"
-compatibility_date = "2025-07-07"
-pages_build_output_dir = "dist"
-
-[[r2_buckets]]
-binding = "PHOTOS"
-bucket_name = "gleams-photos"
