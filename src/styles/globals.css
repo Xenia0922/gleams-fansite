@@ -3,9 +3,30 @@
 @tailwind utilities;
 
 @layer base {
-  body {
-    @apply bg-white text-gray-800 font-sans antialiased;
+  :root {
+    --color-bg: #ffffff;
+    --color-text: #1a1a2e;
+    --color-card: #ffffff;
+    --color-muted: #6b7280;
   }
+  .dark {
+    --color-bg: #0f0f1a;
+    --color-text: #e5e5e5;
+    --color-card: #1a1a2e;
+    --color-muted: #9ca3af;
+  }
+  body {
+    @apply bg-[var(--color-bg)] text-[var(--color-text)] font-sans antialiased;
+  }
+  .dark body, .dark .bg-white { background-color: var(--color-bg) !important; }
+  .dark .text-gray-900 { color: var(--color-text) !important; }
+  .dark .text-gray-700, .dark .text-gray-600, .dark .text-gray-500 { color: var(--color-muted) !important; }
+  .dark .bg-gray-50 { background-color: #1a1a2e !important; }
+  .dark .bg-gray-100 { background-color: #1e1e32 !important; }
+  .dark .border-gray-100 { border-color: #2a2a3e !important; }
+  .dark .card { background-color: #1a1a2e; border-color: #2a2a3e; }
+  .dark .from-pink-50, .dark .to-purple-50 { background: #0f0f1a !important; }
+  .dark .btn-outline { border-color: #3a3a4e; color: #aaa; }
 
   ::selection {
     @apply bg-pink-200 text-pink-900;

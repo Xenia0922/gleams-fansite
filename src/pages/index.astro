@@ -5,11 +5,17 @@ import site from '../data/site.json';
 import members from '../data/members.json';
 import schedule from '../data/schedule.json';
 const newsFiles = Object.values(import.meta.glob('../content/news/*.md', { eager: true }));
-const newsSlugMap = new Map(newsFiles.map((n: any) => {
-  const slug = n.file.split('/').pop()?.replace('.md', '');
-  const d = n.frontmatter.date;
-  return [d, slug];
-}));
+const newsSlugMap = new Map([
+  ['2026-01-25', '2026-01-25-sunday-candy'],
+  ['2026-01-31', '2026-01-31-comic-expo'],
+  ['2026-02-15', '2026-02-15-guiping'],
+  ['2026-02-23', '2026-02-23-akatsuki-24'],
+  ['2026-03-14', '2026-03-14-white-valentine'],
+  ['2026-03-28', '2026-03-28-akatsuki-25'],
+  ['2026-04-26', '2026-04-26-puppy-club'],
+  ['2026-05-16', '2026-05-16-fes'],
+  ['2026-07-04', '2026-07-04-nez-fes'],
+]);
 
 const pastEvents = schedule.events.filter((e: any) => e.status === 'past').reverse().slice(0, 4);
 const upcomingEvents = schedule.events.filter((e: any) => e.status === 'upcoming');
@@ -30,7 +36,7 @@ const eventImages: Record<string, string> = {
 <BaseLayout>
   <!-- Hero -->
   <section class="relative bg-gradient-to-br from-pink-50 via-white to-purple-50 overflow-hidden">
-    <div class="absolute inset-0 opacity-[0.12] bg-center bg-cover" style="background-image: url('/hero-bg.webp')"></div>
+    <div class="absolute inset-0 opacity-[0.25] bg-center bg-cover" style="background-image: url('/hero-bg.webp')"></div>
     <div class="relative max-w-7xl mx-auto px-4 py-16 sm:py-20 md:py-28 text-center">
       <img src="/logo.png" alt={site.name} class="w-24 h-24 sm:w-32 sm:h-32 mx-auto rounded-full shadow-lg mb-6 relative z-10" />
       <HeroTitle name={site.name} subtitle={site.subtitle} />

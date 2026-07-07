@@ -1,4 +1,7 @@
----
+import os
+
+# Rewrite schedule.astro cleanly with proper slugs
+content = '''---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import scheduleData from '../data/schedule.json';
 import membersData from '../data/members.json';
@@ -90,3 +93,8 @@ allEvents.forEach((e: any) => {
     )}
   </section>
 </BaseLayout>
+'''
+
+with open('src/pages/schedule.astro', 'w', encoding='utf-8') as f:
+    f.write(content)
+print('Schedule rewritten')
