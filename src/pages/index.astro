@@ -2,7 +2,10 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import HeroTitle from '../components/HeroTitle.astro';
 import site from '../data/site.json';
-import members from '../data/members.json';
+const allMembers = (await import("../data/members.json")).default;
+const members = { members: allMembers.members.filter((m: any) => m.status !== "graduated") };
+import _dummy from '../data/members.json';
+const activeMembers = members.members.filter(m => m.status !== "graduated");
 import schedule from '../data/schedule.json';
 const newsFiles = Object.values(import.meta.glob('../content/news/*.md', { eager: true }));
 const newsSlugMap = new Map([
@@ -56,7 +59,7 @@ const eventImages: Record<string, string> = {
       <h2 class="section-title">成员</h2>
     </div>
     <div class="grid grid-cols-3 gap-4 sm:gap-6">
-      {members.members.map(m => (
+      {activeMembers.map(m => (
         <a href={`/members/${m.id}`} class="group block">
           <div class="aspect-[4/5] overflow-hidden bg-gray-100 rounded-2xl mb-4 shadow-md group-hover:shadow-xl transition-shadow">
             <img src={m.image} alt={m.name} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
