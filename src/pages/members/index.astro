@@ -10,7 +10,7 @@ import membersData from '../../data/members.json';
       <h1 class="section-title">成员</h1>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 md:gap-8">
+    <div class="space-y-12 md:space-y-16 max-w-md mx-auto">
       {membersData.members.map(m => (
         <a href={`/members/${m.id}`} class="group block">
           <!-- 照片 -->
