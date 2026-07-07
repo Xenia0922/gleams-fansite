@@ -10,6 +10,17 @@
   .dark .text-gray-400, .dark .text-gray-500 { color: #a8a8b8 !important; }
   .dark .text-gray-600 { color: #c0c0cc !important; }
   .dark .text-gray-700 { color: #d4d4dc !important; }
+  .dark .text-gray-800 { color: #e0e0e8 !important; }
+  .dark .text-gray-900 { color: #eeeef4 !important; }
+  .dark .text-black { color: #eeeef4 !important; }
+  .dark .bg-white { background-color: #1a1a2e !important; }
+  .dark .bg-gray-100 { background-color: #1e1e32 !important; }
+  .dark .bg-gray-50 { background-color: #16162a !important; }
+  .dark .prose { color: #d4d4dc !important; }
+  .dark .prose h1, .dark .prose h2, .dark .prose h3 { color: #eeeef4 !important; }
+  .dark .prose strong { color: #e0e0e8 !important; }
+  .dark .btn-outline { border-color: #3a3a4e !important; color: #c0c0cc !important; }
+  .dark .btn-outline:hover { border-color: #e83e8c !important; color: #e83e8c !important; }
 
   ::selection {
     @apply bg-pink-200 text-pink-900;
