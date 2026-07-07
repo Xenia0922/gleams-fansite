@@ -148,7 +148,7 @@ export default function FanUpload() {
               📸
             </div>
           )}
-          <span className="text-sm text-gray-400">点击选择照片（最大 8MB）</span>
+          <span className="text-sm text-gray-400">点击选择照片（最大 15MB）</span>
         </label>
 
         <input

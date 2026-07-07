@@ -38,7 +38,7 @@ async function uploadPhoto(request, env) {
 
     if (!file || !(file instanceof File)) return json({ error: '请选择图片' }, 400);
     if (code !== env.SECRET_CODE) return json({ error: '暗号不对哦' }, 403);
-    if (file.size > 8 * 1024 * 1024) return json({ error: '图片不能超过 8MB' }, 400);
+    if (file.size > 15 * 1024 * 1024) return json({ error: '图片不能超过 15MB' }, 400);
 
     const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic'];
     if (!allowed.includes(file.type)) return json({ error: '仅支持 JPG/PNG/WEBP/GIF/HEIC' }, 400);
