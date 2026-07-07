@@ -8,23 +8,54 @@ import site from '../data/site.json';
     <div class="text-center mb-12">
       <p class="section-title-en">Tokuten</p>
       <h1 class="section-title">特典规则</h1>
-      <p class="text-gray-400 mt-3">请各位骑士仔细阅读并遵守以下规则</p>
+      <p class="text-gray-400 mt-3">以下内容来自 Gleams_Official 微博公示</p>
     </div>
 
-    <div class="card p-8 space-y-6">
-      <ol class="space-y-4">
+    <!-- 特典详情图 -->
+    <div class="card overflow-hidden mb-8">
+      <img src="/images/tokuten/tokuten_detail_0.jpg" alt="物贩详情/集章细则" class="w-full" loading="lazy" />
+    </div>
+    <div class="card overflow-hidden mb-8">
+      <img src="/images/tokuten/tokuten_detail_1.jpg" alt="特典会规则" class="w-full" loading="lazy" />
+    </div>
+    <div class="card overflow-hidden mb-8">
+      <img src="/images/tokuten/tokuten_detail_2.jpg" alt="电切规则" class="w-full" loading="lazy" />
+    </div>
+
+    <!-- 文字规则 -->
+    <div class="card p-8 mb-8">
+      <h2 class="text-lg font-bold text-gray-900 mb-4">✦ 文字规则</h2>
+      <ol class="space-y-3">
         {site.tokutenRules.map((rule: string, i: number) => (
           <li class="flex gap-3">
-            <span class="flex-shrink-0 w-7 h-7 rounded-full bg-pink-100 text-pink-500 text-sm font-bold flex items-center justify-center">{i + 1}</span>
-            <span class="text-gray-700 leading-relaxed pt-0.5">{rule}</span>
+            <span class="flex-shrink-0 w-6 h-6 rounded-full bg-pink-100 text-pink-500 text-sm font-bold flex items-center justify-center">{i + 1}</span>
+            <span class="text-gray-700 pt-0.5">{rule}</span>
           </li>
         ))}
       </ol>
     </div>
 
-    <div class="mt-8 text-center">
-      <p class="text-sm text-gray-400 mb-4">如有疑问请私信官博</p>
-      <a href={site.weibo} target="_blank" rel="noopener" class="btn-pink">联系官博 {site.weiboName}</a>
+    <!-- 过往物贩示例 -->
+    <div class="mb-8">
+      <h2 class="text-lg font-bold text-gray-900 mb-4">✦ 过往物贩参考</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="card overflow-hidden">
+          <img src="/images/tokuten/hakusai_birthday_goods.jpg" alt="白菜生日物贩" class="w-full" loading="lazy" />
+          <div class="p-3 text-sm text-gray-500">💛 白菜2026生日物贩</div>
+        </div>
+        <div class="card overflow-hidden">
+          <img src="/images/tokuten/hakusai_yuzi_drop.jpg" alt="白菜柚子掉落切" class="w-full" loading="lazy" />
+          <div class="p-3 text-sm text-gray-500">💛💚 白菜·柚子掉落切</div>
+        </div>
+        <div class="card overflow-hidden">
+          <img src="/images/tokuten/kumo_drop.jpg" alt="云团掉落切" class="w-full" loading="lazy" />
+          <div class="p-3 text-sm text-gray-500">💙 云团掉落切</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="text-center">
+      <a href={site.weibo} target="_blank" rel="noopener" class="btn-pink">最新规则关注官博 {site.weiboName}</a>
     </div>
   </section>
 </BaseLayout>
