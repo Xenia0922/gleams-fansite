@@ -29,6 +29,9 @@ const pageTitle = title ? `${title} | ${site.name}` : `${site.name} - 偶像应�
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="/favicon.ico" />
     
+    <link rel="preload" href="/logo.png" as="image" />
+    <link rel="preload" href="/hero-bg.webp" as="image" fetchpriority="high" />
+    
     <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site).href} />
 
     <!-- SEO -->

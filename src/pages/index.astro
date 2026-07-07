@@ -31,7 +31,7 @@ const eventImages: Record<string, string> = {
 
 <BaseLayout>
   <section class="relative overflow-hidden">
-    <img src="/hero-bg.webp" alt="" class="absolute inset-0 w-full h-full object-cover opacity-[0.25] dark:opacity-[0.12]" />
+    <img src="/hero-bg.webp" alt="" class="absolute inset-0 w-full h-full object-cover opacity-[0.25] dark:opacity-[0.12]" fetchpriority="high" decoding="async" />
     <div class="relative max-w-7xl mx-auto px-4 py-16 sm:py-20 md:py-28 text-center">
       <img src="/logo.png" alt={site.name} class="w-24 h-24 sm:w-32 sm:h-32 mx-auto rounded-full shadow-lg mb-6 relative z-10" />
       <HeroTitle name={site.name} subtitle={site.subtitle} />
