@@ -1,6 +1,8 @@
 ---
+import { ViewTransitions } from 'astro:transitions';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import ScrollFx from '../components/ScrollFx.astro';
 import site from '../data/site.json';
 
 interface Props {
@@ -36,6 +38,7 @@ const pageTitle = title ? `${title} | ${site.name}` : `${site.name} - 地偶应�
     <meta property="og:image" content={new URL(image, Astro.site).href} />
     <meta property="og:site_name" content={site.name} />
     <meta name="twitter:card" content="summary_large_image" />
+    <ViewTransitions />
 
     <!-- Preload -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -47,5 +50,6 @@ const pageTitle = title ? `${title} | ${site.name}` : `${site.name} - 地偶应�
       <slot />
     </main>
     <Footer />
+    <ScrollFx />
   </body>
 </html>
