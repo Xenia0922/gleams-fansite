@@ -1,102 +1,85 @@
 {
   "events": [
     {
+      "id": "live-2026-01-25",
+      "date": "2026-01-25",
+      "time": "",
+      "title": "Sunday Candy Vol.03（广州首演）",
+      "venue": "广州",
+      "performers": ["hakusai", "kumo", "yuzi"],
+      "status": "past"
+    },
+    {
       "id": "live-2026-01-31",
       "date": "2026-01-31",
       "time": "12:40",
-      "title": "第一届 Comic Expo 国风动漫展 — Gleams 出道首演",
-      "titleJP": "第1回 Comic Expo 国風アニメ展 — Gleams デビュー公演",
+      "title": "第一届 Comic Expo 国风动漫展（出道）",
       "venue": "南宁北投明月荟（西乡塘区）",
-      "venueCN": "南宁北投明月荟（西乡塘区）",
-      "address": "广西南宁西乡塘区",
       "performers": ["hakusai", "kumo", "yuzi"],
-      "ticketUrl": null,
-      "status": "past",
-      "description": "Gleams 公式服1.0 首次亮相！三位公主的首次登台，出道福利活动。"
+      "status": "past"
+    },
+    {
+      "id": "live-2026-02-15",
+      "date": "2026-02-15",
+      "time": "",
+      "title": "桂平·ACG第七届动漫新年盛典",
+      "venue": "桂平",
+      "performers": ["hakusai", "kumo", "yuzi"],
+      "status": "past"
     },
     {
       "id": "live-2026-02-23",
       "date": "2026-02-23",
-      "time": "12:30",
-      "title": "Akatsuki Idol Party Vol.24 ～偶像新年会～",
-      "titleJP": "Akatsuki Idol Party Vol.24 ～アイドル新年会～",
-      "venue": "候朋现场 HOPELIVE（中山路万象汇）",
-      "venueCN": "候朋现场 HOPELIVE（中山路万象汇）",
-      "address": "南宁市中山路万象汇",
+      "time": "",
+      "title": "Akatsuki Idol Party Vol.24 ～アイドル新年会～",
+      "venue": "南宁·候朋现场 HOPELIVE（中山路万象汇）",
       "performers": ["hakusai", "kumo", "yuzi"],
-      "ticketUrl": null,
-      "status": "past",
-      "description": "11组地下偶像联合出演的新年会！Gleams 参演。"
+      "status": "past"
     },
     {
       "id": "live-2026-03-14",
       "date": "2026-03-14",
       "time": "12:25",
       "title": "SUMMERL∞P MINI FES — 白情与公主有个约会",
-      "titleJP": "SUMMERL∞P MINI FES — ホワイトデーと姫のデート",
-      "venue": "南宁青秀区会展动漫城综合厅 PinkNoises Live",
-      "venueCN": "PinkNoises Live（会展动漫城）",
-      "address": "南宁市青秀区会展动漫城综合厅",
+      "venue": "南宁·PinkNoises Live（会展动漫城）",
       "performers": ["hakusai", "kumo", "yuzi"],
-      "ticketUrl": null,
-      "status": "past",
-      "description": "⭐ 白色情人节特别公演！舞台服装主题「白情与公主有个约会」。特典时间 17:20～20:00。"
+      "status": "past"
     },
     {
       "id": "live-2026-03-28",
       "date": "2026-03-28",
       "time": "13:30",
       "title": "Akatsuki Idol Party Vol.25",
-      "titleJP": "Akatsuki Idol Party Vol.25",
-      "venue": "会展动漫城综合厅 PinkNoises Live",
-      "venueCN": "PinkNoises Live（会展动漫城）",
-      "address": "南宁市青秀区会展动漫城综合厅",
+      "venue": "南宁·PinkNoises Live（会展动漫城）",
       "performers": ["hakusai", "kumo", "yuzi"],
-      "ticketUrl": null,
-      "status": "past",
-      "description": "JK 盛夏服主题公演，特典至 20:00。"
+      "status": "past"
     },
     {
       "id": "live-2026-04-26",
       "date": "2026-04-26",
-      "time": "14:30",
+      "time": "",
       "title": "Puppy Club First Anniversary",
-      "titleJP": "Puppy Club First Anniversary",
-      "venue": "民歌湖广场福馆 Full house",
-      "venueCN": "民歌湖广场福馆 Full house",
-      "address": "南宁市民歌湖广场",
+      "venue": "南宁·民歌湖广场福馆 Full house",
       "performers": ["hakusai", "kumo", "yuzi"],
-      "ticketUrl": null,
-      "status": "past",
-      "description": "西芭公式服1.0，特典至 20:00。"
+      "status": "past"
     },
     {
       "id": "live-2026-05-16",
       "date": "2026-05-16",
       "time": "14:00",
       "title": "五碳糖 FES3.0 ～初夏の宴～",
-      "titleJP": "五碳糖 FES3.0 ～初夏の宴～",
-      "venue": "会展动漫城综合厅 PinkNoises Live",
-      "venueCN": "PinkNoises Live（会展动漫城）",
-      "address": "南宁市青秀区会展动漫城综合厅",
+      "venue": "南宁·PinkNoises Live（会展动漫城）",
       "performers": ["hakusai", "kumo", "yuzi"],
-      "ticketUrl": null,
-      "status": "past",
-      "description": "女仆装主题演出！特典 16:50～20:00。"
+      "status": "past"
     },
     {
-      "id": "live-2026-07-20",
-      "date": "2026-07-20",
-      "time": "待定",
-      "title": "Gleams 夏日特别公演（敬请期待）",
-      "titleJP": "Gleams サマースペシャルライブ（近日発表）",
-      "venue": "待定",
-      "venueCN": "待定",
-      "address": "南宁市",
+      "id": "live-2026-07-04",
+      "date": "2026-07-04",
+      "time": "",
+      "title": "Nez Fes Vol.1 -初晴の約束 真夏の約束-（白菜生日SP）",
+      "venue": "南宁·PinkNoises Live（会展动漫城）",
       "performers": ["hakusai", "kumo", "yuzi"],
-      "ticketUrl": null,
-      "status": "upcoming",
-      "description": "夏の特別公演計画中！詳細は微博で発表予定です。关注 Gleams_Official 微博获取最新情报！"
+      "status": "past"
     }
   ]
 }
