@@ -12,22 +12,25 @@ const [month, day] = member.birthday.split('-');
 
 <BaseLayout title={`${member.name} | MEMBER`}>
   <section class="max-w-4xl mx-auto px-4 py-12 md:py-16">
-    <a href="/members" class="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-pink-500 mb-8">← 返回成员列表</a>
+    <a href="/members" class="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-pink-500 mb-8">← 成员列表</a>
 
-    <div class="grid grid-cols-1 md:grid-cols-5 gap-8">
-      <div class="md:col-span-2">
-        <div class="aspect-[3/4] rounded-2xl overflow-hidden bg-gray-100 sticky top-20">
+    <!-- 顶部：照片 + 基本信息 -->
+    <div class="flex flex-col md:flex-row gap-8 mb-12">
+      <!-- 照片 -->
+      <div class="md:w-80 flex-shrink-0">
+        <div class="aspect-[3/4] rounded-2xl overflow-hidden bg-gray-100 mx-auto max-w-xs">
           <img src={member.image} alt={member.name} class="w-full h-full object-cover" />
         </div>
       </div>
 
-      <div class="md:col-span-3 space-y-6">
+      <!-- 信息 -->
+      <div class="flex-1 space-y-5">
         <div>
-          <div class="flex items-center gap-3 mb-2">
+          <div class="flex items-center gap-3 mb-1">
             <span class="text-3xl">{member.emoji}</span>
             <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900">{member.name}</h1>
           </div>
-          <p class="text-gray-400 text-lg">{member.nameJP}</p>
+          <p class="text-gray-400">{member.nameJP}</p>
         </div>
 
         <div class="flex items-center gap-3">
@@ -35,45 +38,43 @@ const [month, day] = member.birthday.split('-');
           <span class="text-sm text-gray-500">成员色</span>
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
-          <div class="bg-gray-50 rounded-xl p-4">
-            <p class="text-xs text-gray-400 mb-1">生日</p>
+        <div class="grid grid-cols-2 gap-3 max-w-xs">
+          <div class="bg-gray-50 rounded-xl p-3 text-center">
+            <p class="text-xs text-gray-400">生日</p>
             <p class="font-bold text-gray-900">{month}月{day}日</p>
           </div>
-          <div class="bg-gray-50 rounded-xl p-4">
-            <p class="text-xs text-gray-400 mb-1">星座</p>
+          <div class="bg-gray-50 rounded-xl p-3 text-center">
+            <p class="text-xs text-gray-400">星座</p>
             <p class="font-bold text-gray-900">{member.constellation}</p>
           </div>
         </div>
 
-        <!-- 真实自我介绍 -->
-        <div class="bg-pink-50 rounded-xl p-5">
-          <p class="text-xs text-pink-400 mb-2 font-bold tracking-widest">自我介绍</p>
-          <p class="text-gray-700 leading-relaxed">{member.intro}</p>
+        <!-- 自我介绍 -->
+        <div class="bg-pink-50 rounded-xl p-4">
+          <p class="text-xs text-pink-400 mb-1 font-bold tracking-widest">自我介绍</p>
+          <p class="text-gray-700 text-sm leading-relaxed">{member.intro}</p>
         </div>
 
         <!-- 微博 -->
-        <div class="flex gap-3">
-          <a href={member.weibo} target="_blank" rel="noopener" class="btn-pink !text-sm !px-5">
-            微博 {member.weiboName}
-          </a>
-        </div>
-        <p class="text-xs text-gray-400 mt-1">{member.weiboDesc}</p>
-
-        <!-- Gallery -->
-        {member.gallery.length > 0 && (
-          <div>
-            <h3 class="text-sm font-bold text-gray-900 mb-3">Gallery</h3>
-            <div class="grid grid-cols-2 gap-2">
-              {member.gallery.map((img: string, i: number) => (
-                <a href={img} target="_blank" rel="noopener" class="aspect-[4/3] rounded-xl overflow-hidden bg-gray-100 block">
-                  <img src={img} alt={`${member.name} ${i+1}`} class="w-full h-full object-cover hover:scale-105 transition-transform" loading="lazy" />
-                </a>
-              ))}
-            </div>
-          </div>
-        )}
+        <a href={member.weibo} target="_blank" rel="noopener" class="btn-pink !text-sm !px-5 inline-flex">
+          微博 {member.weiboName}
+        </a>
+        <p class="text-xs text-gray-400">{member.weiboDesc}</p>
       </div>
     </div>
+
+    <!-- Gallery -->
+    {member.gallery.length > 0 && (
+      <div>
+        <h3 class="text-sm font-bold text-gray-900 mb-4">Gallery</h3>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {member.gallery.map((img: string, i: number) => (
+            <a href={img} target="_blank" rel="noopener" class="aspect-[4/3] rounded-xl overflow-hidden bg-gray-100 block">
+              <img src={img} alt={`${member.name} ${i+1}`} class="w-full h-full object-cover hover:scale-105 transition-transform" loading="lazy" />
+            </a>
+          ))}
+        </div>
+      </div>
+    )}
   </section>
 </BaseLayout>
