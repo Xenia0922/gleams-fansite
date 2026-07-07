@@ -51,9 +51,24 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
 
   useEffect(() => { fetchMessages(); }, [fetchMessages]);
 
+  useEffect(() => {
+    const onSet = () => {
+      const c = getCode();
+      if (c) { setCode(c); setVerified(true); }
+    };
+    const onClear = () => { setCode(''); setVerified(false); };
+    window.addEventListener('gleams-code-set', onSet);
+    window.addEventListener('gleams-code-clear', onClear);
+    return () => {
+      window.removeEventListener('gleams-code-set', onSet);
+      window.removeEventListener('gleams-code-clear', onClear);
+    };
+  }, []);
+
   const handleVerify = () => {
     if (!code.trim()) return;
     localStorage.setItem('gleams-code', JSON.stringify({ code: code.trim(), ts: Date.now() }));
+    window.dispatchEvent(new Event('gleams-code-set'));
     setVerified(true);
   };
 
@@ -80,6 +95,7 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
         setMsg('❌ ' + (data.error || '发送失败'));
         if (res.status === 403) {
           localStorage.removeItem('gleams-code');
+          window.dispatchEvent(new Event('gleams-code-clear'));
           setVerified(false);
         }
       }

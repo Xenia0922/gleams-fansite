@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 
 const MEMBERS = [
   { id: 'hakusai', emoji: '💛', name: '白菜' },
@@ -42,8 +42,23 @@ export default function FanUpload() {
   const handleVerify = () => {
     if (!code.trim()) return;
     localStorage.setItem('gleams-code', JSON.stringify({ code: code.trim(), ts: Date.now() }));
+    window.dispatchEvent(new Event('gleams-code-set'));
     setVerified(true);
   };
+
+  useEffect(() => {
+    const onSet = () => {
+      const c = getCode();
+      if (c) { setCode(c); setVerified(true); }
+    };
+    const onClear = () => { setCode(''); setVerified(false); };
+    window.addEventListener('gleams-code-set', onSet);
+    window.addEventListener('gleams-code-clear', onClear);
+    return () => {
+      window.removeEventListener('gleams-code-set', onSet);
+      window.removeEventListener('gleams-code-clear', onClear);
+    };
+  }, []);
 
   const handleUpload = async () => {
     const file = fileRef.current?.files?.[0];
