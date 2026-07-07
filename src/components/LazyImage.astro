@@ -1,11 +1,11 @@
 <!-- 图片懒加载 + 模糊渐显 -->
 <style is:global>
   img.lazy-blur {
-    filter: blur(10px) scale(1.03);
-    transition: filter 0.6s ease-out, transform 0.6s ease-out;
+    filter: blur(10px);
+    transition: filter 0.5s ease-out;
   }
   img.lazy-blur.loaded {
-    filter: blur(0) scale(1);
+    filter: blur(0);
   }
 </style>
 <script>
@@ -17,18 +17,4 @@
       img.addEventListener('error', () => img.classList.add('loaded'), { once: true });
     }
   });
-  // MutatationObserver for SPA navigation (ViewTransitions)
-  const mo = new MutationObserver(mutations => {
-    mutations.forEach(m => {
-      m.addedNodes.forEach(node => {
-        if (node.nodeType === 1) {
-          (node as Element).querySelectorAll?.('img.lazy-blur')?.forEach((img: HTMLImageElement) => {
-            if (img.complete) img.classList.add('loaded');
-            else img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
-          });
-        }
-      });
-    });
-  });
-  mo.observe(document.body, { childList: true, subtree: true });
 </script>
