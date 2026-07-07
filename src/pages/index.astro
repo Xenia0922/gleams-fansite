@@ -1,16 +1,34 @@
 ---
-import BaseLayout from "../layouts/BaseLayout.astro";
-import HeroTitle from "../components/HeroTitle.astro";
-import site from "../data/site.json";
-import members from "../data/members.json";
-import schedule from "../data/schedule.json";
+import BaseLayout from '../layouts/BaseLayout.astro';
+import HeroTitle from '../components/HeroTitle.astro';
+import site from '../data/site.json';
+import members from '../data/members.json';
+import schedule from '../data/schedule.json';
 
-const activeMembers = members.members.filter(m => m.status !== "graduated");
+const activeMembers = members.members.filter(m => m.status !== 'graduated');
+const pastEvents = schedule.events.filter((e: any) => e.status === 'past').reverse().slice(0, 4);
+
+const newsFiles = Object.values(import.meta.glob('../content/news/*.md', { eager: true }));
+const newsSlugMap = new Map(newsFiles.map((n: any) => {
+  const slug = n.file.split('/').pop()?.replace('.md', '');
+  return [n.frontmatter.date, slug];
+}));
+
+const eventImages: Record<string, string> = {
+  'live-2026-01-25': '/images/events/live-2026-01-25.webp',
+  'live-2026-01-31': '/images/events/live-2026-01-31.webp',
+  'live-2026-02-15': '/images/events/live-2026-02-15.webp',
+  'live-2026-02-23': '/images/events/live-2026-02-23.webp',
+  'live-2026-03-14': '/images/events/live-2026-03-14.webp',
+  'live-2026-03-28': '/images/events/live-2026-03-28.webp',
+  'live-2026-04-26': '/images/events/live-2026-04-26.webp',
+  'live-2026-05-16': '/images/events/live-2026-05-16.webp',
+  'live-2026-07-04': '/images/events/live-2026-07-04.webp',
+};
 ---
 
 <BaseLayout>
-  <!-- Hero -->
-  <section class="relative bg-gradient-to-br from-pink-50 via-white to-purple-50 overflow-hidden">
+  <section class="relative bg-gradient-to-br from-pink-50 via-white to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 overflow-hidden">
     <div class="absolute inset-0 opacity-[0.35] bg-center bg-cover" style="background-image: url('/hero-bg.webp')"></div>
     <div class="relative max-w-7xl mx-auto px-4 py-16 sm:py-20 md:py-28 text-center">
       <img src="/logo.png" alt={site.name} class="w-24 h-24 sm:w-32 sm:h-32 mx-auto rounded-full shadow-lg mb-6 relative z-10" />
@@ -24,41 +42,32 @@ const activeMembers = members.members.filter(m => m.status !== "graduated");
     </div>
   </section>
 
-  <!-- Members — 1col手机 / 3col桌面 -->
-  <section class="max-w-7xl mx-auto px-4 py-12 sm:py-16 md:py-20" data-reveal>
-    <div class="text-center mb-8 sm:mb-12">
+  <section class="max-w-7xl mx-auto px-4 py-16 md:py-20" data-reveal>
+    <div class="text-center mb-10">
       <p class="section-title-en">✦</p>
       <h2 class="section-title">成员</h2>
     </div>
     <div class="grid grid-cols-3 gap-4 sm:gap-6">
       {activeMembers.map(m => (
-        <a href={`/members/${m.id}`} class="group block">
-          <div class="aspect-[4/5] overflow-hidden bg-gray-100 rounded-2xl mb-4 shadow-md group-hover:shadow-xl transition-shadow">
+        <a href={`/members/${m.id}`} class="group block text-center">
+          <div class="aspect-[4/5] rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-900 mb-3 shadow-sm group-hover:shadow-md transition-shadow">
             <img src={m.image} alt={m.name} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
           </div>
-          <div class="text-center px-1">
-            <div class="flex items-center justify-center gap-2 mb-1">
-              <span class="text-2xl">{m.emoji}</span>
-              <h3 class="text-xl font-extrabold text-gray-900 dark:text-gray-100">{m.name}</h3>
-            </div>
-            <p class="text-sm text-gray-400 mb-1">{m.nameJP}</p>
-            <div class="flex items-center justify-center gap-2 mb-3">
-              <span class="inline-block w-3 h-3 rounded-full cursor-pointer hover:scale-150 transition-transform" style={`background:${m.color}`} data-member-color={m.id} title={`切换${m.name}主题色`}></span>
-              <span class="text-xs text-gray-500 dark:text-gray-400">{m.birthday} · {m.constellation}</span>
-            </div>
-            <span class="inline-block text-xs text-pink-500 font-medium hover:text-pink-600">
-              {m.weiboName}
-            </span>
+          <span class="text-xl">{m.emoji}</span>
+          <h3 class="text-base font-extrabold text-gray-900 dark:text-gray-100">{m.name}</h3>
+          <p class="text-xs text-gray-400 dark:text-gray-500">{m.nameJP}</p>
+          <div class="flex items-center justify-center gap-1.5 mt-1">
+            <span class="inline-block w-2.5 h-2.5 rounded-full cursor-pointer hover:scale-150 transition-transform" style={`background:${m.color}`} data-member-color={m.id} title={`切换${m.name}主题色`}></span>
+            <span class="text-xs text-gray-500 dark:text-gray-400">{m.birthday} · {m.constellation}</span>
           </div>
         </a>
       ))}
     </div>
   </section>
 
-  <!-- Past Events — 1col手机 / 2col桌面 -->
-  <section class="bg-gray-50 dark:bg-gray-900 py-12 sm:py-16 md:py-20 border-t border-gray-100 dark:border-gray-800" data-reveal>
+  <section class="bg-gray-50 dark:bg-gray-900 py-16 md:py-20 border-t border-gray-100 dark:border-gray-800" data-reveal>
     <div class="max-w-7xl mx-auto px-4">
-      <div class="text-center mb-8 sm:mb-12">
+      <div class="text-center mb-10">
         <p class="section-title-en">✦</p>
         <h2 class="section-title">过往行程</h2>
       </div>
@@ -67,36 +76,35 @@ const activeMembers = members.members.filter(m => m.status !== "graduated");
           const d = new Date(evt.date);
           const img = eventImages[evt.id] || '/images/events/live-2026-01-31.webp';
           return (
-            <a href={} class="card overflow-hidden group">
-              <div class="aspect-[16/9] overflow-hidden bg-gray-100">
+            <a href={`/news/${newsSlugMap.get(evt.date) || evt.date}`} class="card group">
+              <div class="aspect-[16/9] overflow-hidden bg-gray-100 dark:bg-gray-800">
                 <img src={img} alt={evt.title} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
               </div>
-              <div class="p-3 sm:p-4">
+              <div class="p-4">
                 <div class="flex items-center gap-2 mb-1">
                   <span class="text-xs font-bold text-pink-500">{d.getMonth()+1}/{d.getDate()}</span>
-                  <span class="text-[10px] sm:text-xs text-gray-400">{d.getFullYear()}</span>
+                  <span class="text-xs text-gray-400 dark:text-gray-500">{d.getFullYear()}</span>
                 </div>
                 <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 line-clamp-2">{evt.title}</h3>
-                <p class="text-[10px] sm:text-xs text-gray-400 mt-1">{evt.venue}</p>
+                <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{evt.venue}</p>
               </div>
             </a>
           );
         })}
       </div>
-      <div class="text-center mt-6 sm:mt-8">
+      <div class="text-center mt-8">
         <a href="/schedule" class="btn-outline text-xs sm:text-sm">查看完整日程 →</a>
       </div>
     </div>
   </section>
 
-  <!-- Social -->
-  <section class="max-w-4xl mx-auto px-4 py-12 sm:py-16 text-center">
+  <section class="max-w-4xl mx-auto px-4 py-16 text-center">
     <p class="section-title-en">✦</p>
-    <h2 class="section-title mb-6 sm:mb-8">关注 Gleams</h2>
-    <div class="flex flex-wrap justify-center gap-2 sm:gap-4">
-      <a href={site.weibo} target="_blank" rel="noopener" class="btn-outline text-xs sm:text-sm !px-4 sm:!px-5 !py-2 sm:!py-3">微博</a>
-      <a href={site.xiaohongshu} target="_blank" rel="noopener" class="btn-outline text-xs sm:text-sm !px-4 sm:!px-5 !py-2 sm:!py-3">小红书</a>
-      <a href={site.douyin} target="_blank" rel="noopener" class="btn-outline text-xs sm:text-sm !px-4 sm:!px-5 !py-2 sm:!py-3">抖音</a>
+    <h2 class="section-title mb-8">关注 Gleams</h2>
+    <div class="flex flex-wrap justify-center gap-3">
+      <a href={site.weibo} target="_blank" rel="noopener" class="btn-outline text-sm !px-5 !py-3">微博</a>
+      <a href={site.xiaohongshu} target="_blank" rel="noopener" class="btn-outline text-sm !px-5 !py-3">小红书</a>
+      <a href={site.douyin} target="_blank" rel="noopener" class="btn-outline text-sm !px-5 !py-3">抖音</a>
     </div>
   </section>
 </BaseLayout>
