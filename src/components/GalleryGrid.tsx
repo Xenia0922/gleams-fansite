@@ -1,19 +1,22 @@
 import { useState, useEffect, useCallback } from 'react';
 
-// 使用下载的真实照片
+// 所有照片来自成员个人微博，来源可追溯
 const galleryImages = [
-  '/images/members/Sat_Jun_27_5314209019859106_0.jpg',
-  '/images/members/Sat_Feb_14_5266137572705216_0.jpg',
-  '/images/members/Thu_Sep_04_5207065433737260_0.jpg',
-  '/images/members/Mon_Jul_06_5317726201713318_0.jpg',
-  '/images/members/Mon_Jul_06_5317726201713318_1.jpg',
-  '/images/members/Tue_Jun_09_5307988046775909_0.jpg',
-  '/images/members/Fri_Feb_06_5263289829294666_rt_0.jpg',
-  '/images/members/Fri_Feb_06_5263289829294666_rt_1.jpg',
-  '/images/members/Fri_May_01_5293827222670761_0.jpg',
-  '/images/members/Fri_May_01_5293827222670761_1.jpg',
-  '/images/members/Sun_Jun_28_5314726717294930_1.jpg',
-  '/images/members/Sat_Mar_14_5276494972591479_0.jpg',
+  // 白菜个人微博 (uid=3639876511)
+  '/images/members/hakusai/hakusai_01.jpg',
+  '/images/members/hakusai/hakusai_02.jpg',
+  '/images/members/hakusai/hakusai_03.jpg',
+  '/images/members/hakusai/hakusai_05.jpg',
+  '/images/members/hakusai/hakusai_06.jpg',
+  // 云团个人微博 (uid=5432863560)
+  '/images/members/kumo/kumo_01.jpg',
+  '/images/members/kumo/kumo_05.jpg',
+  '/images/members/kumo/kumo_06.jpg',
+  '/images/members/kumo/kumo_04.jpg',
+  // 柚子个人微博 (uid=7148114625)
+  '/images/members/yuzi/yuzi_02.jpg',
+  '/images/members/yuzi/yuzi_05.jpg',
+  '/images/members/yuzi/yuzi_06.jpg',
 ];
 
 export default function GalleryGrid() {
