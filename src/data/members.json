@@ -1,80 +1,61 @@
 {
-  "generations": ["ALL", "公主"],
   "members": [
     {
       "id": "hakusai",
       "name": "白菜",
-      "nameCN": "Hakusai",
+      "nameJP": "Hakusai",
       "color": "#FFD700",
-      "colorName": "金盏黄",
-      "colorEmoji": "💛",
-      "generation": "公主",
-      "role": "公主",
+      "emoji": "💛",
       "birthday": "06-27",
       "constellation": "巨蟹座",
       "hometown": "星界王国·金之城堡",
-      "catchphrase": "金色の光で、みんなを照らす！白菜です！",
-      "catchphraseCN": "用金色光芒，照亮大家！我是白菜！",
-      "bio": "来自金之城堡的公主，性格开朗温暖如阳光。作为 Gleams 的一员，用明亮的歌声和活力满满的舞蹈，为大家带来希望与勇气。",
-      "image": "/images/members/Sun_Jun_28_5314726717294930_0.jpg",
+      "catchphrase": "用金色光芒，照亮大家！我是白菜！",
+      "bio": "来自金之城堡的公主，性格开朗温暖如阳光。用明亮的歌声和活力满满的舞蹈，为大家带来希望与勇气。",
+      "image": "/images/members/Sat_Jun_27_5314209019859106_0.jpg",
       "gallery": [
         "/images/members/Mon_Jul_06_5317726201713318_0.jpg",
-        "/images/members/Mon_Jul_06_5317726201713318_1.jpg",
         "/images/members/Tue_Jun_09_5307988046775909_0.jpg"
       ],
-      "social": {
-        "weibo": "https://weibo.com/u/7972735157"
-      }
+      "weibo": "https://weibo.com/u/7972735157",
+      "weiboName": "@白菜Hakusai_Gleams"
     },
     {
       "id": "kumo",
       "name": "云团",
-      "nameCN": "Kumo",
+      "nameJP": "Kumo",
       "color": "#4DA6FF",
-      "colorName": "天空蓝",
-      "colorEmoji": "💙",
-      "generation": "公主",
-      "role": "公主",
+      "emoji": "💙",
       "birthday": "02-14",
       "constellation": "水瓶座",
       "hometown": "星界王国·云之城堡",
-      "catchphrase": "青空のキャンバスに、夢を描こう！雲団です！",
-      "catchphraseCN": "在蓝天的画布上，描绘梦想吧！我是云团！",
+      "catchphrase": "在蓝天的画布上，描绘梦想吧！我是云团！",
       "bio": "来自云之城堡的公主，性格温柔而坚定。如天空中自由飘浮的云朵，用清澈的歌声治愈每一位骑士的心。",
       "image": "/images/members/Sat_Feb_14_5266137572705216_0.jpg",
       "gallery": [
         "/images/members/Fri_Feb_06_5263289829294666_rt_0.jpg",
-        "/images/members/Fri_Feb_06_5263289829294666_rt_1.jpg",
-        "/images/members/Sat_Feb_14_5266137572705216_0.jpg"
+        "/images/members/Fri_Feb_06_5263289829294666_rt_1.jpg"
       ],
-      "social": {
-        "weibo": "https://weibo.com/u/7972735157"
-      }
+      "weibo": "https://weibo.com/u/7972735157",
+      "weiboName": "@云团Kumo_Gleams"
     },
     {
       "id": "yuzi",
       "name": "柚子",
-      "nameCN": "Yuzi",
+      "nameJP": "Yuzi",
       "color": "#48D1A0",
-      "colorName": "柚子绿",
-      "colorEmoji": "💚",
-      "generation": "公主",
-      "role": "公主",
+      "emoji": "💚",
       "birthday": "09-04",
       "constellation": "处女座",
       "hometown": "星界王国·森之城堡",
-      "catchphrase": "緑の風に乗せて、笑顔を届ける！柚子です！",
-      "catchphraseCN": "乘着绿风，把笑容送到你身边！我是柚子！",
+      "catchphrase": "乘着绿风，把笑容送到你身边！我是柚子！",
       "bio": "来自森之城堡的公主，活泼灵动充满元气。像清新的柚子一样，用充满活力的表演为王国注入生机与欢笑。",
       "image": "/images/members/Thu_Sep_04_5207065433737260_0.jpg",
       "gallery": [
         "/images/members/Fri_May_01_5293827222670761_0.jpg",
-        "/images/members/Fri_May_01_5293827222670761_1.jpg",
-        "/images/members/Thu_Sep_04_5207065433737260_0.jpg"
+        "/images/members/Fri_May_01_5293827222670761_1.jpg"
       ],
-      "social": {
-        "weibo": "https://weibo.com/u/7972735157"
-      }
+      "weibo": "https://weibo.com/u/7972735157",
+      "weiboName": "@柚子Yuzi_Gleams"
     }
   ]
 }

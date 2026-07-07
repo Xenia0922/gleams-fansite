@@ -1,114 +1,151 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import HeroBanner from '../components/HeroBanner.astro';
-import NewsCard from '../components/NewsCard.astro';
-
-// Import data
+import site from '../data/site.json';
+import members from '../data/members.json';
 import schedule from '../data/schedule.json';
 
-// Get news from markdown files
 const newsPosts = Object.values(import.meta.glob('../content/news/*.md', { eager: true }));
-const sortedNews = newsPosts
-  .sort((a, b) => new Date(b.frontmatter.date).getTime() - new Date(a.frontmatter.date).getTime())
-  .slice(0, 3);
+const sortedNews = newsPosts.sort((a: any, b: any) => new Date(b.frontmatter.date).getTime() - new Date(a.frontmatter.date).getTime()).slice(0, 3);
 
-// Get upcoming events
-const upcomingEvents = schedule.events
-  .filter(e => e.status === 'upcoming')
-  .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-  .slice(0, 3);
+const upcomingEvents = schedule.events.filter((e: any) => e.status === 'upcoming').slice(0, 2);
 ---
 
 <BaseLayout>
   <!-- Hero -->
-  <HeroBanner />
-
-  <!-- Latest News Section -->
-  <section class="py-24 px-4">
-    <div class="max-w-7xl mx-auto">
-      <div class="text-center mb-16">
-        <p class="section-subtitle mb-3">✦ Latest News ✦</p>
-        <h2 class="section-title">最新动态</h2>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {sortedNews.map(post => (
-          <NewsCard
-            title={post.frontmatter.titleCN || post.frontmatter.title}
-            date={post.frontmatter.date}
-            image={post.frontmatter.image}
-            excerpt={post.frontmatter.excerpt}
-            tags={post.frontmatter.tags}
-            slug={post.file.split('/').pop()?.replace('.md', '') || ''}
-          />
-        ))}
-      </div>
-
-      <div class="text-center mt-12">
-        <a href="/news" class="btn-outline">
-          查看全部新闻
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-          </svg>
-        </a>
+  <section class="relative bg-gradient-to-br from-pink-50 via-white to-purple-50 py-16 md:py-24">
+    <div class="max-w-4xl mx-auto px-4 text-center">
+      <p class="text-xs tracking-[0.3em] text-gray-400 uppercase mb-4">{site.subtitle}</p>
+      <h1 class="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-gray-900 mb-4">
+        {site.name}
+      </h1>
+      <p class="text-gray-500 text-base md:text-lg max-w-2xl mx-auto leading-relaxed mb-8">
+        {site.description}
+      </p>
+      <div class="flex flex-wrap justify-center gap-3">
+        <a href="/members" class="btn-pink">成员介绍</a>
+        <a href="/schedule" class="btn-outline">公演日程</a>
+        <a href={site.weibo} target="_blank" rel="noopener" class="btn-outline">关注微博</a>
       </div>
     </div>
   </section>
 
-  <!-- Upcoming Schedule -->
-  <section class="py-24 px-4 relative">
-    <div class="absolute inset-0 bg-gradient-to-b from-transparent via-gleams-500/[0.02] to-transparent"></div>
-    <div class="max-w-4xl mx-auto relative">
-      <div class="text-center mb-16">
-        <p class="section-subtitle mb-3">♫ Upcoming Events ♫</p>
-        <h2 class="section-title">近期公演</h2>
-      </div>
-
-      <div class="space-y-4">
-        {upcomingEvents.length > 0 ? upcomingEvents.map(event => {
-          const eventDate = new Date(event.date);
-          const isToday = new Date().toDateString() === eventDate.toDateString();
-          return (
-            <div class="glass-card-hover p-5 md:p-6 flex flex-col sm:flex-row gap-4 sm:items-center">
-              <div class="flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-xl bg-white/[0.03] flex flex-col items-center justify-center border border-white/[0.05]">
-                <span class="text-2xl font-bold gradient-text">{eventDate.getDate()}</span>
-                <span class="text-xs text-white/40">{eventDate.toLocaleDateString('zh-CN', { month: 'short' })}</span>
-              </div>
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2 mb-1">
-                  <h3 class="text-white/90 font-bold truncate">{event.titleCN || event.title}</h3>
-                  {isToday && (
-                    <span class="tag flex-shrink-0">今天</span>
-                  )}
-                </div>
-                <p class="text-white/40 text-sm mb-2">{event.venueCN || event.venue} · {event.time}</p>
-                {event.description && (
-                  <p class="text-white/30 text-sm line-clamp-1">{event.description}</p>
-                )}
-              </div>
-              <div class="flex items-center gap-3 flex-shrink-0">
-                {event.ticketUrl && (
-                  <a href={event.ticketUrl} class="btn-primary text-xs !px-4 !py-2 whitespace-nowrap" target="_blank" rel="noopener">
-                    购票
-                  </a>
-                )}
-              </div>
-            </div>
-          );
-        }) : (
-          <div class="text-center py-16 text-white/30">
-            <span class="text-4xl mb-4 block">🎵</span>
-            <p>暂无近期公演，请关注 SNS 获取最新信息</p>
+  <!-- Members -->
+  <section class="py-16 md:py-20 px-4 max-w-6xl mx-auto">
+    <div class="text-center mb-12">
+      <p class="section-title-en">Member</p>
+      <h2 class="section-title">成员</h2>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {members.members.map(m => (
+        <a href={`/members/${m.id}`} class="card group">
+          <div class="aspect-[3/4] overflow-hidden bg-gray-100">
+            <img src={m.image} alt={m.name} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
           </div>
-        )}
-      </div>
+          <div class="p-5">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-xl">{m.emoji}</span>
+              <h3 class="text-lg font-bold text-gray-900">{m.name}</h3>
+              <span class="text-xs text-gray-400">{m.nameJP}</span>
+            </div>
+            <p class="text-sm text-gray-500 line-clamp-2">{m.bio}</p>
+            <div class="mt-3 flex items-center gap-3">
+              <a href={m.weibo} target="_blank" rel="noopener" class="text-xs text-pink-500 hover:text-pink-600 font-medium" onclick="event.stopPropagation()">
+                {m.weiboName} →
+              </a>
+            </div>
+          </div>
+        </a>
+      ))}
+    </div>
+  </section>
 
-      <div class="text-center mt-12">
-        <a href="/schedule" class="btn-outline">
-          查看完整日程
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-          </svg>
+  <!-- Schedule -->
+  <section class="py-16 md:py-20 px-4 bg-gray-50">
+    <div class="max-w-3xl mx-auto">
+      <div class="text-center mb-12">
+        <p class="section-title-en">Schedule</p>
+        <h2 class="section-title">公演日程</h2>
+      </div>
+      {upcomingEvents.length > 0 ? (
+        <div class="space-y-4">
+          {upcomingEvents.map((evt: any) => {
+            const d = new Date(evt.date);
+            return (
+              <div class="card p-5 flex flex-col sm:flex-row sm:items-center gap-4">
+                <div class="w-14 h-14 rounded-xl bg-pink-500 text-white flex flex-col items-center justify-center flex-shrink-0">
+                  <span class="text-lg font-extrabold leading-none">{d.getDate()}</span>
+                  <span class="text-[10px]">{d.getMonth() + 1}月</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <h3 class="font-bold text-gray-900">{evt.titleCN || evt.title}</h3>
+                  <p class="text-sm text-gray-500">{evt.venueCN || evt.venue} · {evt.time}</p>
+                </div>
+                {evt.ticketUrl && <a href={evt.ticketUrl} target="_blank" rel="noopener" class="btn-pink text-sm whitespace-nowrap">购票</a>}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <p class="text-center text-gray-400">暂无近期公演，关注微博获取最新消息</p>
+      )}
+      <div class="text-center mt-8">
+        <a href="/schedule" class="btn-outline">查看完整日程 →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- News -->
+  <section class="py-16 md:py-20 px-4 max-w-6xl mx-auto">
+    <div class="text-center mb-12">
+      <p class="section-title-en">News</p>
+      <h2 class="section-title">最新动态</h2>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {sortedNews.map((post: any) => {
+        const slug = post.file.split('/').pop()?.replace('.md', '') || '';
+        const fm = post.frontmatter;
+        return (
+          <a href={`/news/${slug}`} class="card group">
+            <div class="aspect-[16/9] overflow-hidden bg-gray-100">
+              {fm.image ? (
+                <img src={fm.image} alt={fm.title} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+              ) : (
+                <div class="w-full h-full flex items-center justify-center text-4xl text-gray-300">⭐</div>
+              )}
+            </div>
+            <div class="p-5">
+              <time class="text-xs text-gray-400">{new Date(fm.date).toLocaleDateString('zh-CN')}</time>
+              <h3 class="font-bold text-gray-900 mt-1 mb-2 line-clamp-2">{fm.titleCN || fm.title}</h3>
+              <p class="text-sm text-gray-500 line-clamp-2">{fm.excerpt}</p>
+            </div>
+          </a>
+        );
+      })}
+    </div>
+    <div class="text-center mt-8">
+      <a href="/news" class="btn-outline">查看全部新闻 →</a>
+    </div>
+  </section>
+
+  <!-- Social Links -->
+  <section class="py-16 px-4 bg-gray-50">
+    <div class="max-w-2xl mx-auto text-center">
+      <p class="section-title-en">Follow Us</p>
+      <h2 class="section-title mb-8">关注 Gleams</h2>
+      <div class="flex flex-wrap justify-center gap-4">
+        <a href={site.weibo} target="_blank" rel="noopener" class="btn-outline !px-5 !py-3">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M10.098 20.323c-3.977.391-7.414-1.406-7.672-4.02-.259-2.609 2.759-5.047 6.74-5.441 3.979-.394 7.413 1.404 7.671 4.018.259 2.6-2.759 5.049-6.739 5.443z"/></svg>
+          微博 {site.weiboName}
+        </a>
+        <a href={site.bilibili} target="_blank" rel="noopener" class="btn-outline !px-5 !py-3">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M17.813 4.653h.854c1.51.054 2.769.578 3.773 1.574 1.004.995 1.524 2.249 1.56 3.76v7.36c-.036 1.51-.556 2.769-1.56 3.773s-2.262 1.524-3.773 1.56H5.333c-1.51-.036-2.769-.556-3.773-1.56S.036 18.858 0 17.347v-7.36c.036-1.511.556-2.765 1.56-3.76 1.004-.996 2.262-1.52 3.773-1.574h.774l-1.174-1.12a1.234 1.234 0 01-.373-.906c0-.356.124-.658.373-.907l.027-.027c.267-.249.573-.373.92-.373.347 0 .653.124.92.373L9.653 4.44c.071.071.134.142.187.213h4.267a.836.836 0 01.16-.213l2.853-2.747c.267-.249.573-.373.92-.373.347 0 .662.151.929.4.267.249.391.551.391.907 0 .355-.124.657-.373.906zM5.333 7.24c-.746.018-1.373.276-1.88.773-.506.498-.769 1.13-.786 1.894v7.52c.017.764.28 1.395.786 1.893.507.498 1.134.756 1.88.773h13.334c.746-.017 1.373-.275 1.88-.773.506-.498.769-1.129.786-1.893v-7.52c-.017-.765-.28-1.396-.786-1.894-.507-.497-1.134-.755-1.88-.773zM8 11.107c.373 0 .684.124.933.373.25.249.383.569.4.96v1.173c-.017.391-.15.711-.4.96-.249.25-.56.374-.933.374s-.684-.125-.933-.374c-.25-.249-.383-.569-.4-.96V12.44c0-.373.129-.689.386-.947.258-.257.574-.386.947-.386zm8 0c.373 0 .684.124.933.373.25.249.383.569.4.96v1.173c-.017.391-.15.711-.4.96-.249.25-.56.374-.933.374s-.684-.125-.933-.374c-.25-.249-.383-.569-.4-.96V12.44c.017-.391.15-.711.4-.96.249-.249.56-.373.933-.373z"/></svg>
+          哔哩哔哩
+        </a>
+        <a href={site.xiaohongshu} target="_blank" rel="noopener" class="btn-outline !px-5 !py-3">
+          小红书
+        </a>
+        <a href={site.douyin} target="_blank" rel="noopener" class="btn-outline !px-5 !py-3">
+          抖音
         </a>
       </div>
     </div>

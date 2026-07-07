@@ -3,151 +3,84 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import membersData from '../../data/members.json';
 
 export function getStaticPaths() {
-  return membersData.members.map(member => ({
-    params: { slug: member.id },
-    props: { member },
-  }));
+  return membersData.members.map(m => ({ params: { slug: m.id }, props: { member: m } }));
 }
 
 const { member } = Astro.props;
-
-const birthdayFormatted = member.birthday ? `${member.birthday.split('-')[0]}月${member.birthday.split('-')[1]}日` : '';
+const [month, day] = member.birthday.split('-');
 ---
 
-<BaseLayout title={`${member.name} | 成员介绍`} description={member.bio} image={member.image}>
-  <section class="pt-28 pb-16">
-    <!-- Hero Area -->
-    <div class="relative h-[50vh] md:h-[70vh] overflow-hidden">
-      <img
-        src={member.image}
-        alt={member.name}
-        class="w-full h-full object-cover"
-      />
-      <!-- Gradient overlays -->
-      <div class="absolute inset-0 bg-gradient-to-t from-[#0a0a0f] via-[#0a0a0f]/40 to-transparent"></div>
-      <div class="absolute inset-0 bg-gradient-to-r from-[#0a0a0f]/80 to-transparent"></div>
+<BaseLayout title={`${member.name} | MEMBER`}>
+  <section class="max-w-4xl mx-auto px-4 py-12 md:py-16">
+    <a href="/members" class="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-pink-500 mb-8">← 返回成员列表</a>
 
-      <!-- Name overlay -->
-      <div class="absolute bottom-12 left-8 md:left-16 z-10">
-        <p class="text-white/40 text-sm tracking-widest mb-2 animate-fade-in">{member.generation} · {member.role}</p>
-        <h1 class="text-4xl md:text-6xl lg:text-7xl font-display font-bold text-white mb-3 animate-slide-up">
-          {member.colorEmoji} {member.name}
-        </h1>
-        <p class="text-white/50 text-lg md:text-xl animate-slide-up-delayed">{member.nameCN}</p>
-        <div class="flex items-center gap-3 mt-4 animate-fade-in">
-          <span
-            class="inline-block w-4 h-4 rounded-full"
-            style={`background: ${member.color}; box-shadow: 0 0 12px ${member.color}80`}
-          ></span>
-          <span class="text-white/60 text-sm">{member.colorName}</span>
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-8">
+      <!-- Photo -->
+      <div class="md:col-span-2">
+        <div class="aspect-[3/4] rounded-2xl overflow-hidden bg-gray-100 sticky top-20">
+          <img src={member.image} alt={member.name} class="w-full h-full object-cover" />
         </div>
       </div>
-    </div>
 
-    <!-- Content -->
-    <div class="max-w-6xl mx-auto px-4 -mt-20 relative z-10">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Main Profile -->
-        <div class="lg:col-span-2 space-y-8">
-          <!-- Catchphrase -->
-          <div class="glass-card p-6 md:p-8">
-            <p class="text-gleams-400 text-sm tracking-wider mb-3">キャッチフレーズ</p>
-            <blockquote class="text-xl md:text-2xl text-white font-display italic leading-relaxed">
-              「{member.catchphrase}」
-            </blockquote>
-            <p class="text-white/40 text-sm mt-3">「{member.catchphraseCN}」</p>
+      <!-- Info -->
+      <div class="md:col-span-3 space-y-6">
+        <div>
+          <div class="flex items-center gap-3 mb-2">
+            <span class="text-3xl">{member.emoji}</span>
+            <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900">{member.name}</h1>
           </div>
-
-          <!-- Bio -->
-          <div class="glass-card p-6 md:p-8">
-            <h3 class="text-white text-lg font-bold mb-4">✧ Profile</h3>
-            <p class="text-white/70 leading-relaxed text-base">{member.bio}</p>
-          </div>
-
-          <!-- Basic Info Grid -->
-          <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <div class="glass-card p-4 text-center">
-              <p class="text-white/30 text-xs mb-1">生日</p>
-              <p class="text-white font-medium">{birthdayFormatted}</p>
-            </div>
-            <div class="glass-card p-4 text-center">
-              <p class="text-white/30 text-xs mb-1">星座</p>
-              <p class="text-white font-medium">{member.constellation}</p>
-            </div>
-            <div class="glass-card p-4 text-center">
-              <p class="text-white/30 text-xs mb-1">出身</p>
-              <p class="text-white font-medium text-sm">{member.hometown}</p>
-            </div>
-          </div>
-
-          <!-- Gallery -->
-          {member.gallery && member.gallery.length > 0 && (
-            <div class="glass-card p-6 md:p-8">
-              <h3 class="text-white text-lg font-bold mb-6">✧ Gallery</h3>
-              <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {member.gallery.map((img: string, i: number) => (
-                  <a
-                    href={img}
-                    target="_blank"
-                    rel="noopener"
-                    class="block aspect-[4/3] rounded-xl overflow-hidden group"
-                  >
-                    <img
-                      src={img}
-                      alt={`${member.name} photo ${i + 1}`}
-                      class="w-full h-full object-cover transition-all duration-500 group-hover:scale-110"
-                      loading="lazy"
-                    />
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
+          <p class="text-gray-400 text-lg">{member.nameJP}</p>
         </div>
 
-        <!-- Sidebar -->
-        <div class="space-y-6">
-          <!-- Color card -->
-          <div class="glass-card p-6">
-            <h4 class="text-white/40 text-xs tracking-widest mb-4">MEMBER COLOR</h4>
-            <div
-              class="w-full h-32 rounded-xl mb-3 flex items-center justify-center"
-              style={`background: linear-gradient(135deg, ${member.color}, ${member.color}80)`}
-            >
-              <span class="text-4xl">{member.colorEmoji}</span>
-            </div>
-            <p class="text-white/60 text-sm text-center">{member.colorName}</p>
-          </div>
+        <div class="flex items-center gap-3">
+          <span class="inline-block w-4 h-4 rounded-full border-2 border-gray-200" style={`background:${member.color}`}></span>
+          <span class="text-sm text-gray-500">{member.color}</span>
+        </div>
 
-          <!-- SNS Links -->
-          <div class="glass-card p-6">
-            <h4 class="text-white/40 text-xs tracking-widest mb-4">SNS</h4>
-            <div class="space-y-3">
-              {member.social.weibo && (
-                <a
-                  href={member.social.weibo}
-                  target="_blank"
-                  rel="noopener"
-                  class="flex items-center gap-3 text-white/50 hover:text-gleams-400 transition-colors text-sm"
-                >
-                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M10.098 20.323c-3.977.391-7.414-1.406-7.672-4.02-.259-2.609 2.759-5.047 6.74-5.441 3.979-.394 7.413 1.404 7.671 4.018.259 2.6-2.759 5.049-6.739 5.443z"/></svg>
-                  微博
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-gray-50 rounded-xl p-4">
+            <p class="text-xs text-gray-400 mb-1">生日</p>
+            <p class="font-bold text-gray-900">{month}月{day}日</p>
+          </div>
+          <div class="bg-gray-50 rounded-xl p-4">
+            <p class="text-xs text-gray-400 mb-1">星座</p>
+            <p class="font-bold text-gray-900">{member.constellation}</p>
+          </div>
+          <div class="bg-gray-50 rounded-xl p-4">
+            <p class="text-xs text-gray-400 mb-1">出身</p>
+            <p class="font-bold text-gray-900 text-sm">{member.hometown}</p>
+          </div>
+        </div>
+
+        <div>
+          <h3 class="text-sm font-bold text-gray-900 mb-2">キャッチフレーズ</h3>
+          <blockquote class="text-lg text-pink-500 font-medium italic border-l-4 border-pink-300 pl-4">
+            「{member.catchphrase}」
+          </blockquote>
+        </div>
+
+        <div>
+          <h3 class="text-sm font-bold text-gray-900 mb-2">Profile</h3>
+          <p class="text-gray-600 leading-relaxed">{member.bio}</p>
+        </div>
+
+        <div class="flex gap-3">
+          <a href={member.weibo} target="_blank" rel="noopener" class="btn-pink !text-sm !px-5">微博 {member.weiboName}</a>
+        </div>
+
+        <!-- Gallery -->
+        {member.gallery.length > 0 && (
+          <div>
+            <h3 class="text-sm font-bold text-gray-900 mb-3">Gallery</h3>
+            <div class="grid grid-cols-2 gap-2">
+              {member.gallery.map((img: string, i: number) => (
+                <a href={img} target="_blank" rel="noopener" class="aspect-[4/3] rounded-xl overflow-hidden bg-gray-100 block">
+                  <img src={img} alt={`${member.name} ${i+1}`} class="w-full h-full object-cover hover:scale-105 transition-transform" loading="lazy" />
                 </a>
-              )}
+              ))}
             </div>
           </div>
-
-          <!-- Back -->
-          <a
-            href="/members"
-            class="flex items-center gap-2 text-white/40 hover:text-gleams-400 transition-colors text-sm"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-            </svg>
-            返回成员列表
-          </a>
-        </div>
+        )}
       </div>
     </div>
   </section>

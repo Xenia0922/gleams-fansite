@@ -3,93 +3,57 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import site from '../data/site.json';
 ---
 
-<BaseLayout title="关于我们">
-  <section class="pt-32 pb-24 px-4">
-    <div class="max-w-4xl mx-auto">
-      <div class="text-center mb-16">
-        <p class="section-subtitle mb-3 animate-fade-in">☆ About ☆</p>
-        <h2 class="section-title animate-slide-up">关于 Gleams</h2>
-        <p class="text-white/30 mt-4 animate-slide-up-delayed">
-          {site.nameJP} — 来自广西南宁的地下偶像团体
-        </p>
-      </div>
+<BaseLayout title="ABOUT | 关于">
+  <section class="py-16 md:py-20 px-4 max-w-2xl mx-auto">
+    <div class="text-center mb-12">
+      <p class="section-title-en">About</p>
+      <h1 class="section-title">关于 Gleams</h1>
+    </div>
 
-      <!-- 世界观 -->
-      <div class="glass-card p-8 md:p-12 mb-10 text-center">
-        <span class="text-6xl mb-6 block">💎</span>
-        <h3 class="text-2xl md:text-3xl font-display font-bold text-white mb-6">
-          ✦ 世界观 ✦
-        </h3>
-        <blockquote class="text-white/60 text-lg leading-relaxed max-w-2xl mx-auto italic mb-8">
-          「在星界尽头，存在着一座神秘王国，由水晶支撑着整个王国的运转。有天能蚕食人间星光的阴霾突然降临，王国赖以生存的水晶随之日渐暗淡无光。正是在此存亡之际，来自不同城堡的公主，在命运的指引下相聚于此，公主们开始踏上寻找名为『Gleams』的能量宝石来守护他们的世界。」
-        </blockquote>
-        <div class="flex flex-wrap justify-center gap-4">
-          <span class="tag text-base !px-4 !py-2">💛 白菜 Hakusai · 金之城堡</span>
-          <span class="tag-dream text-base !px-4 !py-2">💙 云团 Kumo · 云之城堡</span>
-          <span class="tag text-base !px-4 !py-2">💚 柚子 Yuzi · 森之城堡</span>
-        </div>
-      </div>
+    <!-- 世界观 -->
+    <div class="card p-8 mb-8">
+      <h2 class="text-lg font-bold text-gray-900 mb-4">✦ 世界观</h2>
+      <blockquote class="text-gray-600 leading-relaxed italic border-l-4 border-pink-300 pl-4">
+        「在星界尽头，存在着一座神秘王国，由水晶支撑着整个王国的运转。有天能蚕食人间星光的阴霾突然降临，王国赖以生存的水晶随之日渐暗淡无光。正是在此存亡之际，来自不同城堡的公主，在命运的指引下相聚于此，公主们开始踏上寻找名为『Gleams』的能量宝石来守护他们的世界。」
+      </blockquote>
+    </div>
 
-      <!-- Info Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-        <div class="glass-card p-6">
-          <h4 class="tag mb-4">✨ 关于 Gleams</h4>
-          <p class="text-white/60 text-sm leading-relaxed">
-            Gleams 是一支来自<b>广西南宁</b>的地下偶像团体。三位成员以「公主」的身份，在舞台上演繹属于 Gleams 的奇幻物语。从西乡塘出发，我们活跃于南宁及两广地区的 Livehouse 和动漫展会，用歌声和舞蹈为骑士们带来勇气与希望。
-          </p>
+    <!-- 团体介绍 -->
+    <div class="card p-8 mb-8">
+      <h2 class="text-lg font-bold text-gray-900 mb-4">✦ {site.name}</h2>
+      <p class="text-gray-600 leading-relaxed mb-4">
+        {site.name} 是一支来自<b>广西南宁</b>的地下偶像团体。三位成员以「公主」的身份，在舞台上演繹属于 Gleams 的奇幻物语。从西乡塘出发，活跃于南宁及两广地区的 Livehouse 和动漫展会。
+      </p>
+      <p class="text-gray-600 leading-relaxed">
+        🎵 J-Pop / 地下偶像正统风格，融合原创曲目与经典 Anisong 翻唱。每场演出都有不同的服装主题——从公式服到女仆装、JK 盛夏服、公主裙——带给骑士们不一样的视觉盛宴。
+      </p>
+    </div>
+
+    <!-- 社群 -->
+    <div class="card p-8 mb-8">
+      <h2 class="text-lg font-bold text-gray-900 mb-4">✦ 加入骑士团</h2>
+      <div class="grid grid-cols-2 gap-4 text-center">
+        <div class="bg-gray-50 rounded-xl p-4">
+          <p class="text-xs text-gray-400 mb-1">QQ群</p>
+          <p class="text-lg font-bold text-gray-900">{site.qqGroup}</p>
+          <p class="text-xs text-gray-500">{site.qqGroupName}</p>
         </div>
-        <div class="glass-card p-6">
-          <h4 class="tag-dream mb-4">🎵 演出风格</h4>
-          <p class="text-white/60 text-sm leading-relaxed">
-            J-Pop / 地下偶像正统风格，融合原创曲目与经典 Anisong 翻唱。每场演出都有不同的服装主题——从公式服到女仆装、JK 盛夏服、公主裙——带给骑士们不一样的视觉盛宴。
-          </p>
-        </div>
-        <div class="glass-card p-6">
-          <h4 class="tag mb-4">👑 公主的使命</h4>
-          <p class="text-white/60 text-sm leading-relaxed">
-            三位公主来自不同的城堡，背负着拯救王国的使命。在寻找「Gleams」能量宝石的旅途中，她们遇见了彼此——也遇见了身为「骑士」的你们。每一场演出，都是公主与骑士共同书写的新篇章。
-          </p>
-        </div>
-        <div class="glass-card p-6">
-          <h4 class="tag-dream mb-4">🏰 应援方式</h4>
-          <p class="text-white/60 text-sm leading-relaxed">
-            来现场看 Live 是最好的应援！加入<b>官方 QQ 群「西乡塘公主骑士团」</b>，获取最新演出情报和特典信息。也可以在微店「<b>Gleams小铺</b>」购买官方周边，用行动支持公主们的旅程！
-          </p>
+        <div class="bg-gray-50 rounded-xl p-4">
+          <p class="text-xs text-gray-400 mb-1">微店</p>
+          <p class="text-lg font-bold text-gray-900">{site.weidian}</p>
+          <p class="text-xs text-gray-500">官方周边</p>
         </div>
       </div>
+    </div>
 
-      <!-- 社群 -->
-      <div class="glass-card p-8 text-center mb-10">
-        <h4 class="text-white/80 font-bold mb-6">🏰 加入骑士团</h4>
-        <div class="flex flex-wrap justify-center gap-4 mb-6">
-          <div class="glass-card p-4 px-6 text-center">
-            <p class="text-white/30 text-xs mb-1">QQ 群</p>
-            <p class="text-white font-bold text-lg">{site.qqGroup}</p>
-            <p class="text-white/40 text-xs">{site.qqGroupName}</p>
-          </div>
-          <div class="glass-card p-4 px-6 text-center">
-            <p class="text-white/30 text-xs mb-1">微店</p>
-            <p class="text-white font-bold text-lg">{site.weidian}</p>
-            <p class="text-white/40 text-xs">官方周边</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- SNS Links -->
-      <div class="glass-card p-8 text-center">
-        <h4 class="text-white/80 font-bold mb-6">📱 关注 Gleams</h4>
-        <div class="flex flex-wrap justify-center gap-4">
-          <a href={site.social.weibo} target="_blank" rel="noopener" class="btn-outline text-sm !px-5">
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M10.098 20.323c-3.977.391-7.414-1.406-7.672-4.02-.259-2.609 2.759-5.047 6.74-5.441 3.979-.394 7.413 1.404 7.671 4.018.259 2.6-2.759 5.049-6.739 5.443z"/></svg>
-            微博 @Gleams_Official
-          </a>
-          <a href={site.social.bilibili} target="_blank" rel="noopener" class="btn-outline text-sm !px-5">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M17.813 4.653h.854c1.51.054 2.769.578 3.773 1.574 1.004.995 1.524 2.249 1.56 3.76v7.36c-.036 1.51-.556 2.769-1.56 3.773s-2.262 1.524-3.773 1.56H5.333c-1.51-.036-2.769-.556-3.773-1.56S.036 18.858 0 17.347v-7.36c.036-1.511.556-2.765 1.56-3.76 1.004-.996 2.262-1.52 3.773-1.574h.774l-1.174-1.12a1.234 1.234 0 01-.373-.906c0-.356.124-.658.373-.907l.027-.027c.267-.249.573-.373.92-.373.347 0 .653.124.92.373L9.653 4.44c.071.071.134.142.187.213h4.267a.836.836 0 01.16-.213l2.853-2.747c.267-.249.573-.373.92-.373.347 0 .662.151.929.4.267.249.391.551.391.907 0 .355-.124.657-.373.906zM5.333 7.24c-.746.018-1.373.276-1.88.773-.506.498-.769 1.13-.786 1.894v7.52c.017.764.28 1.395.786 1.893.507.498 1.134.756 1.88.773h13.334c.746-.017 1.373-.275 1.88-.773.506-.498.769-1.129.786-1.893v-7.52c-.017-.765-.28-1.396-.786-1.894-.507-.497-1.134-.755-1.88-.773zM8 11.107c.373 0 .684.124.933.373.25.249.383.569.4.96v1.173c-.017.391-.15.711-.4.96-.249.25-.56.374-.933.374s-.684-.125-.933-.374c-.25-.249-.383-.569-.4-.96V12.44c0-.373.129-.689.386-.947.258-.257.574-.386.947-.386zm8 0c.373 0 .684.124.933.373.25.249.383.569.4.96v1.173c-.017.391-.15.711-.4.96-.249.25-.56.374-.933.374s-.684-.125-.933-.374c-.25-.249-.383-.569-.4-.96V12.44c.017-.391.15-.711.4-.96.249-.249.56-.373.933-.373z"/>
-            </svg>
-            哔哩哔哩
-          </a>
-        </div>
+    <!-- SNS -->
+    <div class="card p-8 text-center">
+      <h2 class="text-lg font-bold text-gray-900 mb-6">✦ 关注 Gleams</h2>
+      <div class="flex flex-wrap justify-center gap-3">
+        <a href={site.weibo} target="_blank" rel="noopener" class="btn-outline !text-sm !px-5 !py-2.5">微博 {site.weiboName}</a>
+        <a href={site.bilibili} target="_blank" rel="noopener" class="btn-outline !text-sm !px-5 !py-2.5">哔哩哔哩</a>
+        <a href={site.xiaohongshu} target="_blank" rel="noopener" class="btn-outline !text-sm !px-5 !py-2.5">小红书</a>
+        <a href={site.douyin} target="_blank" rel="noopener" class="btn-outline !text-sm !px-5 !py-2.5">抖音</a>
       </div>
     </div>
   </section>

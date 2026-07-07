@@ -1,163 +1,70 @@
-import { useState } from 'react';
-import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
 
-interface GalleryItem {
-  src: string;
-  alt: string;
-  category: string;
-}
-
-const defaultGallery: GalleryItem[] = [
-  { src: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&h=600&fit=crop', alt: 'Live 现场 1', category: 'live' },
-  { src: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800&h=1000&fit=crop', alt: '公演舞台', category: 'live' },
-  { src: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&h=600&fit=crop', alt: '演唱会', category: 'live' },
-  { src: 'https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?w=800&h=800&fit=crop', alt: '后台花絮', category: 'behind' },
-  { src: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&h=600&fit=crop', alt: '音乐节', category: 'live' },
-  { src: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&h=800&fit=crop', alt: '幕后准备', category: 'behind' },
-  { src: 'https://images.unsplash.com/photo-1571266028243-e4733b0f0bb0?w=800&h=600&fit=crop', alt: '日常瞬间 1', category: 'daily' },
-  { src: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&h=1000&fit=crop', alt: '公演现场', category: 'live' },
-  { src: 'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=800&h=600&fit=crop', alt: '日常瞬间 2', category: 'daily' },
-  { src: 'https://images.unsplash.com/photo-1460723237483-7a6dc9d0b212?w=800&h=800&fit=crop', alt: '后台花絮 2', category: 'behind' },
-  { src: 'https://images.unsplash.com/photo-1524368535928-5b5e00ddc76b?w=800&h=600&fit=crop', alt: '日常瞬间 3', category: 'daily' },
-  { src: 'https://images.unsplash.com/photo-1499364615650-ec38552f4f34?w=800&h=800&fit=crop', alt: '纪念照', category: 'behind' },
-];
-
-const categories = [
-  { key: 'all', label: '全部' },
-  { key: 'live', label: '公演现场' },
-  { key: 'behind', label: '幕后花絮' },
-  { key: 'daily', label: '日常' },
+// 使用下载的真实照片
+const galleryImages = [
+  '/images/members/Sat_Jun_27_5314209019859106_0.jpg',
+  '/images/members/Sat_Feb_14_5266137572705216_0.jpg',
+  '/images/members/Thu_Sep_04_5207065433737260_0.jpg',
+  '/images/members/Mon_Jul_06_5317726201713318_0.jpg',
+  '/images/members/Mon_Jul_06_5317726201713318_1.jpg',
+  '/images/members/Tue_Jun_09_5307988046775909_0.jpg',
+  '/images/members/Fri_Feb_06_5263289829294666_rt_0.jpg',
+  '/images/members/Fri_Feb_06_5263289829294666_rt_1.jpg',
+  '/images/members/Fri_May_01_5293827222670761_0.jpg',
+  '/images/members/Fri_May_01_5293827222670761_1.jpg',
+  '/images/members/Sun_Jun_28_5314726717294930_1.jpg',
+  '/images/members/Sat_Mar_14_5276494972591479_0.jpg',
 ];
 
 export default function GalleryGrid() {
-  const [activeCategory, setActiveCategory] = useState('all');
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
 
-  const filtered = activeCategory === 'all'
-    ? defaultGallery
-    : defaultGallery.filter(item => item.category === activeCategory);
+  const close = useCallback(() => setLightboxIdx(null), []);
+  const prev = useCallback(() => setLightboxIdx(i => i !== null ? (i - 1 + galleryImages.length) % galleryImages.length : null), []);
+  const next = useCallback(() => setLightboxIdx(i => i !== null ? (i + 1) % galleryImages.length : null), []);
 
-  const openLightbox = (index: number) => setLightboxIndex(index);
-  const closeLightbox = () => setLightboxIndex(null);
-  const prevImage = () => {
-    if (lightboxIndex === null) return;
-    setLightboxIndex((lightboxIndex - 1 + filtered.length) % filtered.length);
-  };
-  const nextImage = () => {
-    if (lightboxIndex === null) return;
-    setLightboxIndex((lightboxIndex + 1) % filtered.length);
-  };
-
-  // Keyboard navigation
-  if (typeof window !== 'undefined') {
-    window.addEventListener('keydown', (e) => {
-      if (lightboxIndex === null) return;
-      if (e.key === 'Escape') closeLightbox();
-      if (e.key === 'ArrowLeft') prevImage();
-      if (e.key === 'ArrowRight') nextImage();
-    });
-  }
+  useEffect(() => {
+    if (lightboxIdx === null) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') close();
+      if (e.key === 'ArrowLeft') prev();
+      if (e.key === 'ArrowRight') next();
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [lightboxIdx, close, prev, next]);
 
   return (
     <>
-      {/* Filter Tabs */}
-      <div className="flex justify-center gap-2 mb-10 flex-wrap">
-        {categories.map(cat => (
-          <button
-            key={cat.key}
-            onClick={() => setActiveCategory(cat.key)}
-            className={`px-5 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
-              activeCategory === cat.key
-                ? 'bg-gleams-500/10 text-gleams-400 border border-gleams-500/20'
-                : 'text-white/40 hover:text-white/70 border border-transparent hover:border-white/10'
-            }`}
-          >
-            {cat.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Masonry Grid */}
-      <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
-        {filtered.map((item, index) => (
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+        {galleryImages.map((src, i) => (
           <div
-            key={index}
-            className="break-inside-avoid glass-card overflow-hidden cursor-pointer group animate-fade-in"
-            onClick={() => openLightbox(index)}
-          >
-            <div className="relative overflow-hidden">
-              <img
-                src={item.src}
-                alt={item.alt}
-                className="w-full object-cover transition-transform duration-700 group-hover:scale-110"
-                loading="lazy"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end p-4">
-                <span className="text-white text-sm">{item.alt}</span>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {filtered.length === 0 && (
-        <div className="text-center py-16 text-white/30">
-          <span className="text-4xl mb-4 block">📷</span>
-          <p>该分类下暂无照片</p>
-        </div>
-      )}
-
-      {/* Lightbox */}
-      {lightboxIndex !== null && (
-        <div
-          className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center"
-          onClick={closeLightbox}
-        >
-          {/* Close button */}
-          <button
-            onClick={closeLightbox}
-            className="absolute top-6 right-6 text-white/60 hover:text-white transition-colors z-10"
-          >
-            <X className="w-8 h-8" />
-          </button>
-
-          {/* Counter */}
-          <div className="absolute top-6 left-6 text-white/40 text-sm z-10">
-            {lightboxIndex + 1} / {filtered.length}
-          </div>
-
-          {/* Prev */}
-          <button
-            onClick={(e) => { e.stopPropagation(); prevImage(); }}
-            className="absolute left-4 md:left-8 text-white/60 hover:text-white transition-colors z-10 p-2"
-          >
-            <ChevronLeft className="w-8 h-8 md:w-10 md:h-10" />
-          </button>
-
-          {/* Image */}
-          <div
-            className="max-w-[90vw] max-h-[85vh] flex items-center justify-center"
-            onClick={(e) => e.stopPropagation()}
+            key={i}
+            className="aspect-square rounded-xl overflow-hidden bg-gray-100 cursor-pointer group"
+            onClick={() => setLightboxIdx(i)}
           >
             <img
-              src={filtered[lightboxIndex].src}
-              alt={filtered[lightboxIndex].alt}
-              className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl animate-fade-in"
+              src={src}
+              alt={`Gleams photo ${i + 1}`}
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+              loading="lazy"
             />
           </div>
+        ))}
+      </div>
 
-          {/* Next */}
-          <button
-            onClick={(e) => { e.stopPropagation(); nextImage(); }}
-            className="absolute right-4 md:right-8 text-white/60 hover:text-white transition-colors z-10 p-2"
-          >
-            <ChevronRight className="w-8 h-8 md:w-10 md:h-10" />
-          </button>
+      {lightboxIdx !== null && (
+        <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center" onClick={close}>
+          <button onClick={close} className="absolute top-6 right-6 text-white/60 hover:text-white text-sm z-10">✕ 关闭</button>
+          <span className="absolute top-6 left-6 text-white/40 text-sm z-10">{lightboxIdx + 1} / {galleryImages.length}</span>
 
-          {/* Caption */}
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/50 text-sm">
-            {filtered[lightboxIndex].alt}
+          <button onClick={e => { e.stopPropagation(); prev(); }} className="absolute left-4 text-white/60 hover:text-white text-3xl z-10 p-4">‹</button>
+
+          <div className="max-w-[90vw] max-h-[85vh]" onClick={e => e.stopPropagation()}>
+            <img src={galleryImages[lightboxIdx]} alt="" className="max-w-full max-h-[85vh] object-contain rounded-lg" />
           </div>
+
+          <button onClick={e => { e.stopPropagation(); next(); }} className="absolute right-4 text-white/60 hover:text-white text-3xl z-10 p-4">›</button>
         </div>
       )}
     </>
