@@ -1,9 +1,7 @@
-<!-- 滚动入场动画 + 返回顶部 + 页面跳转回顶 -->
+<!-- 滚动入场动画 + 返回顶部 -->
 <script>
-  // P0.1: 页面跳转后自动回到顶部
-  document.addEventListener('astro:page-load', () => {
-    window.scrollTo(0, 0);
-  });
+  // 页面加载滚回顶部
+  window.scrollTo(0, 0);
 
   // 滚动入场动画
   const observer = new IntersectionObserver((entries) => {
@@ -15,10 +13,6 @@
   }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
 
   document.querySelectorAll('[data-reveal]').forEach(el => observer.observe(el));
-  // ViewTransitions 后重新绑定
-  document.addEventListener('astro:page-load', () => {
-    document.querySelectorAll('[data-reveal]').forEach(el => observer.observe(el));
-  });
 
   // 返回顶部按钮
   const topBtn = document.getElementById('back-to-top');

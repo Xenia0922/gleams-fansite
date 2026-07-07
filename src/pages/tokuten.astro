@@ -3,10 +3,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import site from '../data/site.json';
 ---
 
-<BaseLayout title="特典 | 特典规则">
+<BaseLayout title="特典 | Gleams">
   <section class="py-16 md:py-20 px-4 max-w-4xl mx-auto">
     <div class="text-center mb-12">
-      <p class="section-title-en">Tokuten</p>
+      <p class="section-title-en">特典</p>
       <h1 class="section-title">特典规则</h1>
       <p class="text-gray-400 mt-3">以下内容来自 Gleams_Official 微博公示</p>
     </div>
@@ -38,7 +38,7 @@ import site from '../data/site.json';
     <!-- 过往物贩示例 -->
     <div class="mb-8">
       <h2 class="text-lg font-bold text-gray-900 mb-4">✦ 过往物贩参考</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div class="card overflow-hidden">
           <img src="/images/tokuten/hakusai_birthday_goods.webp" alt="白菜生日物贩" class="w-full" loading="lazy" />
           <div class="p-3 text-sm text-gray-500">💛 白菜2026生日物贩</div>
@@ -55,7 +55,7 @@ import site from '../data/site.json';
     </div>
 
     <div class="text-center">
-      <a href={site.weibo} target="_blank" rel="noopener" class="btn-pink">最新规则关注官博 {site.weiboName}</a>
+      <a href={site.weibo} target="_blank" rel="noopener" class="btn-outline">关注官博 {site.weiboName} 获取最新规则</a>
     </div>
   </section>
 </BaseLayout>
