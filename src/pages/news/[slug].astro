@@ -38,8 +38,8 @@ const evt = scheduleData.events.find((e: any) => e.date === frontmatter.date);
 
     <!-- 图片 -->
     {frontmatter.image && (
-      <div class="rounded-2xl overflow-hidden bg-gray-100 mb-8">
-        <img src={frontmatter.image} alt={frontmatter.title} class="w-full object-cover max-h-[500px]" />
+      <div class="rounded-2xl overflow-hidden bg-gray-100 mb-8 cursor-zoom-in" onclick="this.querySelector('img').requestFullscreen?.() || (document.getElementById('img-overlay')!.classList.remove('hidden'))">
+        <img src={frontmatter.image} alt={frontmatter.title} class="w-full object-cover max-h-[500px]" id="detail-img" />
       </div>
     )}
 
@@ -48,4 +48,9 @@ const evt = scheduleData.events.find((e: any) => e.date === frontmatter.date);
       <Content />
     </div>
   </article>
+
+  <!-- 全屏图片预览 -->
+  <div id="img-overlay" class="hidden fixed inset-0 z-[100] bg-black/95 flex items-center justify-center cursor-zoom-out" onclick="this.classList.add('hidden')">
+    <img src={frontmatter.image || ''} alt="" class="max-w-[95vw] max-h-[95vh] object-contain" />
+  </div>
 </BaseLayout>
