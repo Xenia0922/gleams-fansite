@@ -2,6 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import FanUpload from '../components/FanUpload';
 import MessageBoard from '../components/MessageBoard';
+import FanGallery from '../components/FanGallery';
 ---
 
 <BaseLayout title="骑士团广场">
@@ -12,16 +13,52 @@ import MessageBoard from '../components/MessageBoard';
       <p class="text-gray-400 mt-2">分享你拍到的 Gleams 瞬间，为公主们应援打 call</p>
     </div>
 
-    <!-- 留言板 -->
-    <div class="mb-12" data-reveal>
-      <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">💬 应援留言板</h2>
-      <MessageBoard client:load />
+    <!-- 标签切换 -->
+    <div class="flex justify-center gap-3 mb-8" id="fan-tabs">
+      <button class="btn-pink text-sm !px-5 !py-2" data-tab="browse">浏览</button>
+      <button class="btn-outline text-sm !px-5 !py-2" data-tab="post">发布</button>
     </div>
 
-    <!-- 照片上传 -->
-    <div class="mb-12" data-reveal>
-      <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">📸 分享现场照</h2>
-      <FanUpload client:load />
+    <!-- 浏览模式（默认） -->
+    <div id="tab-browse">
+      <div class="mb-12" data-reveal>
+        <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">💬 应援留言板</h2>
+        <MessageBoard client:load />
+      </div>
+      <div data-reveal>
+        <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">📸 骑士返图</h2>
+        <FanGallery client:load />
+      </div>
+    </div>
+
+    <!-- 发布模式（隐藏） -->
+    <div id="tab-post" class="hidden">
+      <div class="mb-12" data-reveal>
+        <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">📸 分享现场照</h2>
+        <FanUpload client:load />
+      </div>
     </div>
   </section>
 </BaseLayout>
+
+<script>
+  const tabs = document.querySelectorAll('#fan-tabs button');
+  const browse = document.getElementById('tab-browse');
+  const post = document.getElementById('tab-post');
+
+  tabs.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tab = btn.dataset.tab;
+      tabs.forEach(b => { b.className = 'btn-outline text-sm !px-5 !py-2'; });
+      btn.className = 'btn-pink text-sm !px-5 !py-2';
+
+      if (tab === 'browse') {
+        browse.classList.remove('hidden');
+        post.classList.add('hidden');
+      } else {
+        browse.classList.add('hidden');
+        post.classList.remove('hidden');
+      }
+    });
+  });
+</script>
