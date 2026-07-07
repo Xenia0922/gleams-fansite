@@ -28,13 +28,6 @@ const pageTitle = title ? `${title} | ${site.name}` : `${site.name} - 偶像应�
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="/favicon.ico" />
     
-    <!-- 深色模式 CSS（JS注入避免被 Tailwind purge 删除） -->
-    <script is:inline>
-      const d=document.documentElement;
-      const s=d.appendChild(document.createElement('style'));
-      s.textContent='html.dark,html.dark body,html.dark main,html.dark section{background:#111118!important;color:#d4d4dc!important}html.dark .bg-white,html.dark .bg-gray-50,html.dark .bg-pink-50,html.dark .bg-gray-900{background:#111118!important}html.dark .bg-gray-100,html.dark .card{background:#1a1a28!important}html.dark .card{border-color:#2a2a3a!important}html.dark h1,html.dark h2,html.dark h3,html.dark h4{color:#eeeef4!important}html.dark p,html.dark span,html.dark li,html.dark a:not(.btn-pink),html.dark .btn-outline{color:#c8c8d4!important}html.dark .text-gray-500,html.dark .text-gray-400{color:#a0a0b0!important}html.dark .text-gray-900,html.dark .text-gray-800,html.dark .text-gray-700,html.dark .text-gray-600{color:#eeeef4!important}html.dark footer{background:#0a0a10!important}html.dark .btn-outline{border-color:#3a3a4e!important}html.dark .btn-outline:hover{color:#f262a3!important;border-color:#f262a3!important}';
-      if(d.classList.contains('dark'))d.classList.remove('dark'),d.classList.add('dark');
-    </script>
     <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site).href} />
 
     <!-- SEO -->
@@ -62,5 +55,10 @@ const pageTitle = title ? `${title} | ${site.name}` : `${site.name} - 偶像应�
     <ScrollFx />
     <ColorTheme />
     <LazyImage />
+    <script>
+      const s = document.createElement('style');
+      s.textContent = 'html.dark,html.dark body,html.dark main,html.dark section{background:#111118!important;color:#d4d4dc!important}html.dark .bg-white,html.dark .bg-gray-50,html.dark .bg-pink-50,html.dark .bg-gray-900{background:#111118!important}html.dark .bg-gray-100,html.dark .card{background:#1a1a28!important}html.dark .card{border-color:#2a2a3a!important}html.dark h1,html.dark h2,html.dark h3,html.dark h4{color:#eeeef4!important}html.dark p,html.dark span,html.dark li,html.dark a:not(.btn-pink),html.dark .btn-outline{color:#c8c8d4!important}html.dark .text-gray-500,html.dark .text-gray-400{color:#a0a0b0!important}html.dark .text-gray-900,html.dark .text-gray-800,html.dark .text-gray-700,html.dark .text-gray-600{color:#eeeef4!important}html.dark footer{background:#0a0a10!important}html.dark .btn-outline{border-color:#3a3a4e!important}html.dark .btn-outline:hover{color:#f262a3!important;border-color:#f262a3!important}';
+      document.head.appendChild(s);
+    </script>
   </body>
 </html>
