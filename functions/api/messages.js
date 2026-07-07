@@ -1,6 +1,6 @@
 /**
- * POST /api/messages — 提交留言
- * GET  /api/messages — 获取最近留言
+ * POST /api/messages — 提交留言 → R2
+ * GET  /api/messages — 获取最近留言 ← R2
  */
 
 export async function onRequest(context) {
@@ -28,12 +28,15 @@ async function postMessage(request, env) {
       return json({ error: '内容不能为空' }, 400);
     }
 
-    const { results } = await env.DB
-      .prepare('INSERT INTO messages (name, message, member) VALUES (?, ?, ?) RETURNING *')
-      .bind(name, message, member)
-      .run();
+    const id = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+    const key = `messages/${id}.json`;
+    const data = JSON.stringify({ id, name, message, member, created_at: new Date().toISOString() });
 
-    return json({ ok: true, msg: results[0] });
+    await env.PHOTOS.put(key, data, {
+      httpMetadata: { contentType: 'application/json' },
+    });
+
+    return json({ ok: true, msg: { id, name, message, member } });
   } catch (e) {
     return json({ error: '留言失败: ' + e.message }, 500);
   }
@@ -41,9 +44,18 @@ async function postMessage(request, env) {
 
 async function listMessages(env) {
   try {
-    const { results } = await env.DB
-      .prepare('SELECT * FROM messages ORDER BY created_at DESC LIMIT 50')
-      .all();
+    const { objects } = await env.PHOTOS.list({ prefix: 'messages/', limit: 50 });
+    const results = [];
+    for (const obj of objects) {
+      try {
+        const item = await env.PHOTOS.get(obj.key);
+        if (item) {
+          const text = await item.text();
+          results.push(JSON.parse(text));
+        }
+      } catch { /* skip malformed */ }
+    }
+    results.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     return json(results);
   } catch (e) {
     return json({ error: e.message }, 500);
