@@ -1,0 +1,65 @@
+---
+export interface Props {
+  title: string;
+  date: string;
+  image?: string;
+  excerpt?: string;
+  tags?: string[];
+  slug: string;
+}
+
+const { title, date, image, excerpt, tags = [], slug } = Astro.props;
+const formattedDate = new Date(date).toLocaleDateString('zh-CN', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+---
+
+<a href={`/news/${slug}`} class="block group">
+  <article class="glass-card-hover overflow-hidden h-full flex flex-col">
+    <!-- Image -->
+    <div class="relative overflow-hidden aspect-[16/9]">
+      {image ? (
+        <img
+          src={image}
+          alt={title}
+          class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+          loading="lazy"
+        />
+      ) : (
+        <div class="w-full h-full bg-gradient-to-br from-gleams-500/20 to-dream-400/20 flex items-center justify-center">
+          <span class="text-white/20 text-4xl">⭐</span>
+        </div>
+      )}
+      <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+    </div>
+
+    <!-- Content -->
+    <div class="p-5 flex-1 flex flex-col">
+      <div class="flex items-center gap-2 mb-3">
+        <time datetime={date} class="text-xs text-white/30">{formattedDate}</time>
+        {tags.slice(0, 2).map(tag => (
+          <span class="tag">{tag}</span>
+        ))}
+      </div>
+
+      <h3 class="text-white/90 font-bold text-lg mb-2 line-clamp-2 group-hover:text-gleams-400 transition-colors duration-300">
+        {title}
+      </h3>
+
+      {excerpt && (
+        <p class="text-white/40 text-sm leading-relaxed line-clamp-2 flex-1">
+          {excerpt}
+        </p>
+      )}
+
+      <div class="mt-3 flex items-center text-gleams-400 text-sm font-medium opacity-0 group-hover:opacity-100 translate-x-0 group-hover:translate-x-2 transition-all duration-300">
+        阅读更多
+        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+      </div>
+    </div>
+  </article>
+</a>

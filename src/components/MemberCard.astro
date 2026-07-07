@@ -1,0 +1,65 @@
+---
+export interface Member {
+  id: string;
+  name: string;
+  nameCN: string;
+  color: string;
+  colorName: string;
+  generation: string;
+  role: string;
+  image: string;
+  catchphraseCN: string;
+}
+
+const { member } = Astro.props as { member: Member };
+---
+
+<a href={`/members/${member.id}`} class="block group">
+  <div class="glass-card overflow-hidden transition-all duration-500 group-hover:shadow-xl group-hover:shadow-gleams-500/10 group-hover:-translate-y-2">
+    <!-- Photo -->
+    <div class="relative aspect-[3/4] overflow-hidden">
+      <img
+        src={member.image}
+        alt={member.name}
+        class="w-full h-full object-cover transition-all duration-700 group-hover:scale-110 group-hover:brightness-110"
+        loading="lazy"
+      />
+      <!-- Overlay gradient -->
+      <div class="absolute inset-0 bg-gradient-to-t from-[#0a0a0f] via-transparent to-transparent
+                   opacity-60 group-hover:opacity-80 transition-opacity duration-500"></div>
+
+      <!-- Color accent line -->
+      <div
+        class="absolute bottom-0 left-0 right-0 h-1 transition-all duration-500 group-hover:h-2"
+        style={`background: ${member.color}`}
+      ></div>
+
+      <!-- Name overlay on bottom -->
+      <div class="absolute bottom-4 left-4 right-4">
+        <p class="text-white font-bold text-lg md:text-xl transition-all duration-500
+                  group-hover:translate-y-0">
+          {member.name}
+        </p>
+        <p class="text-white/50 text-xs transition-all duration-500 opacity-0 group-hover:opacity-100
+                  translate-y-2 group-hover:translate-y-0">
+          {member.nameCN}
+        </p>
+      </div>
+    </div>
+
+    <!-- Info below -->
+    <div class="p-4">
+      <div class="flex items-center gap-2 mb-2">
+        <span
+          class="inline-block w-3 h-3 rounded-full flex-shrink-0"
+          style={`background: ${member.color}; box-shadow: 0 0 8px ${member.color}80`}
+        ></span>
+        <span class="text-white/60 text-xs">{member.colorName}</span>
+        <span class="text-white/20 text-xs">·</span>
+        <span class="text-white/40 text-xs">{member.generation}</span>
+      </div>
+      <p class="text-white/70 text-sm font-medium">{member.role}</p>
+      <p class="text-white/30 text-xs mt-1 line-clamp-1">{member.catchphraseCN}</p>
+    </div>
+  </div>
+</a>

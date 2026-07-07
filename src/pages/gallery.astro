@@ -1,0 +1,20 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import GalleryGrid from '../components/GalleryGrid';
+---
+
+<BaseLayout title="照片画廊">
+  <section class="pt-32 pb-24 px-4">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-16">
+        <p class="section-subtitle mb-3 animate-fade-in">◈ Gallery ◈</p>
+        <h2 class="section-title animate-slide-up">照片画廊</h2>
+        <p class="text-white/30 mt-4 animate-slide-up-delayed">
+          キラキラの瞬間を切り取って —— 记录每一个闪亮瞬间
+        </p>
+      </div>
+
+      <GalleryGrid client:load />
+    </div>
+  </section>
+</BaseLayout>

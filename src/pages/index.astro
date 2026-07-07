@@ -1,0 +1,116 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import HeroBanner from '../components/HeroBanner.astro';
+import NewsCard from '../components/NewsCard.astro';
+
+// Import data
+import schedule from '../data/schedule.json';
+
+// Get news from markdown files
+const newsPosts = Object.values(import.meta.glob('../content/news/*.md', { eager: true }));
+const sortedNews = newsPosts
+  .sort((a, b) => new Date(b.frontmatter.date).getTime() - new Date(a.frontmatter.date).getTime())
+  .slice(0, 3);
+
+// Get upcoming events
+const upcomingEvents = schedule.events
+  .filter(e => e.status === 'upcoming')
+  .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+  .slice(0, 3);
+---
+
+<BaseLayout>
+  <!-- Hero -->
+  <HeroBanner />
+
+  <!-- Latest News Section -->
+  <section class="py-24 px-4">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-16">
+        <p class="section-subtitle mb-3">✦ Latest News ✦</p>
+        <h2 class="section-title">最新动态</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {sortedNews.map(post => (
+          <NewsCard
+            title={post.frontmatter.titleCN || post.frontmatter.title}
+            date={post.frontmatter.date}
+            image={post.frontmatter.image}
+            excerpt={post.frontmatter.excerpt}
+            tags={post.frontmatter.tags}
+            slug={post.file.split('/').pop()?.replace('.md', '') || ''}
+          />
+        ))}
+      </div>
+
+      <div class="text-center mt-12">
+        <a href="/news" class="btn-outline">
+          查看全部新闻
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Upcoming Schedule -->
+  <section class="py-24 px-4 relative">
+    <div class="absolute inset-0 bg-gradient-to-b from-transparent via-gleams-500/[0.02] to-transparent"></div>
+    <div class="max-w-4xl mx-auto relative">
+      <div class="text-center mb-16">
+        <p class="section-subtitle mb-3">♫ Upcoming Events ♫</p>
+        <h2 class="section-title">近期公演</h2>
+      </div>
+
+      <div class="space-y-4">
+        {upcomingEvents.length > 0 ? upcomingEvents.map(event => {
+          const eventDate = new Date(event.date);
+          const isToday = new Date().toDateString() === eventDate.toDateString();
+          return (
+            <div class="glass-card-hover p-5 md:p-6 flex flex-col sm:flex-row gap-4 sm:items-center">
+              <div class="flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-xl bg-white/[0.03] flex flex-col items-center justify-center border border-white/[0.05]">
+                <span class="text-2xl font-bold gradient-text">{eventDate.getDate()}</span>
+                <span class="text-xs text-white/40">{eventDate.toLocaleDateString('zh-CN', { month: 'short' })}</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-1">
+                  <h3 class="text-white/90 font-bold truncate">{event.titleCN || event.title}</h3>
+                  {isToday && (
+                    <span class="tag flex-shrink-0">今天</span>
+                  )}
+                </div>
+                <p class="text-white/40 text-sm mb-2">{event.venueCN || event.venue} · {event.time}</p>
+                {event.description && (
+                  <p class="text-white/30 text-sm line-clamp-1">{event.description}</p>
+                )}
+              </div>
+              <div class="flex items-center gap-3 flex-shrink-0">
+                {event.ticketUrl && (
+                  <a href={event.ticketUrl} class="btn-primary text-xs !px-4 !py-2 whitespace-nowrap" target="_blank" rel="noopener">
+                    购票
+                  </a>
+                )}
+              </div>
+            </div>
+          );
+        }) : (
+          <div class="text-center py-16 text-white/30">
+            <span class="text-4xl mb-4 block">🎵</span>
+            <p>暂无近期公演，请关注 SNS 获取最新信息</p>
+          </div>
+        )}
+      </div>
+
+      <div class="text-center mt-12">
+        <a href="/schedule" class="btn-outline">
+          查看完整日程
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

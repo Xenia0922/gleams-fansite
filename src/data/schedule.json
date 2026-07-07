@@ -1,0 +1,74 @@
+{
+  "events": [
+    {
+      "id": "live-2026-07-20",
+      "date": "2026-07-20",
+      "time": "18:30",
+      "title": "Gleams 2nd Anniversary Live「Starlight Symphony」",
+      "titleJP": "Gleams 2周年記念ライブ「Starlight Symphony」",
+      "venue": "渋谷 WWW X",
+      "venueCN": "涩谷 WWW X",
+      "address": "东京都涩谷区宇田川町",
+      "performers": ["rena", "yuna", "miku", "koharu", "aoi", "rin"],
+      "ticketUrl": "https://example.com/tickets/0720",
+      "status": "upcoming",
+      "description": "Gleams 成立两周年纪念公演！将首次披露新曲「Starlight Symphony」，并有特别惊喜环节。"
+    },
+    {
+      "id": "live-2026-08-03",
+      "date": "2026-08-03",
+      "time": "17:00",
+      "title": "夏のアイドルフェス 2026 出演",
+      "titleJP": "夏のアイドルフェス 2026 出演",
+      "venue": "Zepp Haneda",
+      "venueCN": "Zepp 羽田",
+      "address": "东京都大田区羽田空港",
+      "performers": ["rena", "yuna", "miku", "koharu", "aoi", "rin"],
+      "ticketUrl": "https://example.com/tickets/0803",
+      "status": "upcoming",
+      "description": "今年最大级的地下偶像音乐节！Gleams 将在主舞台登场，带来 30 分钟特别演出。"
+    },
+    {
+      "id": "live-2026-08-15",
+      "date": "2026-08-15",
+      "time": "14:00",
+      "title": "握手会 & ミニライブ",
+      "titleJP": "握手会 & ミニライブ",
+      "venue": "秋葉原 アキバシアター",
+      "venueCN": "秋叶原 Akiba Theater",
+      "address": "东京都千代田区外神田",
+      "performers": ["rena", "yuna", "koharu"],
+      "ticketUrl": "https://example.com/tickets/0815",
+      "status": "upcoming",
+      "description": "新曲发售纪念握手会 + 迷你 Live！限定周边贩售也有哦。"
+    },
+    {
+      "id": "live-2026-07-06",
+      "date": "2026-07-06",
+      "time": "19:00",
+      "title": "定期公演 vol.24「Summer Dreams」",
+      "titleJP": "定期公演 vol.24「Summer Dreams」",
+      "venue": "新宿 LOFT",
+      "venueCN": "新宿 LOFT",
+      "address": "东京都新宿区歌舞伎町",
+      "performers": ["rena", "yuna", "miku", "koharu", "aoi", "rin"],
+      "ticketUrl": null,
+      "status": "past",
+      "description": "夏季定期公演，全员夏装首次披露！"
+    },
+    {
+      "id": "live-2026-06-22",
+      "date": "2026-06-22",
+      "time": "19:00",
+      "title": "定期公演 vol.23「雨上がりの虹」",
+      "titleJP": "定期公演 vol.23「雨上がりの虹」",
+      "venue": "新宿 LOFT",
+      "venueCN": "新宿 LOFT",
+      "address": "东京都新宿区歌舞伎町",
+      "performers": ["yuna", "miku", "aoi", "rin"],
+      "ticketUrl": null,
+      "status": "past",
+      "description": "梅雨季节的特别公演，以「雨后彩虹」为主题的抒情曲目为主。"
+    }
+  ]
+}

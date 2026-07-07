@@ -1,0 +1,87 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import site from '../data/site.json';
+---
+
+<BaseLayout title="关于我们">
+  <section class="pt-32 pb-24 px-4">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-16">
+        <p class="section-subtitle mb-3 animate-fade-in">☆ About ☆</p>
+        <h2 class="section-title animate-slide-up">关于 {site.name}</h2>
+      </div>
+
+      <!-- Hero -->
+      <div class="glass-card p-8 md:p-12 mb-10 text-center">
+        <span class="text-6xl mb-6 block">⭐</span>
+        <h3 class="text-2xl md:text-3xl font-display font-bold text-white mb-4">
+          {site.name}
+          <span class="text-white/40 text-lg block mt-2">{site.nameJP}</span>
+        </h3>
+        <p class="text-white/50 max-w-2xl mx-auto leading-relaxed mb-6">
+          {site.descriptionCN}
+        </p>
+        <p class="text-white/40 text-sm leading-relaxed max-w-2xl mx-auto">
+          {site.description}
+        </p>
+      </div>
+
+      <!-- Info Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+        <div class="glass-card p-6">
+          <h4 class="tag mb-4">✨ 我们的理念</h4>
+          <p class="text-white/60 text-sm leading-relaxed">
+            每位成员都是独一无二的星星。在 Gleams，我们相信个性的光芒比标准化更重要。无论你是闪耀的主星还是温柔的伴星，都能在这里找到属于自己的位置，共同编织照亮夜空的光芒。
+          </p>
+        </div>
+        <div class="glass-card p-6">
+          <h4 class="tag-dream mb-4">💫 关于地偶</h4>
+          <p class="text-white/60 text-sm leading-relaxed">
+            地下偶像（地下アイドル）不只是舞台上的表演者，更是和粉丝们一起成长、一起创造回忆的伙伴。从地下 Live House 出发，我们用心唱每一首歌、跳每一支舞，期待有一天和你在更大的舞台上相遇。
+          </p>
+        </div>
+        <div class="glass-card p-6">
+          <h4 class="tag mb-4">🎵 音乐风格</h4>
+          <p class="text-white/60 text-sm leading-relaxed">
+            J-Pop 为核心、融合 EDM 与摇滚元素。既有让人忍不住打 Call 的燃曲，也有一秒催泪的抒情曲。所有原创曲目均由成员参与创作，每首歌都是 Gleams 的真实心情。
+          </p>
+        </div>
+        <div class="glass-card p-6">
+          <h4 class="tag-dream mb-4">🌈 应援方式</h4>
+          <p class="text-white/60 text-sm leading-relaxed">
+            来现场看 Live 是最好的应援！除此之外，关注 SNS、分享演出信息、购买周边等方法都能支持我们。每一位制作人（Producer）的心意，都是我们前进的动力。
+          </p>
+        </div>
+      </div>
+
+      <!-- SNS Links -->
+      <div class="glass-card p-8 text-center">
+        <h4 class="text-white/80 font-bold mb-6">📱 关注我们</h4>
+        <div class="flex flex-wrap justify-center gap-4">
+          <a href={site.social.twitter} target="_blank" rel="noopener" class="btn-outline text-sm !px-5">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            X (Twitter)
+          </a>
+          <a href={site.social.instagram} target="_blank" rel="noopener" class="btn-outline text-sm !px-5">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+            Instagram
+          </a>
+          <a href={site.social.youtube} target="_blank" rel="noopener" class="btn-outline text-sm !px-5">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+            YouTube
+          </a>
+          <a href={site.social.bilibili} target="_blank" rel="noopener" class="btn-outline text-sm !px-5">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M17.813 4.653h.854c1.51.054 2.769.578 3.773 1.574 1.004.995 1.524 2.249 1.56 3.76v7.36c-.036 1.51-.556 2.769-1.56 3.773s-2.262 1.524-3.773 1.56H5.333c-1.51-.036-2.769-.556-3.773-1.56S.036 18.858 0 17.347v-7.36c.036-1.511.556-2.765 1.56-3.76 1.004-.996 2.262-1.52 3.773-1.574h.774l-1.174-1.12a1.234 1.234 0 01-.373-.906c0-.356.124-.658.373-.907l.027-.027c.267-.249.573-.373.92-.373.347 0 .653.124.92.373L9.653 4.44c.071.071.134.142.187.213h4.267a.836.836 0 01.16-.213l2.853-2.747c.267-.249.573-.373.92-.373.347 0 .662.151.929.4.267.249.391.551.391.907 0 .355-.124.657-.373.906zM5.333 7.24c-.746.018-1.373.276-1.88.773-.506.498-.769 1.13-.786 1.894v7.52c.017.764.28 1.395.786 1.893.507.498 1.134.756 1.88.773h13.334c.746-.017 1.373-.275 1.88-.773.506-.498.769-1.129.786-1.893v-7.52c-.017-.765-.28-1.396-.786-1.894-.507-.497-1.134-.755-1.88-.773zM8 11.107c.373 0 .684.124.933.373.25.249.383.569.4.96v1.173c-.017.391-.15.711-.4.96-.249.25-.56.374-.933.374s-.684-.125-.933-.374c-.25-.249-.383-.569-.4-.96V12.44c0-.373.129-.689.386-.947.258-.257.574-.386.947-.386zm8 0c.373 0 .684.124.933.373.25.249.383.569.4.96v1.173c-.017.391-.15.711-.4.96-.249.25-.56.374-.933.374s-.684-.125-.933-.374c-.25-.249-.383-.569-.4-.96V12.44c.017-.391.15-.711.4-.96.249-.249.56-.373.933-.373z"/>
+            </svg>
+            哔哩哔哩
+          </a>
+          <a href={site.social.weibo} target="_blank" rel="noopener" class="btn-outline text-sm !px-5">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M10.098 20.323c-3.977.391-7.414-1.406-7.672-4.02-.259-2.609 2.759-5.047 6.74-5.441 3.979-.394 7.413 1.404 7.671 4.018.259 2.6-2.759 5.049-6.739 5.443z"/></svg>
+            微博
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

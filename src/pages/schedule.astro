@@ -1,0 +1,135 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import scheduleData from '../data/schedule.json';
+import membersData from '../data/members.json';
+
+const { events } = scheduleData;
+const memberMap = new Map(membersData.members.map(m => [m.id, m]));
+
+const upcoming = events.filter(e => e.status === 'upcoming').sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+const past = events.filter(e => e.status === 'past').sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+const formatDate = (dateStr: string) => {
+  const d = new Date(dateStr);
+  return {
+    date: d.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' }),
+    day: d.getDate(),
+    month: d.toLocaleDateString('zh-CN', { month: 'short' }),
+    weekday: d.toLocaleDateString('zh-CN', { weekday: 'short' }),
+    isToday: new Date().toDateString() === d.toDateString(),
+  };
+};
+---
+
+<BaseLayout title="公演日程">
+  <section class="pt-32 pb-24 px-4">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-16">
+        <p class="section-subtitle mb-3 animate-fade-in">♫ Schedule ♫</p>
+        <h2 class="section-title animate-slide-up">公演日程</h2>
+        <p class="text-white/30 mt-4 animate-slide-up-delayed">
+          Gleams のライブスケジュール —— 在星光下相遇
+        </p>
+      </div>
+
+      <!-- Upcoming -->
+      <div class="mb-16">
+        <div class="flex items-center gap-3 mb-8">
+          <span class="w-2 h-2 rounded-full bg-gleams-500 animate-pulse"></span>
+          <h3 class="text-white/80 font-bold text-lg">即将到来</h3>
+          <span class="tag">{upcoming.length} 场</span>
+        </div>
+
+        {upcoming.length > 0 ? (
+          <div class="space-y-4">
+            {upcoming.map(event => {
+              const fd = formatDate(event.date);
+              return (
+                <div class="glass-card-hover p-5 md:p-6">
+                  <div class="flex flex-col md:flex-row gap-5">
+                    <div class={`flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-xl flex flex-col items-center justify-center border
+                      ${fd.isToday ? 'bg-gleams-500/10 border-gleams-500/30' : 'bg-white/[0.03] border-white/[0.05]'}`}>
+                      <span class="text-2xl font-bold gradient-text">{fd.day}</span>
+                      <span class="text-xs text-white/40">
+                        {fd.month} {fd.weekday}
+                      </span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2 mb-1">
+                        <h3 class="text-white font-bold text-lg">{event.titleCN || event.title}</h3>
+                        {fd.isToday && <span class="tag">今天</span>}
+                      </div>
+                      <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-white/40 mb-3">
+                        <span>📍 {event.venueCN || event.venue}</span>
+                        <span>🕐 {event.time} 开演</span>
+                      </div>
+                      <div class="flex flex-wrap gap-2 mb-3">
+                        {event.performers.map((pid: string) => {
+                          const m = memberMap.get(pid);
+                          if (!m) return null;
+                          return (
+                            <a href={`/members/${pid}`} class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white/[0.03] text-white/50 text-xs hover:text-gleams-400 transition-colors">
+                              <span class="w-2 h-2 rounded-full" style={`background: ${m.color}`}></span>
+                              {m.name}
+                            </a>
+                          );
+                        })}
+                      </div>
+                      {event.description && (
+                        <p class="text-white/30 text-sm line-clamp-2">{event.description}</p>
+                      )}
+                    </div>
+                    <div class="flex items-center flex-shrink-0">
+                      {event.ticketUrl ? (
+                        <a href={event.ticketUrl} class="btn-primary text-sm" target="_blank" rel="noopener">购票</a>
+                      ) : (
+                        <span class="text-white/20 text-sm">票务未公开</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div class="text-center py-16 text-white/30 glass-card">
+            <span class="text-4xl mb-4 block">🎵</span>
+            <p>暂无近期公演</p>
+            <p class="text-sm mt-1">关注 SNS 获取最新信息</p>
+          </div>
+        )}
+      </div>
+
+      <!-- Past -->
+      {past.length > 0 && (
+        <div>
+          <div class="flex items-center gap-3 mb-8">
+            <span class="w-2 h-2 rounded-full bg-white/20"></span>
+            <h3 class="text-white/40 font-bold text-lg">已结束</h3>
+            <span class="text-white/20 text-xs">{past.length} 场</span>
+          </div>
+
+          <div class="space-y-3">
+            {past.map(event => {
+              const fd = formatDate(event.date);
+              return (
+                <div class="glass-card p-5 opacity-60 hover:opacity-100 transition-opacity">
+                  <div class="flex flex-col md:flex-row gap-4 md:items-center">
+                    <div class="flex-shrink-0 text-center min-w-[60px]">
+                      <span class="text-white/50 text-lg font-bold">{fd.day}</span>
+                      <p class="text-white/30 text-xs">{fd.month}</p>
+                    </div>
+                    <div class="flex-1">
+                      <h3 class="text-white/70 font-medium">{event.titleCN || event.title}</h3>
+                      <p class="text-white/30 text-sm">{event.venueCN || event.venue} · {event.time}</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  </section>
+</BaseLayout>

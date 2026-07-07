@@ -1,0 +1,14 @@
+{
+  "name": "Gleams",
+  "nameJP": "グリームス",
+  "description": "Gleams（グリームス）は、輝く星のように個性あふれるメンバーが集まった地下アイドルグループです。",
+  "descriptionCN": "Gleams 是一支充满个性的地下偶像团体，每位成员都像闪耀的星芒，共同编织属于舞台的光芒。",
+  "ogImage": "/og-image.png",
+  "social": {
+    "twitter": "https://twitter.com/gleams_official",
+    "instagram": "https://instagram.com/gleams_official",
+    "youtube": "https://youtube.com/@gleams_official",
+    "bilibili": "https://space.bilibili.com/gleams_official",
+    "weibo": "https://weibo.com/gleams_official"
+  }
+}

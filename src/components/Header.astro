@@ -1,0 +1,141 @@
+---
+import { Star } from 'lucide-react';
+import site from '../data/site.json';
+
+const navLinks = [
+  { href: '/', label: '首页', icon: '✦' },
+  { href: '/members', label: '成员', icon: '♡' },
+  { href: '/schedule', label: '日程', icon: '♫' },
+  { href: '/news', label: '新闻', icon: '✧' },
+  { href: '/gallery', label: '画廊', icon: '◈' },
+  { href: '/about', label: '关于', icon: '☆' },
+];
+---
+
+<header
+  class="fixed top-0 left-0 right-0 z-50 transition-all duration-500"
+  id="header"
+>
+  <nav
+    class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
+  >
+    <div
+      class="flex items-center justify-between h-16 md:h-20 glass-card rounded-2xl mt-3 px-4 md:px-8
+                  border-white/[0.04] transition-all duration-500"
+    >
+      <!-- Logo -->
+      <a
+        href="/"
+        class="flex items-center gap-2 group"
+      >
+        <span class="text-2xl">⭐</span>
+        <span
+          class="text-xl md:text-2xl font-display font-bold gradient-text tracking-wide"
+        >
+          {site.name}
+        </span>
+      </a>
+
+      <!-- Desktop Nav -->
+      <div class="hidden md:flex items-center gap-1">
+        {navLinks.map(link => (
+          <a
+            href={link.href}
+            class="relative px-4 py-2 text-sm text-white/60 hover:text-white
+                   rounded-xl transition-all duration-300 group/link
+                   hover:bg-white/[0.04]"
+          >
+            <span class="relative z-10 flex items-center gap-1.5">
+              <span class="text-xs opacity-60">{link.icon}</span>
+              {link.label}
+            </span>
+            <span
+              class="absolute inset-0 rounded-xl bg-gradient-to-r from-gleams-500/0 via-gleams-500/5 to-dream-400/0
+                     opacity-0 group-hover/link:opacity-100 transition-opacity duration-300"
+            ></span>
+          </a>
+        ))}
+      </div>
+
+      <!-- Social + CTA -->
+      <div class="hidden md:flex items-center gap-3">
+        <a
+          href="/about"
+          class="btn-primary text-xs !px-4 !py-2"
+        >
+          <Star class="w-3.5 h-3.5" />
+          应援入会
+        </a>
+      </div>
+
+      <!-- Mobile menu button -->
+      <button
+        id="mobile-menu-btn"
+        class="md:hidden p-2 text-white/80 hover:text-white transition-colors"
+        aria-label="メニュー"
+      >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path class="menu-open" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          <path class="menu-close hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 6l12 12M6 18L18 6" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Mobile Nav -->
+    <div
+      id="mobile-menu"
+      class="md:hidden overflow-hidden transition-all duration-500 max-h-0 opacity-0"
+    >
+      <div class="glass-card mt-2 p-4 space-y-1">
+        {navLinks.map(link => (
+          <a
+            href={link.href}
+            class="flex items-center gap-3 px-4 py-3 text-white/70 hover:text-white hover:bg-white/[0.04] rounded-xl transition-all duration-200"
+          >
+            <span class="text-sm">{link.icon}</span>
+            <span>{link.label}</span>
+          </a>
+        ))}
+        <a
+          href="/about"
+          class="flex items-center gap-3 px-4 py-3 text-gleams-400 hover:text-gleams-300 font-medium rounded-xl"
+        >
+          <Star class="w-4 h-4" />
+          <span>应援入会</span>
+        </a>
+      </div>
+    </div>
+  </nav>
+</header>
+
+<script>
+  const btn = document.getElementById('mobile-menu-btn');
+  const menu = document.getElementById('mobile-menu');
+  const openIcon = document.querySelector('.menu-open') as HTMLElement;
+  const closeIcon = document.querySelector('.menu-close') as HTMLElement;
+
+  btn?.addEventListener('click', () => {
+    const isOpen = menu?.classList.contains('max-h-96');
+    if (isOpen) {
+      menu?.classList.remove('max-h-96', 'opacity-100', 'mt-2');
+      menu?.classList.add('max-h-0', 'opacity-0');
+      openIcon?.classList.remove('hidden');
+      closeIcon?.classList.add('hidden');
+    } else {
+      menu?.classList.remove('max-h-0', 'opacity-0');
+      menu?.classList.add('max-h-96', 'opacity-100', 'mt-2');
+      openIcon?.classList.add('hidden');
+      closeIcon?.classList.remove('hidden');
+    }
+  });
+
+  // Scroll effect on header
+  const header = document.getElementById('header');
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 20) {
+      header?.classList.add('bg-[#0a0a0f]/80', 'backdrop-blur-xl', 'shadow-lg', 'shadow-black/30');
+    } else {
+      header?.classList.remove('bg-[#0a0a0f]/80', 'backdrop-blur-xl', 'shadow-lg', 'shadow-black/30');
+    }
+  });
+</script>
