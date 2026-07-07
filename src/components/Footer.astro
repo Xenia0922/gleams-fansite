@@ -2,58 +2,58 @@
 import site from '../data/site.json';
 ---
 
-<footer class="bg-gray-900 text-white">
+<footer class="bg-gray-100 dark:bg-gray-950 text-gray-700 dark:text-gray-300">
   <!-- 渐变过渡 -->
-  <div class="h-16 bg-gradient-to-b from-white to-gray-900"></div>
+  <div class="h-16 bg-gradient-to-b from-white dark:from-gray-950 to-gray-100 dark:to-gray-950"></div>
   
   <div class="max-w-7xl mx-auto px-4 pb-10">
     <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
       <div>
-        <h4 class="text-xs tracking-widest text-gray-500 uppercase mb-4">导航</h4>
+        <h4 class="text-xs tracking-widest text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase mb-4">导航</h4>
         <div class="space-y-2.5">
-          <a href="/" class="block text-sm text-gray-400 hover:text-white transition-colors">首页</a>
-          <a href="/members" class="block text-sm text-gray-400 hover:text-white transition-colors">成员</a>
-          <a href="/schedule" class="block text-sm text-gray-400 hover:text-white transition-colors">日程</a>
-          <a href="/gallery" class="block text-sm text-gray-400 hover:text-white transition-colors">画廊</a>
+          <a href="/" class="block text-sm text-gray-500 dark:text-gray-400 hover:text-pink-500 dark:hover:text-pink-400 transition-colors">首页</a>
+          <a href="/members" class="block text-sm text-gray-500 dark:text-gray-400 hover:text-pink-500 dark:hover:text-pink-400 transition-colors">成员</a>
+          <a href="/schedule" class="block text-sm text-gray-500 dark:text-gray-400 hover:text-pink-500 dark:hover:text-pink-400 transition-colors">日程</a>
+          <a href="/gallery" class="block text-sm text-gray-500 dark:text-gray-400 hover:text-pink-500 dark:hover:text-pink-400 transition-colors">画廊</a>
         </div>
       </div>
 
       <div>
-        <h4 class="text-xs tracking-widest text-gray-500 uppercase mb-4">应援</h4>
+        <h4 class="text-xs tracking-widest text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase mb-4">应援</h4>
         <div class="space-y-2.5">
-          <a href="/tokuten" class="block text-sm text-gray-400 hover:text-white transition-colors">特典规则</a>
-          <a href="/about" class="block text-sm text-gray-400 hover:text-white transition-colors">关于我们</a>
+          <a href="/tokuten" class="block text-sm text-gray-500 dark:text-gray-400 hover:text-pink-500 dark:hover:text-pink-400 transition-colors">特典规则</a>
+          <a href="/about" class="block text-sm text-gray-500 dark:text-gray-400 hover:text-pink-500 dark:hover:text-pink-400 transition-colors">关于我们</a>
         </div>
-        <div class="mt-4 pt-4 border-t border-gray-800">
-          <p class="text-xs text-gray-500 mb-1">QQ群：{site.qqGroup}</p>
-          <p class="text-xs text-gray-500">{site.qqGroupName}</p>
+        <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800">
+          <p class="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 mb-1">QQ群：{site.qqGroup}</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">{site.qqGroupName}</p>
         </div>
       </div>
 
       <div>
-        <h4 class="text-xs tracking-widest text-gray-500 uppercase mb-4">关注</h4>
+        <h4 class="text-xs tracking-widest text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase mb-4">关注</h4>
         <div class="space-y-2.5">
-          <a href={site.weibo} target="_blank" rel="noopener" class="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">
+          <a href={site.weibo} target="_blank" rel="noopener" class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-pink-500 dark:hover:text-pink-400 transition-colors">
             <img src="/icon-weibo.png" alt="" class="w-4 h-4" /> 微博
           </a>
-          <a href={site.xiaohongshu} target="_blank" rel="noopener" class="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">
+          <a href={site.xiaohongshu} target="_blank" rel="noopener" class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-pink-500 dark:hover:text-pink-400 transition-colors">
             <img src="/icon-xhs.png" alt="" class="w-4 h-4" /> 小红书
           </a>
-          <a href={site.douyin} target="_blank" rel="noopener" class="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">
+          <a href={site.douyin} target="_blank" rel="noopener" class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-pink-500 dark:hover:text-pink-400 transition-colors">
             <img src="/icon-douyin.png" alt="" class="w-4 h-4" /> 抖音
           </a>
         </div>
       </div>
 
       <div>
-        <h4 class="text-xs tracking-widest text-gray-500 uppercase mb-4">{site.name}</h4>
-        <p class="text-sm text-gray-500 leading-relaxed">{site.subtitle}</p>
+        <h4 class="text-xs tracking-widest text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase mb-4">{site.name}</h4>
+        <p class="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500 leading-relaxed">{site.subtitle}</p>
       </div>
     </div>
 
-    <div class="mt-10 pt-6 border-t border-gray-800 text-center text-xs text-gray-600 space-y-1">
+    <div class="mt-10 pt-6 border-t border-gray-200 dark:border-gray-800 text-center text-xs text-gray-500 dark:text-gray-400 space-y-1">
       <p>&copy; 2026 {site.name} Fansite</p>
-      <p>Made by <a href="https://github.com/Xenia0922" class="text-gray-500 hover:text-pink-400 transition-colors">Xenia</a></p>
+      <p>Made by <a href="https://github.com/Xenia0922" class="text-gray-500 dark:text-gray-400 dark:text-gray-500 hover:text-pink-400 transition-colors">Xenia</a></p>
     </div>
   </div>
 </footer>
