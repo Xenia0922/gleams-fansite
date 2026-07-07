@@ -4,6 +4,12 @@ import HeroTitle from '../components/HeroTitle.astro';
 import site from '../data/site.json';
 import members from '../data/members.json';
 import schedule from '../data/schedule.json';
+const newsFiles = Object.values(import.meta.glob('../content/news/*.md', { eager: true }));
+const newsSlugMap = new Map(newsFiles.map((n: any) => {
+  const slug = n.file.split('/').pop()?.replace('.md', '');
+  const d = n.frontmatter.date;
+  return [d, slug];
+}));
 
 const pastEvents = schedule.events.filter((e: any) => e.status === 'past').reverse().slice(0, 4);
 const upcomingEvents = schedule.events.filter((e: any) => e.status === 'upcoming');
@@ -80,9 +86,9 @@ const eventImages: Record<string, string> = {
           const d = new Date(evt.date);
           const img = eventImages[evt.id] || '/images/events/live-2026-01-31.webp';
           return (
-            <div class="card overflow-hidden">
+            <a href={} class="card overflow-hidden group">
               <div class="aspect-[16/9] overflow-hidden bg-gray-100">
-                <img src={img} alt={evt.title} class="w-full h-full object-cover" loading="lazy" />
+                <img src={img} alt={evt.title} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
               </div>
               <div class="p-3 sm:p-4">
                 <div class="flex items-center gap-2 mb-1">
@@ -92,7 +98,7 @@ const eventImages: Record<string, string> = {
                 <h3 class="text-sm font-bold text-gray-900 line-clamp-2">{evt.title}</h3>
                 <p class="text-[10px] sm:text-xs text-gray-400 mt-1">{evt.venue}</p>
               </div>
-            </div>
+            </a>
           );
         })}
       </div>
