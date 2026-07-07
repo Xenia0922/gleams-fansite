@@ -1,0 +1,14 @@
+name = "gleams-fansite"
+compatibility_date = "2025-07-07"
+pages_build_output_dir = "dist"
+
+# R2 对象存储 —— 粉丝上传照片
+[[r2_buckets]]
+binding = "PHOTOS"
+bucket_name = "gleams-photos"
+
+# D1 数据库 —— 留言板
+[[d1_databases]]
+binding = "DB"
+database_name = "gleams-db"
+database_id = ""
