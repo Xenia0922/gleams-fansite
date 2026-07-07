@@ -45,6 +45,25 @@ const pageTitle = title ? `${title} | ${site.name}` : `${site.name} - 偶像应�
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
+
+    <!-- 暗黑模式（inline避免被Tailwind purge） -->
+    <style is:global>
+      html.dark, html.dark body { background-color: #111118 !important; color: #d4d4dc !important; }
+      html.dark section, html.dark main, html.dark div[class*="bg-"] { background-color: #111118 !important; }
+      html.dark .bg-white, html.dark .bg-gray-50, html.dark .bg-pink-50, html.dark .from-pink-50 { background-color: #111118 !important; }
+      html.dark .bg-gray-100 { background-color: #1a1a28 !important; }
+      html.dark .card, html.dark [class*="card"] { background-color: #1a1a28 !important; border-color: #2a2a3a !important; }
+      html.dark h1, html.dark h2, html.dark h3, html.dark h4 { color: #eeeef4 !important; }
+      html.dark p, html.dark span, html.dark li, html.dark a:not(.btn-pink) { color: #c8c8d4 !important; }
+      html.dark .text-gray-900, html.dark .text-gray-800, html.dark .text-gray-700, html.dark .text-gray-600 { color: #eeeef4 !important; }
+      html.dark .text-gray-500, html.dark .text-gray-400 { color: #a0a0b0 !important; }
+      html.dark .text-pink-500 { color: #f262a3 !important; }
+      html.dark .border-gray-100, html.dark .border-gray-200 { border-color: #2a2a3a !important; }
+      html.dark .btn-outline { border-color: #3a3a4e !important; color: #c0c0cc !important; }
+      html.dark .btn-outline:hover { border-color: #f262a3 !important; color: #f262a3 !important; }
+      html.dark footer { background-color: #0a0a10 !important; }
+      html.dark .shadow-sm, html.dark .shadow-md { box-shadow: none !important; }
+    </style>
   </head>
   <body>
     <Header />
