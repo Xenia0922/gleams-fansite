@@ -4,23 +4,42 @@
 
 @layer base {
   body {
-    @apply bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 antialiased;
+    @apply bg-white text-gray-700 antialiased;
     font-family: 'Noto Sans SC', 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
-  .dark .text-gray-400, .dark .text-gray-500 { color: #a8a8b8 !important; }
-  .dark .text-gray-600 { color: #c0c0cc !important; }
-  .dark .text-gray-700 { color: #d4d4dc !important; }
-  .dark .text-gray-800 { color: #e0e0e8 !important; }
-  .dark .text-gray-900 { color: #eeeef4 !important; }
-  .dark .text-black { color: #eeeef4 !important; }
-  .dark .bg-white { background-color: #1a1a2e !important; }
-  .dark .bg-gray-100 { background-color: #1e1e32 !important; }
-  .dark .bg-gray-50 { background-color: #16162a !important; }
-  .dark .prose { color: #d4d4dc !important; }
-  .dark .prose h1, .dark .prose h2, .dark .prose h3 { color: #eeeef4 !important; }
-  .dark .prose strong { color: #e0e0e8 !important; }
+
+  /* 深色模式 —— 全局覆盖，不分组件 */
+  .dark body,
+  .dark { background-color: #111118 !important; color: #d4d4dc !important; }
+  .dark section { background-color: #111118 !important; }
+  .dark .bg-white { background-color: #111118 !important; }
+  .dark .bg-gray-50 { background-color: #111118 !important; }
+  .dark .bg-gray-100 { background-color: #1a1a28 !important; }
+  .dark .bg-pink-50 { background-color: #1a1a28 !important; }
+  .dark .card { background-color: #1a1a28 !important; border-color: #2a2a3a !important; }
+  .dark .border-gray-100 { border-color: #2a2a3a !important; }
+  .dark .border-gray-200 { border-color: #2a2a3a !important; }
+  .dark .shadow-sm { box-shadow: none !important; }
+  .dark .shadow-md { box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important; }
+  
+  /* 文字颜色 */
+  .dark, .dark p, .dark span, .dark div, .dark li, .dark a { color: #d4d4dc !important; }
+  .dark h1, .dark h2, .dark h3, .dark h4 { color: #eeeef4 !important; }
+  .dark .text-gray-900, .dark .text-gray-800, .dark .text-gray-700 { color: #eeeef4 !important; }
+  .dark .text-gray-600, .dark .text-gray-500, .dark .text-gray-400 { color: #b0b0bc !important; }
+  .dark .text-pink-500, .dark .text-pink-600 { color: #f262a3 !important; }
+  
+  /* 按钮 */
   .dark .btn-outline { border-color: #3a3a4e !important; color: #c0c0cc !important; }
-  .dark .btn-outline:hover { border-color: #e83e8c !important; color: #e83e8c !important; }
+  .dark .btn-outline:hover { border-color: #f262a3 !important; color: #f262a3 !important; }
+  .dark .btn-pink { background-color: #d61e6b !important; }
+  
+  /* 导航 */
+  .dark nav.bg-white, .dark header .bg-white, .dark .bg-white[class] { background-color: #111118 !important; }
+  
+  /* Footer */
+  .dark footer { background-color: #0a0a10 !important; }
+  .dark footer .bg-gray-900 { background-color: #0a0a10 !important; }
 
   ::selection {
     @apply bg-pink-200 text-pink-900;
