@@ -4,17 +4,17 @@ import membersData from '../../data/members.json';
 ---
 
 <BaseLayout title="MEMBER | 成员">
-  <section class="max-w-5xl mx-auto px-4 py-12 md:py-20">
+  <section class="max-w-7xl mx-auto px-4 py-12 md:py-20">
     <div class="text-center mb-10">
       <p class="section-title-en">Member</p>
       <h1 class="section-title">成员</h1>
     </div>
 
-    <div class="space-y-12 md:space-y-16 max-w-md mx-auto">
+    <div class="space-y-12 md:space-y-16 max-w-sm mx-auto">
       {membersData.members.map(m => (
         <a href={`/members/${m.id}`} class="group block">
           <!-- 照片 -->
-          <div class="aspect-[3/4] rounded-2xl overflow-hidden bg-gray-100 mb-4 shadow-md group-hover:shadow-xl transition-shadow">
+          <div class="aspect-[4/5] rounded-2xl overflow-hidden bg-gray-100 mb-4 shadow-md group-hover:shadow-xl transition-shadow">
             <img src={m.image} alt={m.name} class="lazy-blur w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
           </div>
           <!-- 信息——紧扣照片下方 -->

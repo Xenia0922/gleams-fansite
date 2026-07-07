@@ -11,14 +11,14 @@ const [month, day] = member.birthday.split('-');
 ---
 
 <BaseLayout title={`${member.name} | MEMBER`}>
-  <section class="max-w-4xl mx-auto px-4 py-12 md:py-16">
+  <section class="max-w-7xl mx-auto px-4 py-12 md:py-16">
     <a href="/members" class="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-pink-500 mb-8">← 成员列表</a>
 
     <!-- 顶部：照片 + 基本信息 -->
     <div class="flex flex-col md:flex-row gap-8 mb-12">
       <!-- 照片 -->
       <div class="md:w-80 flex-shrink-0">
-        <div class="aspect-[3/4] rounded-2xl overflow-hidden bg-gray-100 mx-auto max-w-xs">
+        <div class="aspect-[4/5] rounded-2xl overflow-hidden bg-gray-100 mx-auto max-w-xs">
           <img src={member.image} alt={member.name} class="w-full h-full object-cover" />
         </div>
       </div>

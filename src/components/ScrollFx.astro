@@ -1,25 +1,37 @@
-<!-- 滚动入场动画 + 返回顶部按钮 -->
+<!-- 滚动入场动画 + 返回顶部 + 页面跳转回顶 -->
 <script>
-  // Intersection Observer - 滚动淡入
+  // P0.1: 页面跳转后自动回到顶部
+  document.addEventListener('astro:page-load', () => {
+    window.scrollTo(0, 0);
+  });
+
+  // 滚动入场动画
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
         entry.target.classList.add('visible');
       }
     });
-  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+  }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
 
   document.querySelectorAll('[data-reveal]').forEach(el => observer.observe(el));
+  // ViewTransitions 后重新绑定
+  document.addEventListener('astro:page-load', () => {
+    document.querySelectorAll('[data-reveal]').forEach(el => observer.observe(el));
+  });
 
   // 返回顶部按钮
   const topBtn = document.getElementById('back-to-top');
   if (topBtn) {
-    window.addEventListener('scroll', () => {
-      topBtn.classList.toggle('opacity-100', window.scrollY > 400);
-      topBtn.classList.toggle('opacity-0', window.scrollY <= 400);
-      topBtn.classList.toggle('pointer-events-none', window.scrollY <= 400);
-    });
+    const toggle = () => {
+      const show = window.scrollY > 400;
+      topBtn.classList.toggle('opacity-100', show);
+      topBtn.classList.toggle('opacity-0', !show);
+      topBtn.classList.toggle('pointer-events-none', !show);
+    };
+    window.addEventListener('scroll', toggle, { passive: true });
     topBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    toggle();
   }
 </script>
 
@@ -33,8 +45,6 @@
     opacity: 1;
     transform: translateY(0);
   }
-  [data-reveal-delay] { transition-delay: 0.15s; }
-  [data-reveal-delay-2] { transition-delay: 0.3s; }
 </style>
 
 <button

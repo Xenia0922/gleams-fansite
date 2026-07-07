@@ -17,7 +17,7 @@ const { member } = Astro.props as { member: Member };
 <a href={`/members/${member.id}`} class="block group">
   <div class="glass-card overflow-hidden transition-all duration-500 group-hover:shadow-xl group-hover:shadow-gleams-500/10 group-hover:-translate-y-2">
     <!-- Photo -->
-    <div class="relative aspect-[3/4] overflow-hidden">
+    <div class="relative aspect-[4/5] overflow-hidden">
       <img
         src={member.image}
         alt={member.name}

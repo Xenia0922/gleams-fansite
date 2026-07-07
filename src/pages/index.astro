@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import HeroTitle from '../components/HeroTitle';
 import site from '../data/site.json';
 import members from '../data/members.json';
 import schedule from '../data/schedule.json';
@@ -21,14 +22,13 @@ const eventImages: Record<string, string> = {
 ---
 
 <BaseLayout>
-  <!-- Hero — 三端分离字号 -->
-  <section class="bg-gradient-to-br from-pink-50 via-white to-purple-50">
-    <div class="max-w-4xl mx-auto px-4 py-12 sm:py-16 md:py-24 text-center">
-      <p class="text-[10px] sm:text-xs tracking-[0.3em] text-gray-400 uppercase mb-3 sm:mb-4">{site.subtitle}</p>
-      <h1 class="text-3xl sm:text-5xl md:text-7xl font-extrabold tracking-tight text-gray-900 mb-3 sm:mb-4">
-        {site.name}
-      </h1>
-      <p class="text-xs sm:text-sm text-gray-500 max-w-sm sm:max-w-md mx-auto mb-6 sm:mb-8 px-2">{site.weiboDesc}</p>
+  <!-- Hero — 背景图 + 渐变叠加 -->
+  <section class="relative bg-gradient-to-br from-pink-50 via-white to-purple-50 overflow-hidden">
+    <!-- 背景图（使用最新演出图） -->
+    <div class="absolute inset-0 opacity-[0.06] bg-center bg-cover" style="background-image: url('/images/events/live-2026-07-04.jpg')"></div>
+    <div class="relative max-w-7xl mx-auto px-4 py-20 sm:py-24 md:py-32 text-center">
+      <HeroTitle name={site.name} subtitle={site.subtitle} client:load />
+      <p class="text-xs sm:text-sm text-gray-500 max-w-sm sm:max-w-sm mx-auto mb-6 sm:mb-8 px-2">{site.weiboDesc}</p>
       <div class="flex flex-wrap justify-center gap-2 sm:gap-3">
         <a href="/members" class="btn-pink text-xs sm:text-sm !px-4 sm:!px-6 !py-2 sm:!py-2.5">成员介绍</a>
         <a href="/schedule" class="btn-outline text-xs sm:text-sm !px-4 sm:!px-6 !py-2 sm:!py-2.5">公演日程</a>
@@ -38,15 +38,15 @@ const eventImages: Record<string, string> = {
   </section>
 
   <!-- Members — 1col手机 / 3col桌面 -->
-  <section class="max-w-4xl mx-auto px-4 py-12 sm:py-16 md:py-20" data-reveal>
+  <section class="max-w-7xl mx-auto px-4 py-12 sm:py-16 md:py-20" data-reveal>
     <div class="text-center mb-8 sm:mb-12">
       <p class="section-title-en">Member</p>
       <h2 class="section-title">成员</h2>
     </div>
-    <div class="space-y-12 md:space-y-16 max-w-md mx-auto">
+    <div class="space-y-12 md:space-y-16 max-w-sm mx-auto">
       {members.members.map(m => (
         <a href={`/members/${m.id}`} class="group block">
-          <div class="aspect-[3/4] overflow-hidden bg-gray-100 rounded-2xl mb-4 shadow-md group-hover:shadow-xl transition-shadow">
+          <div class="aspect-[4/5] overflow-hidden bg-gray-100 rounded-2xl mb-4 shadow-md group-hover:shadow-xl transition-shadow">
             <img src={m.image} alt={m.name} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
           </div>
           <div class="text-center px-1">
@@ -70,7 +70,7 @@ const eventImages: Record<string, string> = {
 
   <!-- Past Events — 1col手机 / 2col桌面 -->
   <section class="bg-gray-50 py-12 sm:py-16 md:py-20" data-reveal>
-    <div class="max-w-4xl mx-auto px-4">
+    <div class="max-w-7xl mx-auto px-4">
       <div class="text-center mb-8 sm:mb-12">
         <p class="section-title-en">Past Events</p>
         <h2 class="section-title">过往行程</h2>
@@ -103,7 +103,7 @@ const eventImages: Record<string, string> = {
   </section>
 
   <!-- Social -->
-  <section class="max-w-2xl mx-auto px-4 py-12 sm:py-16 text-center">
+  <section class="max-w-4xl mx-auto px-4 py-12 sm:py-16 text-center">
     <p class="section-title-en">Follow Us</p>
     <h2 class="section-title mb-6 sm:mb-8">关注 Gleams</h2>
     <div class="flex flex-wrap justify-center gap-2 sm:gap-4">
