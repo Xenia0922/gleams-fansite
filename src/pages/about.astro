@@ -12,7 +12,7 @@ import site from '../data/site.json';
 
     <!-- 世界观 -->
     <div class="card p-8 mb-8">
-      <h2 class="text-lg font-bold text-gray-900 mb-4">✦ 世界观</h2>
+      <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">✦ 世界观</h2>
       <blockquote class="text-gray-600 leading-relaxed italic border-l-4 border-pink-300 pl-4">
         「在星界尽头，存在着一座神秘王国，由水晶支撑着整个王国的运转。有天能蚕食人间星光的阴霾突然降临，王国赖以生存的水晶随之日渐暗淡无光。正是在此存亡之际，来自不同城堡的公主，在命运的指引下相聚于此，公主们开始踏上寻找名为『Gleams』的能量宝石来守护他们的世界。」
       </blockquote>
@@ -20,7 +20,7 @@ import site from '../data/site.json';
 
     <!-- 团体介绍 -->
     <div class="card p-8 mb-8">
-      <h2 class="text-lg font-bold text-gray-900 mb-4">✦ {site.name}</h2>
+      <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">✦ {site.name}</h2>
       <p class="text-gray-600 leading-relaxed mb-4">
         {site.name} 是一支来自<b>广西南宁</b>的地下偶像团体。三位成员以「公主」的身份活跃于南宁及两广地区的 Livehouse 和动漫展会。
       </p>
@@ -28,24 +28,24 @@ import site from '../data/site.json';
 
     <!-- 社群 -->
     <div class="card p-8 mb-8">
-      <h2 class="text-lg font-bold text-gray-900 mb-4">✦ 加入骑士团</h2>
+      <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">✦ 加入骑士团</h2>
       <div class="grid grid-cols-2 gap-4 text-center">
-        <div class="bg-gray-50 rounded-2xl p-4">
+        <div class="bg-gray-50 dark:bg-gray-900 rounded-2xl p-4">
           <p class="text-xs text-gray-400 mb-1">QQ群</p>
-          <p class="text-lg font-bold text-gray-900">{site.qqGroup}</p>
-          <p class="text-xs text-gray-500">Gleams应援会</p>
+          <p class="text-lg font-bold text-gray-900 dark:text-gray-100">{site.qqGroup}</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">Gleams应援会</p>
         </div>
-        <div class="bg-gray-50 rounded-2xl p-4">
+        <div class="bg-gray-50 dark:bg-gray-900 rounded-2xl p-4">
           <p class="text-xs text-gray-400 mb-1">微店</p>
-          <p class="text-lg font-bold text-gray-900">{site.weidian}</p>
-          <p class="text-xs text-gray-500">官方周边</p>
+          <p class="text-lg font-bold text-gray-900 dark:text-gray-100">{site.weidian}</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">官方周边</p>
         </div>
       </div>
     </div>
 
     <!-- SNS -->
     <div class="card p-8 text-center">
-      <h2 class="text-lg font-bold text-gray-900 mb-6">✦ 关注 Gleams</h2>
+      <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-6">✦ 关注 Gleams</h2>
       <div class="flex flex-wrap justify-center gap-3">
         <a href={site.weibo} target="_blank" rel="noopener" class="btn-outline !text-sm !px-5 !py-2.5">微博 {site.weiboName}</a>
         <a href={site.xiaohongshu} target="_blank" rel="noopener" class="btn-outline !text-sm !px-5 !py-2.5">小红书</a>

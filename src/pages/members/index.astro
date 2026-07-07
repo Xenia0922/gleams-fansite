@@ -20,18 +20,18 @@ const graduated = membersData.members.filter(m => m.status === 'graduated');
             <img src={m.image} alt={m.name} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
           </div>
           <span class="text-xl">{m.emoji}</span>
-          <h3 class="text-base font-extrabold text-gray-900">{m.name}</h3>
+          <h3 class="text-base font-extrabold text-gray-900 dark:text-gray-100">{m.name}</h3>
           <p class="text-xs text-gray-400">{m.nameJP}</p>
           <div class="flex items-center justify-center gap-1.5 mt-1">
             <span class="inline-block w-2.5 h-2.5 rounded-full" style={`background:${m.color}`}></span>
-            <span class="text-xs text-gray-500">{m.birthday} · {m.constellation}</span>
+            <span class="text-xs text-gray-500 dark:text-gray-400">{m.birthday} · {m.constellation}</span>
           </div>
         </a>
       ))}
     </div>
 
     {graduated.length > 0 && (
-      <div class="border-t border-gray-100 pt-10">
+      <div class="border-t border-gray-100 dark:border-gray-800 pt-10">
         <h2 class="text-xs font-bold text-gray-400 tracking-widest text-center mb-6">毕业成员</h2>
         <div class="grid grid-cols-3 gap-4 sm:gap-6 opacity-60">
           {graduated.map(m => (
@@ -40,7 +40,7 @@ const graduated = membersData.members.filter(m => m.status === 'graduated');
                 <img src={m.image} alt={m.name} class="w-full h-full object-cover" loading="lazy" />
               </div>
               <span class="text-xl">{m.emoji}</span>
-              <h3 class="text-base font-extrabold text-gray-500">{m.name}</h3>
+              <h3 class="text-base font-extrabold text-gray-500 dark:text-gray-400">{m.name}</h3>
               <p class="text-xs text-gray-400">{m.intro}</p>
             </div>
           ))}

@@ -34,7 +34,7 @@ const eventMap = new Map(scheduleData.events.map((e: any) => [e.date, e]));
                 <span class="text-xs font-bold text-pink-500">{d.getMonth()+1}/{d.getDate()}</span>
                 <span class="text-xs text-gray-400">{d.getFullYear()}</span>
               </div>
-              <h3 class="text-sm font-bold text-gray-900 line-clamp-2 mb-1">{fm.title}</h3>
+              <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 line-clamp-2 mb-1">{fm.title}</h3>
               {evt && <p class="text-xs text-gray-400">{evt.venue}</p>}
             </div>
           </a>
