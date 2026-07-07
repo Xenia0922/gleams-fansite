@@ -14,7 +14,7 @@ const navLinks = [
 ---
 
 <header class="fixed top-0 left-0 right-0 z-50">
-  <div class="bg-white dark:bg-gray-950 border-b border-gray-100 dark:border-gray-800">
+  <div class="frost">
     <div class="max-w-7xl mx-auto px-3 sm:px-4">
       <div class="flex items-center justify-between h-12 sm:h-14 md:h-16 relative">
         <a href="/" class="flex items-center gap-2 sm:gap-2.5 flex-shrink-0">
@@ -81,7 +81,7 @@ const navLinks = [
   </div>
 
   <!-- Mobile Menu -->
-  <div id="mobile-menu" class="md:hidden bg-white border-b border-pink-100 shadow-lg overflow-hidden transition-all duration-300 max-h-0">
+  <div id="mobile-menu" class="md:hidden frost border-b border-pink-100/40 dark:border-white/[0.04] shadow-lg overflow-hidden transition-all duration-300 max-h-0 rounded-b-3xl">
     <div class="px-4 py-2 space-y-0">
       {navLinks.map(link => {
         const isActive = currentPath === link.href || (link.href !== '/' && currentPath.startsWith(link.href));

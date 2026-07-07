@@ -30,8 +30,8 @@ const eventImages: Record<string, string> = {
 ---
 
 <BaseLayout>
-  <section class="relative bg-gradient-to-br from-pink-50 dark:from-gray-950 via-white dark:via-gray-900 to-purple-50 dark:to-gray-950 overflow-hidden">
-    <img src="/hero-bg.webp" alt="" class="absolute inset-0 w-full h-full object-cover opacity-[0.35]" />
+  <section class="relative overflow-hidden">
+    <img src="/hero-bg.webp" alt="" class="absolute inset-0 w-full h-full object-cover opacity-[0.25] dark:opacity-[0.12]" />
     <div class="relative max-w-7xl mx-auto px-4 py-16 sm:py-20 md:py-28 text-center">
       <img src="/logo.png" alt={site.name} class="w-24 h-24 sm:w-32 sm:h-32 mx-auto rounded-full shadow-lg mb-6 relative z-10" />
       <HeroTitle name={site.name} subtitle={site.subtitle} />
@@ -52,7 +52,7 @@ const eventImages: Record<string, string> = {
     <div class="grid grid-cols-3 gap-4 sm:gap-6">
       {activeMembers.map(m => (
         <a href={`/members/${m.id}`} class="group block text-center">
-          <div class="aspect-[4/5] rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-900 mb-3 shadow-sm group-hover:shadow-md transition-shadow">
+          <div class="aspect-[4/5] rounded-3xl overflow-hidden mb-3 glass shadow-md group-hover:shadow-lg transition-shadow">
             <img src={m.image} alt={m.name} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
           </div>
           <span class="text-xl">{m.emoji}</span>
@@ -67,7 +67,7 @@ const eventImages: Record<string, string> = {
     </div>
   </section>
 
-  <section class="bg-gray-50 py-16 md:py-20 border-t border-gray-100 dark:border-gray-800" data-reveal>
+  <section class="py-16 md:py-20 border-t glass-divider" data-reveal>
     <div class="max-w-7xl mx-auto px-4">
       <div class="text-center mb-10">
         <p class="section-title-en">✦</p>

@@ -85,7 +85,7 @@ export default function GalleryGrid() {
         {filtered.map((item, i) => (
           <div
             key={`${item.member}-${i}`}
-            className="aspect-[4/5] rounded-2xl overflow-hidden bg-gray-100 cursor-pointer group"
+            className="aspect-[4/5] rounded-3xl overflow-hidden glass cursor-pointer group"
             onClick={() => setLightboxIdx(i)}
           >
             <img
