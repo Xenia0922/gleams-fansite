@@ -121,14 +121,6 @@ const navLinks = [
 </script>
 
 <script>
-  // 暗黑模式CSS（JS注入避免被Astro/Tailwind删除）
-  const darkCSS = 'html.dark,html.dark body{background:#111118!important;color:#d4d4dc!important}html.dark section,html.dark main{background:#111118!important}html.dark .bg-white,html.dark .bg-gray-50,html.dark .bg-pink-50{background:#111118!important}html.dark .bg-gray-100{background:#1a1a28!important}html.dark .card{background:#1a1a28!important;border-color:#2a2a3a!important}html.dark h1,html.dark h2,html.dark h3,html.dark h4{color:#eeeef4!important}html.dark p,html.dark span,html.dark li,html.dark a:not(.btn-pink){color:#c8c8d4!important}html.dark .text-gray-500,html.dark .text-gray-400{color:#a0a0b0!important}html.dark .text-gray-900,html.dark .text-gray-800,html.dark .text-gray-700,html.dark .text-gray-600{color:#eeeef4!important}html.dark footer{background:#0a0a10!important}';
-  const ds = document.createElement('style');
-  ds.textContent = darkCSS;
-  document.head.appendChild(ds);
-</script>
-
-<script>
   function setupDarkToggle(btnId) {
     const btn = document.getElementById(btnId);
     if (!btn) return;

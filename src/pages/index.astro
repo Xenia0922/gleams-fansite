@@ -11,7 +11,9 @@ const pastEvents = schedule.events.filter((e: any) => e.status === 'past').rever
 const newsFiles = Object.values(import.meta.glob('../content/news/*.md', { eager: true }));
 const newsSlugMap = new Map(newsFiles.map((n: any) => {
   const slug = n.file.split('/').pop()?.replace('.md', '');
-  return [n.frontmatter.date, slug];
+  const d = n.frontmatter.date instanceof Date ? n.frontmatter.date : new Date(n.frontmatter.date);
+  const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  return [dateStr, slug];
 }));
 
 const eventImages: Record<string, string> = {
@@ -28,7 +30,7 @@ const eventImages: Record<string, string> = {
 ---
 
 <BaseLayout>
-  <section class="relative bg-gradient-to-br from-pink-50 dark:from-gray-900 via-white dark:via-gray-900 to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 overflow-hidden">
+  <section class="relative bg-gradient-to-br from-pink-50 dark:from-gray-950 via-white dark:via-gray-900 to-purple-50 dark:to-gray-950 overflow-hidden">
     <img src="/hero-bg.webp" alt="" class="absolute inset-0 w-full h-full object-cover opacity-[0.35]" />
     <div class="relative max-w-7xl mx-auto px-4 py-16 sm:py-20 md:py-28 text-center">
       <img src="/logo.png" alt={site.name} class="w-24 h-24 sm:w-32 sm:h-32 mx-auto rounded-full shadow-lg mb-6 relative z-10" />

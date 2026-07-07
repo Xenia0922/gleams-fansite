@@ -14,8 +14,9 @@ const { post } = Astro.props;
 const { frontmatter } = post;
 const { Content } = post;
 
-const d = new Date(frontmatter.date);
-const evt = scheduleData.events.find((e: any) => e.date === frontmatter.date);
+const d = frontmatter.date instanceof Date ? frontmatter.date : new Date(frontmatter.date);
+const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const evt = scheduleData.events.find((e: any) => e.date === dateStr);
 ---
 
 <BaseLayout title={frontmatter.title}>

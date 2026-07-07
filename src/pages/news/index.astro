@@ -19,8 +19,9 @@ const eventMap = new Map(scheduleData.events.map((e: any) => [e.date, e]));
       {sortedNews.map((post: any) => {
         const fm = post.frontmatter;
         const slug = post.file.split('/').pop()?.replace('.md', '');
-        const d = new Date(fm.date);
-        const evt = eventMap.get(fm.date);
+        const d = fm.date instanceof Date ? fm.date : new Date(fm.date);
+        const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        const evt = eventMap.get(dateStr);
         return (
           <a href={`/news/${slug}`} class="card group overflow-hidden">
             <div class="aspect-[16/9] overflow-hidden bg-gray-100 dark:bg-gray-800">

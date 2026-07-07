@@ -40,12 +40,14 @@ const [month, day] = (member.birthday || "--").split('-');
           <p class="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">{member.intro}</p>
         </div>
 
-        <div>
-          <a href={member.weibo} target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-sm text-pink-500 hover:text-pink-600 font-medium">
-            {member.weiboName}
-          </a>
-          <p class="text-xs text-gray-400 mt-1">{member.weiboDesc}</p>
-        </div>
+        {member.weibo && (
+          <div>
+            <a href={member.weibo} target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-sm text-pink-500 hover:text-pink-600 font-medium">
+              {member.weiboName}
+            </a>
+            <p class="text-xs text-gray-400 mt-1">{member.weiboDesc}</p>
+          </div>
+        )}
 
         {member.gallery.length > 0 && (
           <div>
