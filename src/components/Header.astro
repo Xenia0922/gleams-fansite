@@ -122,21 +122,26 @@ const navLinks = [
 </script>
 
 <script>
-  function setupDarkToggle(btnId) {
-    const btn = document.getElementById(btnId);
-    if (!btn) return;
-    const sun = btn.querySelector('.sun');
-    const moon = btn.querySelector('.moon');
+  (() => {
+    const btns = ['dark-toggle', 'dark-toggle-m'];
     const isDark = localStorage.getItem('dark') === '1';
-    if (isDark) { document.documentElement.classList.add('dark'); sun?.classList.add('hidden'); moon?.classList.remove('hidden'); }
-    btn.addEventListener('click', () => {
-      document.documentElement.classList.toggle('dark');
+
+    if (isDark) document.documentElement.classList.add('dark');
+
+    function sync() {
       const d = document.documentElement.classList.contains('dark');
       document.querySelectorAll('.sun').forEach(s => s.classList.toggle('hidden', d));
       document.querySelectorAll('.moon').forEach(s => s.classList.toggle('hidden', !d));
-      localStorage.setItem('dark', d ? '1' : '0');
+    }
+    sync();
+
+    btns.forEach(id => {
+      document.getElementById(id)?.addEventListener('click', () => {
+        document.documentElement.classList.toggle('dark');
+        const d = document.documentElement.classList.contains('dark');
+        localStorage.setItem('dark', d ? '1' : '0');
+        sync();
+      });
     });
-  }
-  setupDarkToggle('dark-toggle');
-  setupDarkToggle('dark-toggle-m');
+  })();
 </script>
