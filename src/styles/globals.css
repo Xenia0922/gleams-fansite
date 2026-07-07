@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-white dark:bg-gray-950 text-gray-800 dark:text-gray-200 font-sans antialiased;
+    @apply bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-sans antialiased;
   }
   ::selection {
     @apply bg-pink-200 text-pink-900;

@@ -23,7 +23,7 @@ const eventMap = new Map(scheduleData.events.map((e: any) => [e.date, e]));
         const evt = eventMap.get(fm.date);
         return (
           <a href={`/news/${slug}`} class="card group overflow-hidden">
-            <div class="aspect-[16/9] overflow-hidden bg-gray-100">
+            <div class="aspect-[16/9] overflow-hidden bg-gray-100 dark:bg-gray-800">
               {fm.image
                 ? <img src={fm.image} alt={fm.title} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                 : <div class="w-full h-full flex items-center justify-center text-gray-300 text-3xl">⭐</div>

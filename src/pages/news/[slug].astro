@@ -20,15 +20,15 @@ const evt = scheduleData.events.find((e: any) => e.date === frontmatter.date);
 
 <BaseLayout title={frontmatter.title}>
   <article class="max-w-3xl mx-auto px-4 py-12 md:py-16">
-    <a href="/news" class="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-gray-600 mb-6">← 返回</a>
+    <a href="/news" class="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-gray-600 dark:text-gray-400 mb-6">← 返回</a>
 
     <!-- 活动信息卡片 -->
     {evt && (
       <div class="flex flex-wrap gap-2 mb-6 text-sm">
-        <span class="bg-pink-50 text-pink-600 px-3 py-1.5 rounded-full font-medium">
+        <span class="bg-pink-50 dark:bg-gray-800 text-pink-600 px-3 py-1.5 rounded-full font-medium">
           {d.getMonth()+1}月{d.getDate()}日
         </span>
-        {evt.time && <span class="bg-gray-100 text-gray-600 px-3 py-1.5 rounded-full">{evt.time}</span>}
+        {evt.time && <span class="bg-gray-100 dark:bg-gray-800 text-gray-600 px-3 py-1.5 rounded-full">{evt.time}</span>}
         <span class="bg-gray-100 text-gray-600 px-3 py-1.5 rounded-full">{evt.venue}</span>
       </div>
     )}

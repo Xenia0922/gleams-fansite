@@ -58,8 +58,8 @@ allEvents.forEach((e: any) => {
               const img = eventImages[evt.id] || '/images/events/live-2026-07-04.webp';
               const slug = newsSlugs[evt.date] || evt.date;
               return (
-                <a href={'/news/' + slug} class={'flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl transition-opacity group ' + (isPast ? 'opacity-65 hover:opacity-100 bg-gray-50 dark:bg-gray-900' : 'bg-pink-50')}>
-                  <div class="flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden bg-gray-100">
+                <a href={'/news/' + slug} class={'flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl transition-opacity group ' + (isPast ? 'opacity-65 hover:opacity-100 bg-gray-50 dark:bg-gray-900' : 'bg-pink-50 dark:bg-gray-800')}>
+                  <div class="flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800">
                     <img src={img} alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform" loading="lazy" />
                   </div>
                   <div class="flex-shrink-0 text-center min-w-[44px] sm:min-w-[50px]">
@@ -70,14 +70,14 @@ allEvents.forEach((e: any) => {
                   </div>
                   <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-2 flex-wrap">
-                      <h3 class={'text-sm font-bold ' + (isPast ? 'text-gray-600' : 'text-gray-900 dark:text-gray-100')}>{evt.title}</h3>
+                      <h3 class={'text-sm font-bold ' + (isPast ? 'text-gray-600 dark:text-gray-400' : 'text-gray-900 dark:text-gray-100')}>{evt.title}</h3>
                       {isPast && <span class="text-[10px] bg-gray-200 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full flex-shrink-0">已结束</span>}
                     </div>
                     <p class="text-xs text-gray-400 mt-1">{evt.venue}</p>
                     <div class="flex flex-wrap gap-1 mt-1.5">
                       {evt.performers.map((pid: string) => {
                         const m = memberMap.get(pid);
-                        return m ? <span class="text-[10px] bg-white/80 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full">{m.emoji} {m.name}</span> : null;
+                        return m ? <span class="text-[10px] bg-white dark:bg-gray-900/80 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full">{m.emoji} {m.name}</span> : null;
                       })}
                     </div>
                   </div>

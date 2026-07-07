@@ -53,7 +53,7 @@ const navLinks = [
           <a href={site.douyin} target="_blank" rel="noopener" class="opacity-40 hover:opacity-100 transition-opacity" title="抖音">
             <img src="/icon-douyin.png" alt="抖音" class="w-4 h-4" />
           </a>
-          <span class="text-gray-300 dark:text-gray-700">|</span>
+          <span class="text-gray-300 dark:text-gray-700 dark:text-gray-300">|</span>
           <button id="dark-toggle" class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" aria-label="暗黑模式" title="暗黑模式">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path class="sun" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
@@ -86,7 +86,7 @@ const navLinks = [
       {navLinks.map(link => {
         const isActive = currentPath === link.href || (link.href !== '/' && currentPath.startsWith(link.href));
         return (
-          <a href={link.href} class={`block py-3 px-3 text-sm tracking-widest border-l-2 transition-colors ${isActive ? 'text-pink-500 border-pink-500 font-bold dark:text-pink-400 bg-pink-50' : 'text-gray-600 border-transparent hover:text-pink-400 hover:bg-pink-50'}`}>
+          <a href={link.href} class={`block py-3 px-3 text-sm tracking-widest border-l-2 transition-colors ${isActive ? 'text-pink-500 border-pink-500 font-bold dark:text-pink-400 bg-pink-50 dark:bg-gray-800' : 'text-gray-600 border-transparent hover:text-pink-400 hover:bg-pink-50'}`}>
             {link.label}
           </a>
         );
