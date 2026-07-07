@@ -4,7 +4,7 @@ import site from '../data/site.json';
 import members from '../data/members.json';
 import schedule from '../data/schedule.json';
 
-const pastEvents = schedule.events.filter((e: any) => e.status === 'past').reverse().slice(-4);
+const pastEvents = schedule.events.filter((e: any) => e.status === 'past').reverse().slice(0, 4);
 const upcomingEvents = schedule.events.filter((e: any) => e.status === 'upcoming');
 
 // 每场行程对应其官博预告帖的第一张图
