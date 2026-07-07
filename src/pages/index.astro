@@ -22,11 +22,9 @@ const eventImages: Record<string, string> = {
 ---
 
 <BaseLayout>
-  <!-- Hero — 背景图 + 渐变叠加 -->
-  <section class="relative bg-gradient-to-br from-pink-50 via-white to-purple-50 overflow-hidden">
-    <!-- 背景图（使用最新演出图） -->
-    <div class="absolute inset-0 opacity-[0.06] bg-center bg-cover" style="background-image: url('/images/events/live-2026-07-04.webp')"></div>
-    <div class="relative max-w-7xl mx-auto px-4 py-20 sm:py-24 md:py-32 text-center">
+  <!-- Hero -->
+  <section class="bg-gradient-to-br from-pink-50 via-white to-purple-50">
+    <div class="max-w-7xl mx-auto px-4 py-20 sm:py-24 md:py-32 text-center">
       <HeroTitle name={site.name} subtitle={site.subtitle} client:load />
       <p class="text-xs sm:text-sm text-gray-500 max-w-sm sm:max-w-sm mx-auto mb-6 sm:mb-8 px-2">{site.weiboDesc}</p>
       <div class="flex flex-wrap justify-center gap-2 sm:gap-3">
