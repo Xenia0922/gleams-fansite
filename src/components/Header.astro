@@ -30,10 +30,10 @@ const navLinks = [
             return (
               <a
                 href={link.href}
-                class={`px-3 py-5 text-xs tracking-widest transition-colors border-b-2 ${
+                class={`relative px-3 py-5 text-xs tracking-widest transition-all duration-200 border-b-2 ${
                   isActive
                     ? 'text-pink-500 border-pink-500 font-bold'
-                    : 'text-gray-500 border-transparent hover:text-pink-400 hover:border-pink-200'
+                    : 'text-gray-500 border-transparent hover:text-pink-500 hover:border-pink-300'
                 }`}
               >
                 {link.label}

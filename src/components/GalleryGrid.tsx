@@ -1,38 +1,52 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 
-// 全部来自成员个人微博，每人8张
-const galleryImages = [
-  '/images/members/hakusai/hakusai_01.jpg',
-  '/images/members/hakusai/hakusai_02.jpg',
-  '/images/members/hakusai/hakusai_03.jpg',
-  '/images/members/hakusai/hakusai_04.jpg',
-  '/images/members/hakusai/hakusai_05.jpg',
-  '/images/members/hakusai/hakusai_06.jpg',
-  '/images/members/hakusai/hakusai_07.jpg',
-  '/images/members/hakusai/hakusai_08.jpg',
-  '/images/members/kumo/kumo_01.jpg',
-  '/images/members/kumo/kumo_02.jpg',
-  '/images/members/kumo/kumo_03.jpg',
-  '/images/members/kumo/kumo_04.jpg',
-  '/images/members/kumo/kumo_05.jpg',
-  '/images/members/kumo/kumo_06.jpg',
-  '/images/members/kumo/kumo_07.jpg',
-  '/images/members/kumo/kumo_08.jpg',
-  '/images/members/yuzi/yuzi_02.jpg',
-  '/images/members/yuzi/yuzi_03.jpg',
-  '/images/members/yuzi/yuzi_04.jpg',
-  '/images/members/yuzi/yuzi_05.jpg',
-  '/images/members/yuzi/yuzi_06.jpg',
-  '/images/members/yuzi/yuzi_07.jpg',
-  '/images/members/yuzi/yuzi_08.jpg',
+const allImages = [
+  { src: '/images/members/hakusai/hakusai_01.jpg', member: 'hakusai' },
+  { src: '/images/members/hakusai/hakusai_02.jpg', member: 'hakusai' },
+  { src: '/images/members/hakusai/hakusai_03.jpg', member: 'hakusai' },
+  { src: '/images/members/hakusai/hakusai_04.jpg', member: 'hakusai' },
+  { src: '/images/members/hakusai/hakusai_05.jpg', member: 'hakusai' },
+  { src: '/images/members/hakusai/hakusai_06.jpg', member: 'hakusai' },
+  { src: '/images/members/hakusai/hakusai_07.jpg', member: 'hakusai' },
+  { src: '/images/members/hakusai/hakusai_08.jpg', member: 'hakusai' },
+  { src: '/images/members/kumo/kumo_01.jpg', member: 'kumo' },
+  { src: '/images/members/kumo/kumo_02.jpg', member: 'kumo' },
+  { src: '/images/members/kumo/kumo_03.jpg', member: 'kumo' },
+  { src: '/images/members/kumo/kumo_04.jpg', member: 'kumo' },
+  { src: '/images/members/kumo/kumo_05.jpg', member: 'kumo' },
+  { src: '/images/members/kumo/kumo_06.jpg', member: 'kumo' },
+  { src: '/images/members/kumo/kumo_07.jpg', member: 'kumo' },
+  { src: '/images/members/kumo/kumo_08.jpg', member: 'kumo' },
+  { src: '/images/members/yuzi/yuzi_02.jpg', member: 'yuzi' },
+  { src: '/images/members/yuzi/yuzi_03.jpg', member: 'yuzi' },
+  { src: '/images/members/yuzi/yuzi_04.jpg', member: 'yuzi' },
+  { src: '/images/members/yuzi/yuzi_05.jpg', member: 'yuzi' },
+  { src: '/images/members/yuzi/yuzi_06.jpg', member: 'yuzi' },
+  { src: '/images/members/yuzi/yuzi_07.jpg', member: 'yuzi' },
+  { src: '/images/members/yuzi/yuzi_08.jpg', member: 'yuzi' },
+];
+
+type Filter = 'all' | 'hakusai' | 'kumo' | 'yuzi';
+
+const filters: { key: Filter; label: string; emoji: string; color: string }[] = [
+  { key: 'all', label: '全部', emoji: '⭐', color: '#e83e8c' },
+  { key: 'hakusai', label: '白菜', emoji: '💛', color: '#FFD700' },
+  { key: 'kumo', label: '云团', emoji: '💙', color: '#4DA6FF' },
+  { key: 'yuzi', label: '柚子', emoji: '💚', color: '#48D1A0' },
 ];
 
 export default function GalleryGrid() {
+  const [filter, setFilter] = useState<Filter>('all');
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
 
+  const filtered = useMemo(() =>
+    filter === 'all' ? allImages : allImages.filter(img => img.member === filter),
+    [filter]
+  );
+
   const close = useCallback(() => setLightboxIdx(null), []);
-  const prev = useCallback(() => setLightboxIdx(i => i !== null ? (i - 1 + galleryImages.length) % galleryImages.length : null), []);
-  const next = useCallback(() => setLightboxIdx(i => i !== null ? (i + 1) % galleryImages.length : null), []);
+  const prev = useCallback(() => setLightboxIdx(i => i !== null ? (i - 1 + filtered.length) % filtered.length : null), [filtered.length]);
+  const next = useCallback(() => setLightboxIdx(i => i !== null ? (i + 1) % filtered.length : null), [filtered.length]);
 
   useEffect(() => {
     if (lightboxIdx === null) return;
@@ -47,32 +61,57 @@ export default function GalleryGrid() {
 
   return (
     <>
+      {/* 成员筛选按钮 */}
+      <div className="flex justify-center gap-2 mb-8 flex-wrap">
+        {filters.map(f => (
+          <button
+            key={f.key}
+            onClick={() => { setFilter(f.key); setLightboxIdx(null); }}
+            className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+              filter === f.key
+                ? 'text-white shadow-md'
+                : 'text-gray-500 bg-gray-100 hover:bg-gray-200'
+            }`}
+            style={filter === f.key ? { backgroundColor: f.color } : {}}
+          >
+            <span>{f.emoji}</span>
+            <span>{f.label}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* 图片网格 */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-        {galleryImages.map((src, i) => (
+        {filtered.map((item, i) => (
           <div
-            key={i}
-            className="aspect-square rounded-xl overflow-hidden bg-gray-100 cursor-pointer group"
+            key={`${item.member}-${i}`}
+            className="aspect-[4/5] rounded-xl overflow-hidden bg-gray-100 cursor-pointer group"
             onClick={() => setLightboxIdx(i)}
           >
             <img
-              src={src}
-              alt={`Gleams photo ${i + 1}`}
-              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+              src={item.src}
+              alt=""
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 lazy-blur"
               loading="lazy"
             />
           </div>
         ))}
       </div>
 
+      {filtered.length === 0 && (
+        <div className="text-center py-16 text-gray-400">暂无照片</div>
+      )}
+
+      {/* 灯箱 */}
       {lightboxIdx !== null && (
         <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center" onClick={close}>
           <button onClick={close} className="absolute top-6 right-6 text-white/60 hover:text-white text-sm z-10">✕ 关闭</button>
-          <span className="absolute top-6 left-6 text-white/40 text-sm z-10">{lightboxIdx + 1} / {galleryImages.length}</span>
+          <span className="absolute top-6 left-6 text-white/40 text-sm z-10">{lightboxIdx + 1} / {filtered.length}</span>
 
           <button onClick={e => { e.stopPropagation(); prev(); }} className="absolute left-4 text-white/60 hover:text-white text-3xl z-10 p-4">‹</button>
 
           <div className="max-w-[90vw] max-h-[85vh]" onClick={e => e.stopPropagation()}>
-            <img src={galleryImages[lightboxIdx]} alt="" className="max-w-full max-h-[85vh] object-contain rounded-lg" />
+            <img src={filtered[lightboxIdx].src} alt="" className="max-w-full max-h-[85vh] object-contain rounded-lg" />
           </div>
 
           <button onClick={e => { e.stopPropagation(); next(); }} className="absolute right-4 text-white/60 hover:text-white text-3xl z-10 p-4">›</button>
