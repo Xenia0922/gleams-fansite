@@ -1,22 +1,30 @@
 import { useState, useEffect, useCallback } from 'react';
 
-// 所有照片来自成员个人微博，来源可追溯
+// 全部来自成员个人微博，每人8张
 const galleryImages = [
-  // 白菜个人微博 (uid=3639876511)
   '/images/members/hakusai/hakusai_01.jpg',
   '/images/members/hakusai/hakusai_02.jpg',
   '/images/members/hakusai/hakusai_03.jpg',
+  '/images/members/hakusai/hakusai_04.jpg',
   '/images/members/hakusai/hakusai_05.jpg',
   '/images/members/hakusai/hakusai_06.jpg',
-  // 云团个人微博 (uid=5432863560)
+  '/images/members/hakusai/hakusai_07.jpg',
+  '/images/members/hakusai/hakusai_08.jpg',
   '/images/members/kumo/kumo_01.jpg',
+  '/images/members/kumo/kumo_02.jpg',
+  '/images/members/kumo/kumo_03.jpg',
+  '/images/members/kumo/kumo_04.jpg',
   '/images/members/kumo/kumo_05.jpg',
   '/images/members/kumo/kumo_06.jpg',
-  '/images/members/kumo/kumo_04.jpg',
-  // 柚子个人微博 (uid=7148114625)
+  '/images/members/kumo/kumo_07.jpg',
+  '/images/members/kumo/kumo_08.jpg',
   '/images/members/yuzi/yuzi_02.jpg',
+  '/images/members/yuzi/yuzi_03.jpg',
+  '/images/members/yuzi/yuzi_04.jpg',
   '/images/members/yuzi/yuzi_05.jpg',
   '/images/members/yuzi/yuzi_06.jpg',
+  '/images/members/yuzi/yuzi_07.jpg',
+  '/images/members/yuzi/yuzi_08.jpg',
 ];
 
 export default function GalleryGrid() {
