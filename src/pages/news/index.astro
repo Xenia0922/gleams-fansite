@@ -1,46 +1,15 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import scheduleData from '../../data/schedule.json';
-
-const allNews = Object.values(import.meta.glob('../../content/news/*.md', { eager: true }));
-const sortedNews = allNews.sort(
-  (a: any, b: any) => new Date(b.frontmatter.date).getTime() - new Date(a.frontmatter.date).getTime()
-);
-const eventMap = new Map(scheduleData.events.map((e: any) => [e.date, e]));
+// 重定向到日程页面
 ---
 
-<BaseLayout title="活动">
-  <section class="max-w-7xl mx-auto px-4 py-12 md:py-20">
-    <div class="text-center mb-10">
-      <p class="section-title-en">✦</p>
-      <h1 class="section-title">活动结算</h1>
-    </div>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-      {sortedNews.map((post: any) => {
-        const fm = post.frontmatter;
-        const slug = post.file.split('/').pop()?.replace('.md', '');
-        const d = fm.date instanceof Date ? fm.date : new Date(fm.date);
-        const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-        const evt = eventMap.get(dateStr);
-        return (
-          <a href={`/news/${slug}`} class="card group overflow-hidden">
-            <div class="aspect-[16/9] overflow-hidden bg-gray-100 dark:bg-gray-800">
-              {fm.image
-                ? <img src={fm.image} alt={fm.title} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
-                : <div class="w-full h-full flex items-center justify-center text-gray-300 text-3xl">⭐</div>
-              }
-            </div>
-            <div class="p-4">
-              <div class="flex items-center gap-2 mb-1">
-                <span class="text-xs font-bold text-pink-500">{d.getMonth()+1}/{d.getDate()}</span>
-                <span class="text-xs text-gray-400">{d.getFullYear()}</span>
-              </div>
-              <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 line-clamp-2 mb-1">{fm.title}</h3>
-              {evt && <p class="text-xs text-gray-400">{evt.venue}</p>}
-            </div>
-          </a>
-        );
-      })}
-    </div>
-  </section>
-</BaseLayout>
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="refresh" content="0;url=/schedule" />
+  <title>跳转中...</title>
+</head>
+<body>
+  <p>正在跳转到 <a href="/schedule">日程页面</a>...</p>
+</body>
+</html>
