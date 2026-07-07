@@ -55,7 +55,7 @@ const navLinks = [
             <img src="/icon-douyin.png" alt="抖音" class="w-4 h-4" />
           </a>
           <span class="text-gray-300 dark:text-gray-600">|</span>
-          <button id="dark-toggle" class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors relative z-10" aria-label="暗黑模式" title="暗黑模式">
+          <button id="dark-toggle" class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" aria-label="暗黑模式" title="暗黑模式">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path class="sun" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
               <path class="moon hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
@@ -65,7 +65,7 @@ const navLinks = [
 
         <!-- Mobile: dark toggle + hamburger -->
         <div class="flex md:hidden items-center gap-1">
-          <button id="dark-toggle-m" class="p-2 text-gray-400 relative z-10" aria-label="暗黑模式">
+          <button id="dark-toggle-m" class="p-2 text-gray-400" aria-label="暗黑模式">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path class="sun" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
               <path class="moon hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
@@ -82,7 +82,7 @@ const navLinks = [
   </div>
 
   <!-- Mobile Menu -->
-  <div id="mobile-menu" class="md:hidden hidden frost border-b border-pink-100/40 dark:border-white/[0.04] shadow-lg rounded-b-3xl">
+  <div id="mobile-menu" class="md:hidden frost border-b border-pink-100/40 dark:border-white/[0.04] shadow-lg overflow-hidden transition-all duration-300 max-h-0 rounded-b-3xl">
     <div class="px-4 py-2 space-y-0">
       {navLinks.map(link => {
         const isActive = currentPath === link.href || (link.href !== '/' && currentPath.startsWith(link.href));
@@ -96,20 +96,6 @@ const navLinks = [
   </div>
 </header>
 
-<style>
-  #mobile-menu:not(.hidden) {
-    animation: menuIn 0.2s ease-out forwards;
-  }
-  @keyframes menuIn {
-    from { opacity: 0; transform: translateY(-8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  @media (max-width: 767px) {
-    #mobile-menu { backdrop-filter: none; -webkit-backdrop-filter: none; }
-    #mobile-menu:not(.hidden) { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
-  }
-</style>
-
 <!-- Spacer -->
 <div class="h-12 sm:h-14 md:h-16"></div>
 
@@ -119,49 +105,43 @@ const navLinks = [
   const openIcon = document.querySelector('.menu-open') as HTMLElement;
   const closeIcon = document.querySelector('.menu-close') as HTMLElement;
 
-  let menuOpen = false;
   btn?.addEventListener('click', () => {
-    menuOpen = !menuOpen;
-    if (menuOpen) {
-      menu?.classList.remove('hidden');
-      openIcon?.classList.add('hidden');
-      closeIcon?.classList.remove('hidden');
-    } else {
-      menu?.classList.add('hidden');
+    const isOpen = menu?.classList.contains('max-h-96');
+    if (isOpen) {
+      menu?.classList.remove('max-h-96');
+      menu?.classList.add('max-h-0');
       openIcon?.classList.remove('hidden');
       closeIcon?.classList.add('hidden');
+    } else {
+      menu?.classList.remove('max-h-0');
+      menu?.classList.add('max-h-96');
+      openIcon?.classList.add('hidden');
+      closeIcon?.classList.remove('hidden');
     }
   });
 </script>
 
 <script>
   (() => {
+    const btns = ['dark-toggle', 'dark-toggle-m'];
     const isDark = localStorage.getItem('dark') === '1';
+
     if (isDark) document.documentElement.classList.add('dark');
-    updateIcons();
 
-    function updateIcons() {
+    function sync() {
       const d = document.documentElement.classList.contains('dark');
-      const suns = document.querySelectorAll('.sun');
-      const moons = document.querySelectorAll('.moon');
-      for (let i = 0; i < suns.length; i++) {
-        if (d) suns[i].classList.add('hidden');
-        else suns[i].classList.remove('hidden');
-      }
-      for (let i = 0; i < moons.length; i++) {
-        if (d) moons[i].classList.remove('hidden');
-        else moons[i].classList.add('hidden');
-      }
+      document.querySelectorAll('.sun').forEach(s => s.classList.toggle('hidden', d));
+      document.querySelectorAll('.moon').forEach(s => s.classList.toggle('hidden', !d));
     }
+    sync();
 
-    function handleToggle(e) {
-      e.preventDefault();
-      document.documentElement.classList.toggle('dark');
-      localStorage.setItem('dark', document.documentElement.classList.contains('dark') ? '1' : '0');
-      updateIcons();
-    }
-
-    document.getElementById('dark-toggle')?.addEventListener('click', handleToggle);
-    document.getElementById('dark-toggle-m')?.addEventListener('click', handleToggle);
+    btns.forEach(id => {
+      document.getElementById(id)?.addEventListener('click', () => {
+        document.documentElement.classList.toggle('dark');
+        const d = document.documentElement.classList.contains('dark');
+        localStorage.setItem('dark', d ? '1' : '0');
+        sync();
+      });
+    });
   })();
 </script>
