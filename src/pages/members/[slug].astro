@@ -11,16 +11,7 @@ export function getStaticPaths() {
 
 const { member } = Astro.props;
 
-// Calculate age from birthday
-const birthDate = new Date(member.birthday);
-const age = Math.floor((Date.now() - birthDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
-
-// Format birthday
-const birthdayFormatted = new Date(member.birthday).toLocaleDateString('zh-CN', {
-  year: 'numeric',
-  month: 'long',
-  day: 'numeric',
-});
+const birthdayFormatted = member.birthday ? `${member.birthday.split('-')[0]}月${member.birthday.split('-')[1]}日` : '';
 ---
 
 <BaseLayout title={`${member.name} | 成员介绍`} description={member.bio} image={member.image}>
@@ -40,7 +31,7 @@ const birthdayFormatted = new Date(member.birthday).toLocaleDateString('zh-CN', 
       <div class="absolute bottom-12 left-8 md:left-16 z-10">
         <p class="text-white/40 text-sm tracking-widest mb-2 animate-fade-in">{member.generation} · {member.role}</p>
         <h1 class="text-4xl md:text-6xl lg:text-7xl font-display font-bold text-white mb-3 animate-slide-up">
-          {member.name}
+          {member.colorEmoji} {member.name}
         </h1>
         <p class="text-white/50 text-lg md:text-xl animate-slide-up-delayed">{member.nameCN}</p>
         <div class="flex items-center gap-3 mt-4 animate-fade-in">
@@ -73,43 +64,19 @@ const birthdayFormatted = new Date(member.birthday).toLocaleDateString('zh-CN', 
             <p class="text-white/70 leading-relaxed text-base">{member.bio}</p>
           </div>
 
-          <!-- Stats Grid -->
+          <!-- Basic Info Grid -->
           <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div class="glass-card p-4 text-center">
               <p class="text-white/30 text-xs mb-1">生日</p>
               <p class="text-white font-medium">{birthdayFormatted}</p>
             </div>
             <div class="glass-card p-4 text-center">
-              <p class="text-white/30 text-xs mb-1">年龄</p>
-              <p class="text-white font-medium">{age}歳</p>
-            </div>
-            <div class="glass-card p-4 text-center">
               <p class="text-white/30 text-xs mb-1">星座</p>
               <p class="text-white font-medium">{member.constellation}</p>
             </div>
             <div class="glass-card p-4 text-center">
-              <p class="text-white/30 text-xs mb-1">身高</p>
-              <p class="text-white font-medium">{member.height}cm</p>
-            </div>
-            <div class="glass-card p-4 text-center">
-              <p class="text-white/30 text-xs mb-1">血型</p>
-              <p class="text-white font-medium">{member.bloodType}型</p>
-            </div>
-            <div class="glass-card p-4 text-center">
               <p class="text-white/30 text-xs mb-1">出身</p>
-              <p class="text-white font-medium">{member.hometown}</p>
-            </div>
-          </div>
-
-          <!-- Details -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="glass-card p-6">
-              <h4 class="tag-dream mb-3">趣味</h4>
-              <p class="text-white/70 text-sm">{member.hobby}</p>
-            </div>
-            <div class="glass-card p-6">
-              <h4 class="tag-dream mb-3">特技</h4>
-              <p class="text-white/70 text-sm">{member.specialSkill}</p>
+              <p class="text-white font-medium text-sm">{member.hometown}</p>
             </div>
           </div>
 
@@ -144,9 +111,11 @@ const birthdayFormatted = new Date(member.birthday).toLocaleDateString('zh-CN', 
           <div class="glass-card p-6">
             <h4 class="text-white/40 text-xs tracking-widest mb-4">MEMBER COLOR</h4>
             <div
-              class="w-full h-32 rounded-xl mb-3"
+              class="w-full h-32 rounded-xl mb-3 flex items-center justify-center"
               style={`background: linear-gradient(135deg, ${member.color}, ${member.color}80)`}
-            ></div>
+            >
+              <span class="text-4xl">{member.colorEmoji}</span>
+            </div>
             <p class="text-white/60 text-sm text-center">{member.colorName}</p>
           </div>
 
@@ -154,26 +123,15 @@ const birthdayFormatted = new Date(member.birthday).toLocaleDateString('zh-CN', 
           <div class="glass-card p-6">
             <h4 class="text-white/40 text-xs tracking-widest mb-4">SNS</h4>
             <div class="space-y-3">
-              {member.social.twitter && (
+              {member.social.weibo && (
                 <a
-                  href={member.social.twitter}
+                  href={member.social.weibo}
                   target="_blank"
                   rel="noopener"
                   class="flex items-center gap-3 text-white/50 hover:text-gleams-400 transition-colors text-sm"
                 >
-                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                  X (Twitter)
-                </a>
-              )}
-              {member.social.instagram && (
-                <a
-                  href={member.social.instagram}
-                  target="_blank"
-                  rel="noopener"
-                  class="flex items-center gap-3 text-white/50 hover:text-gleams-400 transition-colors text-sm"
-                >
-                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
-                  Instagram
+                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M10.098 20.323c-3.977.391-7.414-1.406-7.672-4.02-.259-2.609 2.759-5.047 6.74-5.441 3.979-.394 7.413 1.404 7.671 4.018.259 2.6-2.759 5.049-6.739 5.443z"/></svg>
+                  微博
                 </a>
               )}
             </div>

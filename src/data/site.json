@@ -1,14 +1,17 @@
 {
   "name": "Gleams",
-  "nameJP": "グリームス",
-  "description": "Gleams（グリームス）は、輝く星のように個性あふれるメンバーが集まった地下アイドルグループです。",
-  "descriptionCN": "Gleams 是一支充满个性的地下偶像团体，每位成员都像闪耀的星芒，共同编织属于舞台的光芒。",
+  "nameJP": "Gleams_Official",
+  "description": "星界尽头的神秘王国，公主们踏上寻找「Gleams」能量宝石的旅程。",
+  "descriptionCN": "来自广西南宁的地下偶像团体 Gleams。三位公主——白菜、云团、柚子，在命运的指引下相聚，用歌声和舞蹈守护被阴霾侵蚀的王国。",
   "ogImage": "/og-image.png",
+  "location": "广西南宁",
+  "qqGroup": "3838067250",
+  "qqGroupName": "西乡塘公主骑士团",
+  "weidian": "Gleams小铺",
   "social": {
-    "twitter": "https://twitter.com/gleams_official",
-    "instagram": "https://instagram.com/gleams_official",
-    "youtube": "https://youtube.com/@gleams_official",
-    "bilibili": "https://space.bilibili.com/gleams_official",
-    "weibo": "https://weibo.com/gleams_official"
+    "weibo": "https://weibo.com/u/7972735157",
+    "xiaohongshu": "https://www.xiaohongshu.com/user/profile/Gleams_Official",
+    "douyin": "https://www.douyin.com/user/Gleams_Official",
+    "bilibili": "https://space.bilibili.com/Gleams_Official"
   }
 }

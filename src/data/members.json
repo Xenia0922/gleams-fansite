@@ -1,178 +1,79 @@
 {
-  "generations": ["ALL", "1期生", "2期生"],
+  "generations": ["ALL", "公主"],
   "members": [
     {
-      "id": "rena",
-      "name": "星野 玲奈",
-      "nameCN": "Rena Hoshino",
-      "color": "#FF5C9F",
-      "colorName": "Sakura Pink",
-      "generation": "1期生",
-      "role": "Center / 队长",
-      "birthday": "2002-03-14",
-      "constellation": "双鱼座",
-      "height": 158,
-      "bloodType": "A",
-      "hometown": "东京",
-      "hobby": "舞蹈、收集香水",
-      "specialSkill": "芭蕾舞、柔韧性",
-      "catchphrase": "咲き誇れ、夢の花！れなです！",
-      "catchphraseCN": "绽放吧，梦想之花！我是 Rena！",
-      "bio": "从小学习芭蕾，梦想成为舞台上最闪耀的存在。作为 Gleams 的 Center 和队长，用温柔而坚定的力量带领成员们前进。",
-      "image": "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&h=800&fit=crop",
-      "gallery": [
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&h=600&fit=crop",
-        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=800&h=600&fit=crop",
-        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&h=600&fit=crop"
-      ],
-      "social": {
-        "twitter": "https://twitter.com/gleams_rena",
-        "instagram": "https://instagram.com/gleams_rena"
-      }
-    },
-    {
-      "id": "yuna",
-      "name": "月城 結菜",
-      "nameCN": "Yuna Tsukishiro",
-      "color": "#A855F7",
-      "colorName": "Dream Purple",
-      "generation": "1期生",
-      "role": "Vocal / 副队长",
-      "birthday": "2001-11-22",
-      "constellation": "天蝎座",
-      "height": 162,
-      "bloodType": "O",
-      "hometown": "大阪",
-      "hobby": "吉他、逛旧书店",
-      "specialSkill": "和声编曲、绝对音感",
-      "catchphrase": "心のメロディー、届けます！ゆなです！",
-      "catchphraseCN": "将心中的旋律传达给你！我是 Yuna！",
-      "bio": "具备天赋级唱功的副队长，经常负责团体的和声编排。台上气场强大，台下却是会讲关西腔笑话的天然系。",
-      "image": "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=600&h=800&fit=crop",
-      "gallery": [
-        "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800&h=600&fit=crop",
-        "https://images.unsplash.com/photo-1554151228-14d9def656e4?w=800&h=600&fit=crop",
-        "https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?w=800&h=600&fit=crop"
-      ],
-      "social": {
-        "twitter": "https://twitter.com/gleams_yuna",
-        "instagram": "https://instagram.com/gleams_yuna"
-      }
-    },
-    {
-      "id": "miku",
-      "name": "桜庭 美空",
-      "nameCN": "Miku Sakuraba",
+      "id": "hakusai",
+      "name": "白菜",
+      "nameCN": "Hakusai",
       "color": "#FFD700",
-      "colorName": "Starlight Gold",
-      "generation": "1期生",
-      "role": "Dance / 综艺担当",
-      "birthday": "2003-07-07",
+      "colorName": "金盏黄",
+      "colorEmoji": "💛",
+      "generation": "公主",
+      "role": "公主",
+      "birthday": "06-27",
       "constellation": "巨蟹座",
-      "height": 155,
-      "bloodType": "B",
-      "hometown": "福冈",
-      "hobby": "看动漫、cosplay",
-      "specialSkill": "Locking舞蹈、模仿声优",
-      "catchphrase": "みんなの笑顔、私が守る！みくです！",
-      "catchphraseCN": "大家的笑容，由我来守护！我是 Miku！",
-      "bio": "元气满满的综艺担当，舞台上的舞蹈爆发力令人惊叹。台下是重度动漫宅，经常在 SNS 分享 cosplay 照片。",
-      "image": "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=600&h=800&fit=crop",
+      "hometown": "星界王国·金之城堡",
+      "catchphrase": "金色の光で、みんなを照らす！白菜です！",
+      "catchphraseCN": "用金色光芒，照亮大家！我是白菜！",
+      "bio": "来自金之城堡的公主，性格开朗温暖如阳光。作为 Gleams 的一员，用明亮的歌声和活力满满的舞蹈，为大家带来希望与勇气。",
+      "image": "https://images.unsplash.com/photo-1552058544-f2b08422138a?w=600&h=800&fit=crop",
       "gallery": [
-        "https://images.unsplash.com/photo-1517365830460-955ce3ccd263?w=800&h=600&fit=crop",
-        "https://images.unsplash.com/photo-1516726817505-f5ed825624d8?w=800&h=600&fit=crop",
-        "https://images.unsplash.com/photo-1481214110143-ed630356e1bb?w=800&h=600&fit=crop"
+        "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&h=600&fit=crop",
+        "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&h=600&fit=crop",
+        "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&h=600&fit=crop"
       ],
       "social": {
-        "twitter": "https://twitter.com/gleams_miku",
-        "instagram": "https://instagram.com/gleams_miku"
+        "weibo": "https://weibo.com/u/7972735157"
       }
     },
     {
-      "id": "koharu",
-      "name": "七瀬 小春",
-      "nameCN": "Koharu Nanase",
-      "color": "#48D1CC",
-      "colorName": "Aqua Blue",
-      "generation": "2期生",
-      "role": "Visual / 模特担当",
-      "birthday": "2004-05-03",
-      "constellation": "金牛座",
-      "height": 168,
-      "bloodType": "AB",
-      "hometown": "神奈川",
-      "hobby": "摄影、时尚搭配",
-      "specialSkill": "走台步、手作饰品",
-      "catchphrase": "キラリ、あなたの心にフォーカス！こはるです！",
-      "catchphraseCN": "咔嚓，对准你的心对焦！我是 Koharu！",
-      "bio": "新生代 Visual 担当，宛如从少女漫画走出来的美少女。同时也是时尚杂志的读者模特，私下喜欢胶片摄影。",
-      "image": "https://images.unsplash.com/photo-1534665482403-a909d0d97c67?w=600&h=800&fit=crop",
+      "id": "kumo",
+      "name": "云团",
+      "nameCN": "Kumo",
+      "color": "#4DA6FF",
+      "colorName": "天空蓝",
+      "colorEmoji": "💙",
+      "generation": "公主",
+      "role": "公主",
+      "birthday": "02-14",
+      "constellation": "水瓶座",
+      "hometown": "星界王国·云之城堡",
+      "catchphrase": "青空のキャンバスに、夢を描こう！雲団です！",
+      "catchphraseCN": "在蓝天的画布上，描绘梦想吧！我是云团！",
+      "bio": "来自云之城堡的公主，性格温柔而坚定。如天空中自由飘浮的云朵，用清澈的歌声治愈每一位骑士的心。",
+      "image": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=600&h=800&fit=crop",
       "gallery": [
-        "https://images.unsplash.com/photo-1542596594-649edbc13630?w=800&h=600&fit=crop",
-        "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800&h=600&fit=crop",
-        "https://images.unsplash.com/photo-1503342217505-b0a501809dbc?w=800&h=600&fit=crop"
+        "https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?w=800&h=600&fit=crop",
+        "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&h=600&fit=crop",
+        "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800&h=600&fit=crop"
       ],
       "social": {
-        "twitter": "https://twitter.com/gleams_koharu",
-        "instagram": "https://instagram.com/gleams_koharu"
+        "weibo": "https://weibo.com/u/7972735157"
       }
     },
     {
-      "id": "aoi",
-      "name": "神楽坂 葵",
-      "nameCN": "Aoi Kagurazaka",
-      "color": "#FF6B6B",
-      "colorName": "Coral Red",
-      "generation": "2期生",
-      "role": "Rap / 创作担当",
-      "birthday": "2002-12-24",
-      "constellation": "摩羯座",
-      "height": 160,
-      "bloodType": "A",
-      "hometown": "京都",
-      "hobby": "写歌词、茶道",
-      "specialSkill": "即兴Rap、书法",
-      "catchphrase": "言葉の刃で、世界を切る！あおいです！",
-      "catchphraseCN": "用言语的刀刃，切开世界！我是 Aoi！",
-      "bio": "沉默寡言却内心炽热的创作担当。负责团体大部分原创歌词，Rap 风格独特。京都出身，意外的茶道大师。",
-      "image": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=800&fit=crop",
-      "gallery": [
-        "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=800&h=600&fit=crop",
-        "https://images.unsplash.com/photo-1504593811423-6dd665756598?w=800&h=600&fit=crop",
-        "https://images.unsplash.com/photo-1492447273231-50242cc6d4f0?w=800&h=600&fit=crop"
-      ],
-      "social": {
-        "twitter": "https://twitter.com/gleams_aoi",
-        "instagram": "https://instagram.com/gleams_aoi"
-      }
-    },
-    {
-      "id": "rin",
-      "name": "天宮 凜",
-      "nameCN": "Rin Amamiya",
-      "color": "#FFB6C1",
-      "colorName": "Light Pink",
-      "generation": "2期生",
-      "role": "忙内 / 演技担当",
-      "birthday": "2005-09-09",
+      "id": "yuzi",
+      "name": "柚子",
+      "nameCN": "Yuzi",
+      "color": "#48D1A0",
+      "colorName": "柚子绿",
+      "colorEmoji": "💚",
+      "generation": "公主",
+      "role": "公主",
+      "birthday": "09-04",
       "constellation": "处女座",
-      "height": 152,
-      "bloodType": "O",
-      "hometown": "北海道",
-      "hobby": "看舞台剧、冰淇淋巡礼",
-      "specialSkill": "舞台剧表演、变脸",
-      "catchphrase": "キミの一番星になりたい！りんです！",
-      "catchphraseCN": "想成为你的第一颗星！我是 Rin！",
-      "bio": "团内最年少，却拥有超越年龄的表演力。从小就活跃于剧团，决定转型偶像后依然保持着每天演技训练的习惯。",
-      "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&h=800&fit=crop",
+      "hometown": "星界王国·森之城堡",
+      "catchphrase": "緑の風に乗せて、笑顔を届ける！柚子です！",
+      "catchphraseCN": "乘着绿风，把笑容送到你身边！我是柚子！",
+      "bio": "来自森之城堡的公主，活泼灵动充满元气。像清新的柚子一样，用充满活力的表演为王国注入生机与欢笑。",
+      "image": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&h=800&fit=crop",
       "gallery": [
-        "https://images.unsplash.com/photo-1464863979621-258859e62245?w=800&h=600&fit=crop",
-        "https://images.unsplash.com/photo-1503756234508-e32369269deb?w=800&h=600&fit=crop",
-        "https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=800&h=600&fit=crop"
+        "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=800&h=600&fit=crop",
+        "https://images.unsplash.com/photo-1524368535928-5b5e00ddc76b?w=800&h=600&fit=crop",
+        "https://images.unsplash.com/photo-1460723237483-7a6dc9d0b212?w=800&h=600&fit=crop"
       ],
       "social": {
-        "twitter": "https://twitter.com/gleams_rin",
-        "instagram": "https://instagram.com/gleams_rin"
+        "weibo": "https://weibo.com/u/7972735157"
       }
     }
   ]
