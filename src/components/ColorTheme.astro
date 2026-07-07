@@ -1,0 +1,57 @@
+<!-- 成员色主题切换 -->
+<script>
+  const themeColors = {
+    hakusai: '#FFD700',
+    kumo: '#4DA6FF',
+    yuzi: '#48D1A0',
+    default: '#e83e8c'
+  };
+
+  // 从 localStorage 读取
+  const saved = localStorage.getItem('gleams-theme');
+  if (saved && themeColors[saved]) {
+    document.documentElement.style.setProperty('--accent', themeColors[saved]);
+  } else {
+    document.documentElement.style.setProperty('--accent', themeColors.default);
+  }
+
+  // 监听成员色点击
+  document.addEventListener('click', (e) => {
+    const dot = e.target.closest('[data-member-color]');
+    if (!dot) return;
+    const member = dot.dataset.memberColor;
+    const color = themeColors[member] || themeColors.default;
+    document.documentElement.style.setProperty('--accent', color);
+    localStorage.setItem('gleams-theme', member);
+  });
+
+  // 双击 logo 恢复默认
+  document.querySelector('a[href="/"]')?.addEventListener('dblclick', (e) => {
+    e.preventDefault();
+    document.documentElement.style.setProperty('--accent', themeColors.default);
+    localStorage.removeItem('gleams-theme');
+  });
+</script>
+
+<style is:global>
+  :root {
+    --accent: #e83e8c;
+  }
+  .btn-pink {
+    background-color: var(--accent) !important;
+  }
+  .btn-pink:hover {
+    filter: brightness(0.9);
+  }
+  .text-pink-500, .text-pink-400, .text-pink-600,
+  .hover\:text-pink-500, .hover\:text-pink-400, .hover\:text-pink-600 {
+    color: var(--accent) !important;
+  }
+  .bg-pink-500 { background-color: var(--accent) !important; }
+  .bg-pink-50 { background-color: color-mix(in srgb, var(--accent) 8%, white) !important; }
+  .bg-pink-100 { background-color: color-mix(in srgb, var(--accent) 12%, white) !important; }
+  .border-pink-500 { border-color: var(--accent) !important; }
+  .border-pink-100 { border-color: color-mix(in srgb, var(--accent) 15%, white) !important; }
+  .shadow-pink-200 { box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 20%, transparent) !important; }
+  .from-pink-50 { --tw-gradient-from: color-mix(in srgb, var(--accent) 5%, white) !important; }
+</style>
