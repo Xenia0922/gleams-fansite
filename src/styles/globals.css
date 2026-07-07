@@ -4,8 +4,13 @@
 
 @layer base {
   body {
-    @apply bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-sans antialiased;
+    @apply bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 antialiased;
+    font-family: 'Noto Sans SC', 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
+  .dark .text-gray-400, .dark .text-gray-500 { color: #a8a8b8 !important; }
+  .dark .text-gray-600 { color: #c0c0cc !important; }
+  .dark .text-gray-700 { color: #d4d4dc !important; }
+
   ::selection {
     @apply bg-pink-200 text-pink-900;
   }
