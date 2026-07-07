@@ -15,7 +15,7 @@ import membersData from '../../data/members.json';
         <a href={`/members/${m.id}`} class="group block">
           <!-- 照片 -->
           <div class="aspect-[3/4] rounded-2xl overflow-hidden bg-gray-100 mb-4 shadow-md group-hover:shadow-xl transition-shadow">
-            <img src={m.image} alt={m.name} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+            <img src={m.image} alt={m.name} class="lazy-blur w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
           </div>
           <!-- 信息——紧扣照片下方 -->
           <div class="text-center px-1">
