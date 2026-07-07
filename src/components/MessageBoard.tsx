@@ -15,19 +15,27 @@ interface Message {
   created_at: string;
 }
 
+function getCode(): string | null {
+  if (typeof window === 'undefined') return null;
+  const entry = localStorage.getItem('gleams-code');
+  if (!entry) return null;
+  try {
+    const { code, ts } = JSON.parse(entry);
+    if (Date.now() - ts < 30 * 60 * 1000) return code;
+    localStorage.removeItem('gleams-code');
+  } catch {
+    localStorage.removeItem('gleams-code');
+  }
+  return null;
+}
+
 export default function MessageBoard() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [name, setName] = useState('');
   const [text, setText] = useState('');
   const [member, setMember] = useState<string | null>(null);
-  const [code, setCode] = useState(() => {
-    if (typeof window !== 'undefined') return localStorage.getItem('gleams-code') || '';
-    return '';
-  });
-  const [verified, setVerified] = useState(() => {
-    if (typeof window !== 'undefined') return !!localStorage.getItem('gleams-code');
-    return false;
-  });
+  const [code, setCode] = useState(() => getCode() || '');
+  const [verified, setVerified] = useState(() => !!getCode());
   const [posting, setPosting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState('');
@@ -45,7 +53,7 @@ export default function MessageBoard() {
 
   const handleVerify = () => {
     if (!code.trim()) return;
-    localStorage.setItem('gleams-code', code.trim());
+    localStorage.setItem('gleams-code', JSON.stringify({ code: code.trim(), ts: Date.now() }));
     setVerified(true);
   };
 

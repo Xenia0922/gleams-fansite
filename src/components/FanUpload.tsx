@@ -7,12 +7,28 @@ const MEMBERS = [
   { id: 'other', emoji: '⭐', name: '多人/其他' },
 ];
 
+function getCode(): string | null {
+  if (typeof window === 'undefined') return null;
+  const entry = localStorage.getItem('gleams-code');
+  if (!entry) return null;
+  try {
+    const { code, ts } = JSON.parse(entry);
+    if (Date.now() - ts < 30 * 60 * 1000) return code;
+    localStorage.removeItem('gleams-code');
+  } catch {
+    localStorage.removeItem('gleams-code');
+  }
+  return null;
+}
+
 export default function FanUpload() {
   const [member, setMember] = useState('other');
   const [nickname, setNickname] = useState('');
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [msg, setMsg] = useState('');
+  const [code, setCode] = useState(() => getCode() || '');
+  const [verified, setVerified] = useState(() => !!getCode());
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleFile = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -23,6 +39,12 @@ export default function FanUpload() {
     reader.readAsDataURL(f);
   }, []);
 
+  const handleVerify = () => {
+    if (!code.trim()) return;
+    localStorage.setItem('gleams-code', JSON.stringify({ code: code.trim(), ts: Date.now() }));
+    setVerified(true);
+  };
+
   const handleUpload = async () => {
     const file = fileRef.current?.files?.[0];
     if (!file) return;
@@ -32,6 +54,7 @@ export default function FanUpload() {
     fd.append('file', file);
     fd.append('member', member);
     fd.append('nickname', nickname || '匿名骑士');
+    fd.append('code', code.trim());
     try {
       const res = await fetch('/api/photos', { method: 'POST', body: fd });
       const data = await res.json();
@@ -41,12 +64,35 @@ export default function FanUpload() {
         if (fileRef.current) fileRef.current.value = '';
       } else {
         setMsg('❌ ' + (data.error || '上传失败'));
+        if (res.status === 403) {
+          localStorage.removeItem('gleams-code');
+          setVerified(false);
+        }
       }
     } catch {
       setMsg('❌ 网络错误');
     }
     setUploading(false);
   };
+
+  if (!verified) {
+    return (
+      <div className="frost-card p-8 text-center">
+        <p className="text-gray-500 mb-4 text-sm">请输入骑士团暗号以上传照片</p>
+        <input
+          type="text"
+          value={code}
+          onChange={e => setCode(e.target.value)}
+          placeholder="暗号（在 QQ 群获取）"
+          className="w-full max-w-xs px-4 py-2 rounded-full text-sm text-center bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 outline-none focus:border-pink-400 transition-colors"
+          onKeyDown={e => e.key === 'Enter' && handleVerify()}
+        />
+        <button onClick={handleVerify} className="btn-pink text-xs mt-3 !px-4 !py-1.5">
+          验证
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">
