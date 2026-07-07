@@ -1,6 +1,7 @@
 /**
- * POST /api/photos — 粉丝上传照片到 R2
+ * POST /api/photos — 粉丝上传照片到 R2（需暗号）
  * GET  /api/photos — 列出已上传的照片
+ * DELETE /api/photos — 删除照片（需 ADMIN_CODE）
  */
 
 export async function onRequest(context) {
@@ -12,6 +13,10 @@ export async function onRequest(context) {
 
   if (request.method === 'POST') {
     return uploadPhoto(request, env);
+  }
+
+  if (request.method === 'DELETE') {
+    return deletePhoto(request, env);
   }
 
   return new Response('Method not allowed', { status: 405 });
@@ -63,13 +68,31 @@ async function uploadPhoto(request, env) {
 
 /** 列出最近 50 张照片 */
 async function listPhotos(env) {
-  const { objects } = await env.PHOTOS.list({ limit: 50 });
+  const { objects } = await env.PHOTOS.list({ limit: 50, prefix: 'uploads/' });
   const photos = objects.map(o => ({
     key: o.key,
     url: `/photos/${o.key}`,
     uploaded: o.uploaded,
   }));
   return json(photos);
+}
+
+/** 删除照片 */
+async function deletePhoto(request, env) {
+  try {
+    const admin = request.headers.get('x-admin-code') || '';
+    if (admin !== env.ADMIN_CODE) {
+      return json({ error: '无权限' }, 403);
+    }
+    const { key } = await request.json();
+    if (!key || !key.startsWith('uploads/')) {
+      return json({ error: '无效 key' }, 400);
+    }
+    await env.PHOTOS.delete(key);
+    return json({ ok: true });
+  } catch (e) {
+    return json({ error: e.message }, 500);
+  }
 }
 
 function json(data, status = 200) {

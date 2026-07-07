@@ -1,6 +1,7 @@
 /**
  * POST /api/messages — 提交留言 → R2（需暗号）
  * GET  /api/messages — 获取最近留言 ← R2
+ * DELETE /api/messages — 删除留言（需 ADMIN_CODE）
  */
 
 export async function onRequest(context) {
@@ -12,6 +13,10 @@ export async function onRequest(context) {
 
   if (request.method === 'POST') {
     return postMessage(request, env);
+  }
+
+  if (request.method === 'DELETE') {
+    return deleteMessage(request, env);
   }
 
   return new Response('Method not allowed', { status: 405 });
@@ -33,7 +38,7 @@ async function postMessage(request, env) {
       return json({ error: '暗号不对哦' }, 403);
     }
 
-    // 简易限流：同时查同一 IP 最近一条留言
+    // 简易限流
     const ip = request.headers.get('cf-connecting-ip') || 'unknown';
     const { objects } = await env.PHOTOS.list({ prefix: `messages/`, limit: 3 });
     for (const obj of objects) {
@@ -81,6 +86,23 @@ async function listMessages(env) {
     }
     results.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     return json(results);
+  } catch (e) {
+    return json({ error: e.message }, 500);
+  }
+}
+
+async function deleteMessage(request, env) {
+  try {
+    const admin = request.headers.get('x-admin-code') || '';
+    if (admin !== env.ADMIN_CODE) {
+      return json({ error: '无权限' }, 403);
+    }
+    const { key } = await request.json();
+    if (!key || !key.startsWith('messages/')) {
+      return json({ error: '无效 key' }, 400);
+    }
+    await env.PHOTOS.delete(key);
+    return json({ ok: true });
   } catch (e) {
     return json({ error: e.message }, 500);
   }
