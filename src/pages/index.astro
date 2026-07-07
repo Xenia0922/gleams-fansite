@@ -55,7 +55,7 @@ const eventImages: Record<string, string> = {
       <p class="section-title-en">✦</p>
       <h2 class="section-title">成员</h2>
     </div>
-    <div class="space-y-12 md:space-y-16 max-w-sm mx-auto">
+    <div class="grid grid-cols-3 gap-4 sm:gap-6">
       {members.members.map(m => (
         <a href={`/members/${m.id}`} class="group block">
           <div class="aspect-[4/5] overflow-hidden bg-gray-100 rounded-2xl mb-4 shadow-md group-hover:shadow-xl transition-shadow">

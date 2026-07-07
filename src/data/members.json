@@ -8,6 +8,7 @@
       "emoji": "💛",
       "birthday": "06-27",
       "constellation": "巨蟹座",
+      "status": "active",
       "image": "/images/members/hakusai/hakusai_01.webp",
       "gallery": [
         "/images/members/hakusai/hakusai_02.webp",
@@ -27,6 +28,7 @@
       "emoji": "💙",
       "birthday": "02-14",
       "constellation": "水瓶座",
+      "status": "active",
       "image": "/images/members/kumo/kumo_01.webp",
       "gallery": [
         "/images/members/kumo/kumo_05.webp",
@@ -46,6 +48,7 @@
       "emoji": "💚",
       "birthday": "09-04",
       "constellation": "处女座",
+      "status": "active",
       "image": "/images/members/yuzi/yuzi_02.webp",
       "gallery": [
         "/images/members/yuzi/yuzi_05.webp",
@@ -56,6 +59,22 @@
       "weiboName": "@柚子Yuzi_Gleams",
       "weiboDesc": "这里只有柚子（ ◜ ω ◝ ） dm只能看不能回复",
       "intro": "能够与你相见的日子 ⌯>𖥦<⌯ಣ 广西出身的柚子，期待与大家多多见面！"
+    },
+    {
+      "id": "huangyuyu",
+      "name": "黄鱼鱼",
+      "nameJP": "Huangyuyu",
+      "color": "#FF69B4",
+      "emoji": "🩷",
+      "birthday": "",
+      "constellation": "",
+      "status": "graduated",
+      "image": "/images/members/hakusai/hakusai_01.webp",
+      "gallery": [],
+      "weibo": "",
+      "weiboName": "",
+      "weiboDesc": "",
+      "intro": "Gleams一期生，已于早期毕业。"
     }
   ]
 }
