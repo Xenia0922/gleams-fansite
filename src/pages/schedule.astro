@@ -58,8 +58,8 @@ allEvents.forEach((e: any) => {
               const img = eventImages[evt.id] || '/images/events/live-2026-07-04.webp';
               const slug = newsSlugs[evt.date] || evt.date;
               return (
-                <a href={'/news/' + slug} class={'flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl transition-opacity group ' + (isPast ? 'opacity-65 hover:opacity-100 bg-gray-50' : 'bg-pink-50')}>
-                  <div class="flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden bg-gray-100">
+                <a href={'/news/' + slug} class={'flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl transition-opacity group ' + (isPast ? 'opacity-65 hover:opacity-100 bg-gray-50' : 'bg-pink-50')}>
+                  <div class="flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden bg-gray-100">
                     <img src={img} alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform" loading="lazy" />
                   </div>
                   <div class="flex-shrink-0 text-center min-w-[44px] sm:min-w-[50px]">

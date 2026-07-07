@@ -85,7 +85,7 @@ export default function GalleryGrid() {
         {filtered.map((item, i) => (
           <div
             key={`${item.member}-${i}`}
-            className="aspect-[4/5] rounded-xl overflow-hidden bg-gray-100 cursor-pointer group"
+            className="aspect-[4/5] rounded-2xl overflow-hidden bg-gray-100 cursor-pointer group"
             onClick={() => setLightboxIdx(i)}
           >
             <img
@@ -111,7 +111,7 @@ export default function GalleryGrid() {
           <button onClick={e => { e.stopPropagation(); prev(); }} className="absolute left-4 text-white/60 hover:text-white text-3xl z-10 p-4">‹</button>
 
           <div className="max-w-[90vw] max-h-[85vh]" onClick={e => e.stopPropagation()}>
-            <img src={filtered[lightboxIdx].src} alt="" className="max-w-full max-h-[85vh] object-contain rounded-lg" />
+            <img src={filtered[lightboxIdx].src} alt="" className="max-w-full max-h-[85vh] object-contain rounded-2xl" />
           </div>
 
           <button onClick={e => { e.stopPropagation(); next(); }} className="absolute right-4 text-white/60 hover:text-white text-3xl z-10 p-4">›</button>
