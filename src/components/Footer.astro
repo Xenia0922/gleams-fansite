@@ -2,49 +2,58 @@
 import site from '../data/site.json';
 ---
 
-<footer class="bg-gray-900 text-white py-12 px-4">
-  <div class="max-w-6xl mx-auto">
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-      <!-- Brand -->
+<footer class="bg-gray-900 text-white">
+  <!-- 渐变过渡 -->
+  <div class="h-16 bg-gradient-to-b from-white to-gray-900"></div>
+  
+  <div class="max-w-7xl mx-auto px-4 pb-10">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
       <div>
-        <h3 class="text-lg font-bold text-pink-400 mb-3">{site.name}</h3>
-        <p class="text-gray-400 text-sm leading-relaxed mb-4">{site.subtitle}</p>
-        <p class="text-gray-500 text-xs">QQ群：{site.qqGroup}<br/>{site.qqGroupName}</p>
-      </div>
-
-      <!-- Nav -->
-      <div>
-        <h4 class="text-xs tracking-widest text-gray-500 uppercase mb-3">导航</h4>
-        <div class="space-y-2">
-          <a href="/" class="block text-sm text-gray-400 hover:text-pink-400">首页</a>
-          <a href="/news" class="block text-sm text-gray-400 hover:text-pink-400">活动</a>
-          <a href="/members" class="block text-sm text-gray-400 hover:text-pink-400">成员</a>
-          <a href="/schedule" class="block text-sm text-gray-400 hover:text-pink-400">日程</a>
+        <h4 class="text-xs tracking-widest text-gray-500 uppercase mb-4">导航</h4>
+        <div class="space-y-2.5">
+          <a href="/" class="block text-sm text-gray-400 hover:text-white transition-colors">首页</a>
+          <a href="/members" class="block text-sm text-gray-400 hover:text-white transition-colors">成员</a>
+          <a href="/schedule" class="block text-sm text-gray-400 hover:text-white transition-colors">日程</a>
+          <a href="/news" class="block text-sm text-gray-400 hover:text-white transition-colors">活动</a>
+          <a href="/gallery" class="block text-sm text-gray-400 hover:text-white transition-colors">画廊</a>
         </div>
       </div>
 
       <div>
-        <h4 class="text-xs tracking-widest text-gray-500 uppercase mb-3">更多</h4>
-        <div class="space-y-2">
-          <a href="/gallery" class="block text-sm text-gray-400 hover:text-pink-400">画廊</a>
-          <a href="/tokuten" class="block text-sm text-gray-400 hover:text-pink-400">特典规则</a>
-          <a href="/about" class="block text-sm text-gray-400 hover:text-pink-400">关于</a>
+        <h4 class="text-xs tracking-widest text-gray-500 uppercase mb-4">应援</h4>
+        <div class="space-y-2.5">
+          <a href="/tokuten" class="block text-sm text-gray-400 hover:text-white transition-colors">特典规则</a>
+          <a href="/about" class="block text-sm text-gray-400 hover:text-white transition-colors">关于我们</a>
+        </div>
+        <div class="mt-4 pt-4 border-t border-gray-800">
+          <p class="text-xs text-gray-500 mb-1">QQ群：{site.qqGroup}</p>
+          <p class="text-xs text-gray-500">{site.qqGroupName}</p>
         </div>
       </div>
 
-      <!-- SNS -->
       <div>
-        <h4 class="text-xs tracking-widest text-gray-500 uppercase mb-3">关注</h4>
-        <div class="space-y-2">
-          <a href={site.weibo} target="_blank" rel="noopener" class="block text-sm text-gray-400 hover:text-pink-400">微博 {site.weiboName}</a>
-          <a href={site.xiaohongshu} target="_blank" rel="noopener" class="block text-sm text-gray-400 hover:text-pink-400">小红书</a>
-          <a href={site.douyin} target="_blank" rel="noopener" class="block text-sm text-gray-400 hover:text-pink-400">抖音</a>
+        <h4 class="text-xs tracking-widest text-gray-500 uppercase mb-4">关注</h4>
+        <div class="space-y-2.5">
+          <a href={site.weibo} target="_blank" rel="noopener" class="flex items-center gap-2 text-sm text-gray-400 hover:text-[#E6162D] transition-colors">
+            <span class="flex items-center justify-center w-5 h-5 rounded-sm bg-[#E6162D] text-white text-[8px] font-extrabold">微</span> 微博
+          </a>
+          <a href={site.xiaohongshu} target="_blank" rel="noopener" class="flex items-center gap-2 text-sm text-gray-400 hover:text-red-400 transition-colors">
+            <span class="flex items-center justify-center w-5 h-5 rounded-sm bg-red-400 text-white text-[8px] font-extrabold">红</span> 小红书
+          </a>
+          <a href={site.douyin} target="_blank" rel="noopener" class="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">
+            <span class="flex items-center justify-center w-5 h-5 rounded-sm bg-black text-white text-[8px] font-extrabold border border-gray-600">抖</span> 抖音
+          </a>
         </div>
+      </div>
+
+      <div>
+        <h4 class="text-xs tracking-widest text-gray-500 uppercase mb-4">{site.name}</h4>
+        <p class="text-sm text-gray-500 leading-relaxed">{site.subtitle}</p>
       </div>
     </div>
 
     <div class="mt-10 pt-6 border-t border-gray-800 text-center text-xs text-gray-600">
-      &copy; 2026 {site.name} 应援站. gleams.vip
+      &copy; 2026 {site.name} 应援站 · gleams.vip
     </div>
   </div>
 </footer>
