@@ -6,8 +6,6 @@ const allNews = Object.values(import.meta.glob('../../content/news/*.md', { eage
 const sortedNews = allNews.sort(
   (a: any, b: any) => new Date(b.frontmatter.date).getTime() - new Date(a.frontmatter.date).getTime()
 );
-
-// Create date→event map for venue lookup
 const eventMap = new Map(scheduleData.events.map((e: any) => [e.date, e]));
 ---
 
@@ -17,21 +15,19 @@ const eventMap = new Map(scheduleData.events.map((e: any) => [e.date, e]));
       <p class="section-title-en">✦</p>
       <h1 class="section-title">活动结算</h1>
     </div>
-
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
       {sortedNews.map((post: any) => {
         const fm = post.frontmatter;
-        const slug = post.file.split('/').pop()?.replace('.md', '') || '';
+        const slug = post.file.split('/').pop()?.replace('.md', '');
         const d = new Date(fm.date);
         const evt = eventMap.get(fm.date);
         return (
           <a href={`/news/${slug}`} class="card group overflow-hidden">
             <div class="aspect-[16/9] overflow-hidden bg-gray-100">
-              {fm.image ? (
-                <img src={fm.image} alt={fm.title} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
-              ) : (
-                <div class="w-full h-full flex items-center justify-center text-gray-300 text-3xl">⭐</div>
-              )}
+              {fm.image
+                ? <img src={fm.image} alt={fm.title} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                : <div class="w-full h-full flex items-center justify-center text-gray-300 text-3xl">⭐</div>
+              }
             </div>
             <div class="p-4">
               <div class="flex items-center gap-2 mb-1">
@@ -42,7 +38,8 @@ const eventMap = new Map(scheduleData.events.map((e: any) => [e.date, e]));
               {evt && <p class="text-xs text-gray-400">{evt.venue}</p>}
             </div>
           </a>
-        ))}
-      </div>
+        );
+      })}
+    </div>
   </section>
 </BaseLayout>

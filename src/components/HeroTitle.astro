@@ -1,0 +1,19 @@
+---
+const { name, subtitle } = Astro.props;
+---
+<p class="animate-fade-in text-[10px] sm:text-xs tracking-[0.3em] text-gray-400 uppercase mb-3 sm:mb-4" style="animation-delay: 0s">
+  {subtitle}
+</p>
+<h1 class="animate-fade-in text-3xl sm:text-5xl md:text-7xl font-extrabold tracking-tight text-gray-900 mb-3 sm:mb-4" style="animation-delay: 0.15s">
+  {name}
+</h1>
+<style>
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fade-in {
+    opacity: 0;
+    animation: fadeIn 0.7s ease-out forwards;
+  }
+</style>
