@@ -29,6 +29,26 @@ function getCode(): string | null {
   return null;
 }
 
+function Hint() {
+  const [show, setShow] = useState(false);
+  return (
+    <div className="mt-4">
+      {!show ? (
+        <button
+          onClick={() => setShow(true)}
+          className="text-[11px] text-gray-400 hover:text-pink-400 dark:text-gray-500 dark:hover:text-pink-400 transition-colors cursor-pointer bg-transparent border-none"
+        >
+          不知道暗号？点这里试试！
+        </button>
+      ) : (
+        <p className="text-[11px] text-gray-400 dark:text-gray-500">
+          Gleams应援会QQ群：480408977
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function MessageBoard({ readonly }: { readonly?: boolean }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [name, setName] = useState('');
@@ -150,25 +170,7 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
         <button onClick={handleVerify} className="btn-pink text-xs mt-3 !px-4 !py-1.5">
           验证
         </button>
-      </div>
-    );
-  }
-
-  if (!verified) {
-    return (
-      <div className="frost-card p-8 text-center">
-        <p className="text-gray-500 mb-4 text-sm">请输入骑士团暗号以参与互动</p>
-        <input
-          type="text"
-          value={code}
-          onChange={e => setCode(e.target.value)}
-          placeholder="暗号（在 QQ 群获取）"
-          className="w-full max-w-xs px-4 py-2 rounded-full text-sm text-center bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 outline-none focus:border-pink-400 transition-colors"
-          onKeyDown={e => e.key === 'Enter' && handleVerify()}
-        />
-        <button onClick={handleVerify} className="btn-pink text-xs mt-3 !px-4 !py-1.5">
-          验证
-        </button>
+        <Hint />
       </div>
     );
   }

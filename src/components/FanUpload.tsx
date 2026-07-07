@@ -21,6 +21,26 @@ function getCode(): string | null {
   return null;
 }
 
+function Hint() {
+  const [show, setShow] = useState(false);
+  return (
+    <div className="mt-4">
+      {!show ? (
+        <button
+          onClick={() => setShow(true)}
+          className="text-[11px] text-gray-400 hover:text-pink-400 dark:text-gray-500 dark:hover:text-pink-400 transition-colors cursor-pointer bg-transparent border-none"
+        >
+          不知道暗号？点这里试试！
+        </button>
+      ) : (
+        <p className="text-[11px] text-gray-400 dark:text-gray-500">
+          Gleams应援会QQ群：480408977
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function FanUpload() {
   const [member, setMember] = useState('other');
   const [nickname, setNickname] = useState('');
@@ -105,6 +125,7 @@ export default function FanUpload() {
         <button onClick={handleVerify} className="btn-pink text-xs mt-3 !px-4 !py-1.5">
           验证
         </button>
+        <Hint />
       </div>
     );
   }
