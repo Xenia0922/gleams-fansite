@@ -1,6 +1,6 @@
 /**
- * POST /api/messages — 提交留言 → R2（需暗号）
- * GET  /api/messages — 获取最近留言 ← R2
+ * POST /api/messages — 提交留言 → D1（需暗号）
+ * GET  /api/messages — 获取最近留言 ← D1
  * DELETE /api/messages — 删除留言（需 ADMIN_CODE）
  */
 
@@ -38,33 +38,24 @@ async function postMessage(request, env) {
       return json({ error: '暗号不对哦' }, 403);
     }
 
-    // 简易限流
+    // 简易限流：30 秒内同 IP 不能连续发
     const ip = request.headers.get('cf-connecting-ip') || 'unknown';
-    const { objects } = await env.PHOTOS.list({ prefix: `messages/`, limit: 3 });
-    for (const obj of objects) {
-      const item = await env.PHOTOS.get(obj.key);
-      if (item) {
-        const prev = JSON.parse(await item.text());
-        if (prev.ip === ip) {
-          const elapsed = Date.now() - new Date(prev.created_at).getTime();
-          if (elapsed < 30000) {
-            return json({ error: '发太快了，等30秒再试' }, 429);
-          }
-        }
+    const { results: recent } = await env.DB
+      .prepare('SELECT created_at FROM messages WHERE ip = ? ORDER BY created_at DESC LIMIT 1')
+      .bind(ip)
+      .all();
+    if (recent.length > 0) {
+      const elapsed = Date.now() - new Date(recent[0].created_at + 'Z').getTime();
+      if (elapsed < 30000) {
+        return json({ error: '发太快了，等30秒再试' }, 429);
       }
     }
 
     const id = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
-    const key = `messages/${id}.json`;
-    const data = JSON.stringify({
-      id, name, message, member,
-      created_at: new Date().toISOString(),
-    });
-
-    await env.PHOTOS.put(key, data, {
-      httpMetadata: { contentType: 'application/json' },
-      customMetadata: { ip },
-    });
+    await env.DB
+      .prepare('INSERT INTO messages (id, name, message, member, ip) VALUES (?, ?, ?, ?, ?)')
+      .bind(id, name, message, member, ip)
+      .run();
 
     return json({ ok: true, msg: { id, name, message, member } });
   } catch (e) {
@@ -74,17 +65,9 @@ async function postMessage(request, env) {
 
 async function listMessages(env) {
   try {
-    const { objects } = await env.PHOTOS.list({ prefix: 'messages/', limit: 50 });
-    const results = [];
-    for (const obj of objects) {
-      try {
-        const item = await env.PHOTOS.get(obj.key);
-        if (item) {
-          results.push(JSON.parse(await item.text()));
-        }
-      } catch { /* skip */ }
-    }
-    results.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    const { results } = await env.DB
+      .prepare('SELECT id, name, message, member, created_at FROM messages ORDER BY created_at DESC LIMIT 50')
+      .all();
     return json(results);
   } catch (e) {
     return json({ error: e.message }, 500);
@@ -97,11 +80,9 @@ async function deleteMessage(request, env) {
     if (admin !== env.ADMIN_CODE) {
       return json({ error: '无权限' }, 403);
     }
-    const { key } = await request.json();
-    if (!key || !key.startsWith('messages/')) {
-      return json({ error: '无效 key' }, 400);
-    }
-    await env.PHOTOS.delete(key);
+    const { id } = await request.json();
+    if (!id) return json({ error: '缺少 id' }, 400);
+    await env.DB.prepare('DELETE FROM messages WHERE id = ?').bind(id).run();
     return json({ ok: true });
   } catch (e) {
     return json({ error: e.message }, 500);

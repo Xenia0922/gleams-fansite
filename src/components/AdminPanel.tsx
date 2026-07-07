@@ -12,7 +12,6 @@ interface Message {
   message: string;
   member: string | null;
   created_at: string;
-  _key?: string;
 }
 
 export default function AdminPanel() {
@@ -42,13 +41,7 @@ export default function AdminPanel() {
     try {
       const res = await fetch('/api/messages');
       const data = await res.json();
-      if (Array.isArray(data)) {
-        const withKeys = await Promise.all(data.map(async (m: Message) => {
-          const key = `messages/${m.id}.json`;
-          return { ...m, _key: key };
-        }));
-        setMessages(withKeys);
-      }
+      if (Array.isArray(data)) setMessages(data);
     } catch {}
     setLoading(false);
   }, []);
@@ -74,7 +67,7 @@ export default function AdminPanel() {
     const res = await fetch('/api/messages', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json', 'x-admin-code': code },
-      body: JSON.stringify({ key: m._key }),
+      body: JSON.stringify({ id: m.id }),
     });
     if ((await res.json()).ok) fetchMessages();
     else alert('删除失败');
