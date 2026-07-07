@@ -8,7 +8,7 @@ const MEMBERS = [
 ];
 
 interface Message {
-  id: number;
+  id: string;
   name: string;
   message: string;
   member: string | null;
@@ -20,8 +20,17 @@ export default function MessageBoard() {
   const [name, setName] = useState('');
   const [text, setText] = useState('');
   const [member, setMember] = useState<string | null>(null);
+  const [code, setCode] = useState(() => {
+    if (typeof window !== 'undefined') return localStorage.getItem('gleams-code') || '';
+    return '';
+  });
+  const [verified, setVerified] = useState(() => {
+    if (typeof window !== 'undefined') return !!localStorage.getItem('gleams-code');
+    return false;
+  });
   const [posting, setPosting] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [msg, setMsg] = useState('');
 
   const fetchMessages = useCallback(async () => {
     try {
@@ -34,21 +43,41 @@ export default function MessageBoard() {
 
   useEffect(() => { fetchMessages(); }, [fetchMessages]);
 
+  const handleVerify = () => {
+    if (!code.trim()) return;
+    localStorage.setItem('gleams-code', code.trim());
+    setVerified(true);
+  };
+
   const handlePost = async () => {
     if (!text.trim()) return;
     setPosting(true);
+    setMsg('');
     try {
       const res = await fetch('/api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim() || '匿名骑士', message: text.trim(), member }),
+        body: JSON.stringify({
+          name: name.trim() || '匿名骑士',
+          message: text.trim(),
+          member,
+          code: code.trim(),
+        }),
       });
       const data = await res.json();
       if (data.ok) {
         setText('');
         await fetchMessages();
+      } else {
+        setMsg('❌ ' + (data.error || '发送失败'));
+        if (res.status === 403) {
+          localStorage.removeItem('gleams-code');
+          setVerified(false);
+        }
       }
-    } catch { /* ignore */ }
+    } catch {
+      setMsg('❌ 网络错误');
+    }
     setPosting(false);
   };
 
@@ -56,6 +85,25 @@ export default function MessageBoard() {
     const d = new Date(ts + 'Z');
     return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   };
+
+  if (!verified) {
+    return (
+      <div className="frost-card p-8 text-center">
+        <p className="text-gray-500 mb-4 text-sm">请输入骑士团暗号以参与互动</p>
+        <input
+          type="text"
+          value={code}
+          onChange={e => setCode(e.target.value)}
+          placeholder="暗号（在 QQ 群获取）"
+          className="w-full max-w-xs px-4 py-2 rounded-full text-sm text-center bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 outline-none focus:border-pink-400 transition-colors"
+          onKeyDown={e => e.key === 'Enter' && handleVerify()}
+        />
+        <button onClick={handleVerify} className="btn-pink text-xs mt-3 !px-4 !py-1.5">
+          验证
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">
@@ -103,6 +151,7 @@ export default function MessageBoard() {
             {posting ? '发送中...' : '发送留言'}
           </button>
         </div>
+        {msg && <p className={`mt-2 text-xs ${msg.startsWith('❌') ? 'text-red-400' : 'text-green-500'}`}>{msg}</p>}
       </div>
 
       {/* 留言列表 */}
