@@ -42,7 +42,7 @@ const navLinks = [
           })}
         </nav>
 
-        <!-- SNS Icons -->
+        <!-- SNS Icons + Dark Mode -->
         <div class="hidden md:flex items-center gap-3">
           <a href={site.weibo} target="_blank" rel="noopener" class="opacity-40 hover:opacity-100 transition-opacity" title="微博">
             <img src="/icon-weibo.png" alt="微博" class="w-4 h-4" />
@@ -53,17 +53,23 @@ const navLinks = [
           <a href={site.douyin} target="_blank" rel="noopener" class="opacity-40 hover:opacity-100 transition-opacity" title="抖音">
             <img src="/icon-douyin.png" alt="抖音" class="w-4 h-4" />
           </a>
+          <span class="text-gray-300 dark:text-gray-700">|</span>
+          <button id="dark-toggle" class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" aria-label="暗黑模式" title="暗黑模式">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path class="sun" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+              <path class="moon hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+            </svg>
+          </button>
         </div>
 
-        <!-- Dark Mode Toggle -->
-        <button id="dark-toggle" class="p-2 text-gray-400 hover:text-gray-600 transition-colors" aria-label="暗黑模式" title="暗黑模式">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path class="sun" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
-            <path class="moon hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
-          </svg>
-        </button>
-
-        <!-- Mobile Menu Button -->
+        <!-- Mobile: dark toggle + hamburger -->
+        <div class="flex md:hidden items-center gap-1">
+          <button id="dark-toggle-m" class="p-2 text-gray-400" aria-label="暗黑模式">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path class="sun" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+              <path class="moon hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+            </svg>
+          </button>
         <button id="mobile-menu-btn" class="md:hidden p-2 text-gray-500" aria-label="菜单">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path class="menu-open" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
@@ -115,16 +121,21 @@ const navLinks = [
 </script>
 
 <script>
-  const dt = document.getElementById('dark-toggle');
-  const sun = dt?.querySelector('.sun');
-  const moon = dt?.querySelector('.moon');
-  const isDark = localStorage.getItem('dark') === '1';
-  if (isDark) { document.documentElement.classList.add('dark'); sun?.classList.add('hidden'); moon?.classList.remove('hidden'); }
-  dt?.addEventListener('click', () => {
-    document.documentElement.classList.toggle('dark');
-    const d = document.documentElement.classList.contains('dark');
-    sun?.classList.toggle('hidden', d);
-    moon?.classList.toggle('hidden', !d);
-    localStorage.setItem('dark', d ? '1' : '0');
-  });
+  function setupDarkToggle(btnId) {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    const sun = btn.querySelector('.sun');
+    const moon = btn.querySelector('.moon');
+    const isDark = localStorage.getItem('dark') === '1';
+    if (isDark) { document.documentElement.classList.add('dark'); sun?.classList.add('hidden'); moon?.classList.remove('hidden'); }
+    btn.addEventListener('click', () => {
+      document.documentElement.classList.toggle('dark');
+      const d = document.documentElement.classList.contains('dark');
+      document.querySelectorAll('.sun').forEach(s => s.classList.toggle('hidden', d));
+      document.querySelectorAll('.moon').forEach(s => s.classList.toggle('hidden', !d));
+      localStorage.setItem('dark', d ? '1' : '0');
+    });
+  }
+  setupDarkToggle('dark-toggle');
+  setupDarkToggle('dark-toggle-m');
 </script>
