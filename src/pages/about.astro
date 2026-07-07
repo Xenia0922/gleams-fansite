@@ -28,17 +28,17 @@ import site from '../data/site.json';
 
     <!-- 社群 -->
     <div class="card p-8 mb-8">
-      <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">✦ 加入骑士团</h2>
+      <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">✦ 支持公主</h2>
       <div class="grid grid-cols-2 gap-4 text-center">
-        <div class="bg-gray-50 dark:bg-gray-900 rounded-3xl p-4 backdrop-blur-sm bg-white/30 dark:bg-white/[0.02]">
-          <p class="text-xs text-gray-400 mb-1">QQ群</p>
-          <p class="text-lg font-bold text-gray-900 dark:text-gray-100">{site.qqGroup}</p>
-          <p class="text-xs text-gray-500 dark:text-gray-400">Gleams应援会</p>
-        </div>
         <div class="bg-gray-50 dark:bg-gray-900 rounded-3xl p-4 backdrop-blur-sm bg-white/30 dark:bg-white/[0.02]">
           <p class="text-xs text-gray-400 mb-1">微店</p>
           <p class="text-lg font-bold text-gray-900 dark:text-gray-100">{site.weidian}</p>
           <p class="text-xs text-gray-500 dark:text-gray-400">官方周边</p>
+        </div>
+        <div class="bg-gray-50 dark:bg-gray-900 rounded-3xl p-4 backdrop-blur-sm bg-white/30 dark:bg-white/[0.02]">
+          <p class="text-xs text-gray-400 mb-1">QQ</p>
+          <p class="text-lg font-bold text-gray-900 dark:text-gray-100">{site.staffQQ}</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">官方电聊</p>
         </div>
       </div>
     </div>
@@ -47,7 +47,7 @@ import site from '../data/site.json';
     <div class="card p-8 text-center">
       <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-6">✦ 关注 Gleams</h2>
       <div class="flex flex-wrap justify-center gap-3">
-        <a href={site.weibo} target="_blank" rel="noopener" class="btn-outline !text-sm !px-5 !py-2.5">微博 {site.weiboName}</a>
+        <a href={site.weibo} target="_blank" rel="noopener" class="btn-outline !text-sm !px-5 !py-2.5">微博</a>
         <a href={site.xiaohongshu} target="_blank" rel="noopener" class="btn-outline !text-sm !px-5 !py-2.5">小红书</a>
         <a href={site.douyin} target="_blank" rel="noopener" class="btn-outline !text-sm !px-5 !py-2.5">抖音</a>
       </div>
