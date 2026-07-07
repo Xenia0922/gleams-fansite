@@ -10,10 +10,10 @@ import membersData from '../../data/members.json';
       <h1 class="section-title">成员</h1>
     </div>
 
-    <div class="grid grid-cols-3 gap-4 sm:gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
       {membersData.members.map(m => (
         <a href={`/members/${m.id}`} class="card group text-center">
-          <div class="aspect-square overflow-hidden bg-gray-100">
+          <div class="aspect-[3/4] overflow-hidden bg-gray-100">
             <img src={m.image} alt={m.name} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
           </div>
           <div class="p-2 sm:p-4">
