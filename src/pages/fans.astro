@@ -64,6 +64,7 @@ import FanGallery from '../components/FanGallery';
       if (tab === 'browse') {
         browse.classList.remove('hidden');
         post.classList.add('hidden');
+        window.dispatchEvent(new Event('tab-browse-visible'));
       } else {
         browse.classList.add('hidden');
         post.classList.remove('hidden');

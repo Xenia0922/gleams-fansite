@@ -52,6 +52,11 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
   useEffect(() => { fetchMessages(); }, [fetchMessages]);
 
   useEffect(() => {
+    window.addEventListener('tab-browse-visible', fetchMessages);
+    return () => window.removeEventListener('tab-browse-visible', fetchMessages);
+  }, [fetchMessages]);
+
+  useEffect(() => {
     const onSet = () => {
       const c = getCode();
       if (c) { setCode(c); setVerified(true); }
@@ -106,7 +111,9 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
   };
 
   const formatTime = (ts: string) => {
-    const d = new Date(ts + 'Z');
+    if (!ts) return '';
+    const d = new Date(ts.endsWith('Z') ? ts : ts + 'Z');
+    if (isNaN(d.getTime())) return '';
     return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   };
 

@@ -64,24 +64,34 @@ export default function AdminPanel() {
 
   const delMessage = async (m: Message) => {
     if (!confirm(`删除「${m.name}」的留言？`)) return;
-    const res = await fetch('/api/messages', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json', 'x-admin-code': code },
-      body: JSON.stringify({ id: m.id }),
-    });
-    if ((await res.json()).ok) fetchMessages();
-    else alert('删除失败');
+    try {
+      const res = await fetch('/api/messages', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', 'x-admin-code': code },
+        body: JSON.stringify({ id: m.id }),
+      });
+      const data = await res.json();
+      if (data.ok) fetchMessages();
+      else alert(data.error || '删除失败');
+    } catch {
+      alert('网络错误，删除失败');
+    }
   };
 
   const delPhoto = async (p: Photo) => {
     if (!confirm('删除这张照片？')) return;
-    const res = await fetch('/api/photos', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json', 'x-admin-code': code },
-      body: JSON.stringify({ key: p.key }),
-    });
-    if ((await res.json()).ok) fetchPhotos();
-    else alert('删除失败');
+    try {
+      const res = await fetch('/api/photos', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', 'x-admin-code': code },
+        body: JSON.stringify({ key: p.key }),
+      });
+      const data = await res.json();
+      if (data.ok) fetchPhotos();
+      else alert(data.error || '删除失败');
+    } catch {
+      alert('网络错误，删除失败');
+    }
   };
 
   if (!authed) {

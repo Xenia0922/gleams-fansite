@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface Photo {
   key: string;
@@ -9,19 +9,47 @@ interface Photo {
 export default function FanGallery() {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const fetchPhotos = useCallback(async () => {
+    try {
+      const res = await fetch('/api/photos');
+      if (!res.ok) throw new Error('加载失败');
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setPhotos(data);
+        setError('');
+      } else {
+        setError('数据格式异常');
+      }
+    } catch {
+      if (photos.length === 0) setError('加载失败，请刷新重试');
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { fetchPhotos(); }, [fetchPhotos]);
 
   useEffect(() => {
-    fetch('/api/photos')
-      .then(r => r.json())
-      .then(data => {
-        if (Array.isArray(data)) setPhotos(data);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    window.addEventListener('tab-browse-visible', fetchPhotos);
+    return () => window.removeEventListener('tab-browse-visible', fetchPhotos);
+  }, [fetchPhotos]);
+
+  const handleImgError = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
+    e.currentTarget.style.display = 'none';
   }, []);
 
   if (loading) {
     return <p className="text-center text-gray-400 py-8">加载中...</p>;
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-gray-400 text-sm mb-2">{error}</p>
+        <button onClick={fetchPhotos} className="btn-outline text-xs !px-4 !py-1.5">重试</button>
+      </div>
+    );
   }
 
   if (photos.length === 0) {
@@ -43,6 +71,7 @@ export default function FanGallery() {
             alt=""
             className="w-full aspect-[4/5] object-cover group-hover:scale-105 transition-transform duration-500"
             loading="lazy"
+            onError={handleImgError}
           />
         </a>
       ))}

@@ -30,11 +30,27 @@ export default function FanUpload() {
   const [code, setCode] = useState(() => getCode() || '');
   const [verified, setVerified] = useState(() => !!getCode());
   const fileRef = useRef<HTMLInputElement>(null);
+  const readerRef = useRef<FileReader | null>(null);
+
+  useEffect(() => () => {
+    readerRef.current?.abort();
+  }, []);
 
   const handleFile = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic'];
+    if (!allowed.includes(f.type)) {
+      setMsg('❌ 仅支持 JPG/PNG/WEBP/GIF/HEIC');
+      return;
+    }
+    if (f.size > 15 * 1024 * 1024) {
+      setMsg('❌ 图片不能超过 15MB');
+      return;
+    }
+    setMsg('');
     const reader = new FileReader();
+    readerRef.current = reader;
     reader.onload = () => setPreview(reader.result as string);
     reader.readAsDataURL(f);
   }, []);
