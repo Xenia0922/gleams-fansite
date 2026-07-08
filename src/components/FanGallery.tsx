@@ -69,7 +69,7 @@ export default function FanGallery() {
       </div>
 
       {lightboxIdx !== null && (
-        <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center" onClick={close}>
+        <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center" onClick={close}>
           <button onClick={close} className="absolute top-6 right-6 text-white/60 hover:text-white text-sm z-10">✕ 关闭</button>
           <span className="absolute top-6 left-6 text-white/40 text-sm z-10">{lightboxIdx + 1} / {photos.length}</span>
           {photos.length > 1 && (
@@ -78,9 +78,7 @@ export default function FanGallery() {
               <button onClick={e => { e.stopPropagation(); next(); }} className="absolute right-4 text-white/60 hover:text-white text-3xl z-10 p-4">›</button>
             </>
           )}
-          <div className="max-w-[98vw] max-h-[98vh]" onClick={e => e.stopPropagation()}>
-            <img src={photos[lightboxIdx].url} alt="" className="max-w-full max-h-[98vh] object-contain" />
-          </div>
+          <img src={photos[lightboxIdx].url} alt="" className="max-w-screen max-h-screen object-contain" onClick={e => e.stopPropagation()} />
         </div>
       )}
     </>
