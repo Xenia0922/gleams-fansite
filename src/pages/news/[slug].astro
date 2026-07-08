@@ -1,18 +1,18 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import scheduleData from '../../data/schedule.json';
+import { eventReportEntries } from '../../utils/eventReports';
 
 export async function getStaticPaths() {
-  const postModules = import.meta.glob('../../content/news/*.md', { eager: true });
-  return Object.entries(postModules).map(([filepath, post]: [string, any]) => ({
-    params: { slug: filepath.split('/').pop()?.replace('.md', '') },
-    props: { post },
+  return eventReportEntries.map(({ slug, report }) => ({
+    params: { slug },
+    props: { report },
   }));
 }
 
-const { post } = Astro.props;
-const { frontmatter } = post;
-const { Content } = post;
+const { report } = Astro.props;
+const { frontmatter } = report;
+const { Content } = report;
 
 const d = frontmatter.date instanceof Date ? frontmatter.date : new Date(frontmatter.date);
 const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;

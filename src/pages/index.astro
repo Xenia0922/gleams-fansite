@@ -4,29 +4,11 @@ import HeroTitle from '../components/HeroTitle.astro';
 import site from '../data/site.json';
 import members from '../data/members.json';
 import schedule from '../data/schedule.json';
+import { getEventImage } from '../utils/eventImages';
+import { getEventReportSlugForDate } from '../utils/eventReports';
 
 const activeMembers = members.members.filter(m => m.status !== 'graduated');
 const pastEvents = schedule.events.filter((e: any) => e.status === 'past').reverse().slice(0, 4);
-
-const newsFiles = Object.values(import.meta.glob('../content/news/*.md', { eager: true }));
-const newsSlugMap = new Map(newsFiles.map((n: any) => {
-  const slug = n.file.split('/').pop()?.replace('.md', '');
-  const d = n.frontmatter.date instanceof Date ? n.frontmatter.date : new Date(n.frontmatter.date);
-  const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  return [dateStr, slug];
-}));
-
-const eventImages: Record<string, string> = {
-  'live-2026-01-25': '/images/events/live-2026-01-25.webp',
-  'live-2026-01-31': '/images/events/live-2026-01-31.webp',
-  'live-2026-02-15': '/images/events/live-2026-02-15.webp',
-  'live-2026-02-23': '/images/events/live-2026-02-23.webp',
-  'live-2026-03-14': '/images/events/live-2026-03-14.webp',
-  'live-2026-03-28': '/images/events/live-2026-03-28.webp',
-  'live-2026-04-26': '/images/events/live-2026-04-26.webp',
-  'live-2026-05-16': '/images/events/live-2026-05-16.webp',
-  'live-2026-07-04': '/images/events/live-2026-07-04.webp',
-};
 ---
 
 <BaseLayout>
@@ -76,9 +58,9 @@ const eventImages: Record<string, string> = {
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         {pastEvents.map((evt: any) => {
           const d = new Date(evt.date);
-          const img = eventImages[evt.id] || '/images/events/live-2026-01-31.webp';
+          const img = getEventImage(evt.id, '/images/events/live-2026-01-31.webp');
           return (
-            <a href={`/news/${newsSlugMap.get(evt.date) || evt.date}`} class="card group">
+            <a href={`/news/${getEventReportSlugForDate(evt.date)}`} class="card group">
               <div class="aspect-[16/9] overflow-hidden bg-gray-100 dark:bg-gray-800">
                 <img src={img} alt={evt.title} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
               </div>

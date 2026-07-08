@@ -1,6 +1,6 @@
 import { defineCollection, z } from 'astro:content';
 
-const newsCollection = defineCollection({
+const eventReportsCollection = defineCollection({
   type: 'content',
   schema: z.object({
     title: z.string(),
@@ -14,5 +14,6 @@ const newsCollection = defineCollection({
 });
 
 export const collections = {
-  news: newsCollection,
+  // Keep the collection key as "news" because the existing content directory and public URLs use /news.
+  news: eventReportsCollection,
 };

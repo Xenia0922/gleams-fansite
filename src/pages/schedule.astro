@@ -2,33 +2,11 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import scheduleData from '../data/schedule.json';
 import membersData from '../data/members.json';
+import { getEventImage } from '../utils/eventImages';
+import { getEventReportSlugForDate } from '../utils/eventReports';
 
 const memberMap = new Map(membersData.members.map(m => [m.id, m]));
 const allEvents = [...scheduleData.events].sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-const newsSlugs: Record<string, string> = {
-  '2026-01-25': '2026-01-25-sunday-candy',
-  '2026-01-31': '2026-01-31-comic-expo',
-  '2026-02-15': '2026-02-15-guiping',
-  '2026-02-23': '2026-02-23-akatsuki-24',
-  '2026-03-14': '2026-03-14-white-valentine',
-  '2026-03-28': '2026-03-28-akatsuki-25',
-  '2026-04-26': '2026-04-26-puppy-club',
-  '2026-05-16': '2026-05-16-fes',
-  '2026-07-04': '2026-07-04-nez-fes',
-};
-
-const eventImages: Record<string, string> = {
-  'live-2026-01-25': '/images/events/live-2026-01-25.webp',
-  'live-2026-01-31': '/images/events/live-2026-01-31.webp',
-  'live-2026-02-15': '/images/events/live-2026-02-15.webp',
-  'live-2026-02-23': '/images/events/live-2026-02-23.webp',
-  'live-2026-03-14': '/images/events/live-2026-03-14.webp',
-  'live-2026-03-28': '/images/events/live-2026-03-28.webp',
-  'live-2026-04-26': '/images/events/live-2026-04-26.webp',
-  'live-2026-05-16': '/images/events/live-2026-05-16.webp',
-  'live-2026-07-04': '/images/events/live-2026-07-04.webp',
-};
 
 const grouped: Record<string, any[]> = {};
 allEvents.forEach((e: any) => {
@@ -55,8 +33,8 @@ allEvents.forEach((e: any) => {
             {events.map((evt: any) => {
               const d = new Date(evt.date);
               const isPast = evt.status === 'past';
-              const img = eventImages[evt.id] || '/images/events/live-2026-07-04.webp';
-              const slug = newsSlugs[evt.date] || evt.date;
+              const img = getEventImage(evt.id);
+              const slug = getEventReportSlugForDate(evt.date);
               return (
                 <a href={'/news/' + slug} class={'flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-3xl transition-opacity group ' + (isPast ? 'opacity-65 hover:opacity-100 glass' : 'frost-card shadow-md')}>
                   <div class="flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-3xl overflow-hidden glass">
