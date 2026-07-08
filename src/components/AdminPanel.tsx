@@ -28,8 +28,6 @@ export default function AdminPanel() {
   const [tab, setTab] = useState<'messages' | 'photos'>('messages');
   const [loading, setLoading] = useState(false);
 
-  const headers = { 'x-admin-code': code };
-
   const login = () => {
     if (!code.trim()) return;
     localStorage.setItem('gleams-admin', code.trim());

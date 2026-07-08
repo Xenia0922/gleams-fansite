@@ -39,7 +39,7 @@ export default function FanUpload() {
   const handleFile = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
-    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic'];
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
     if (!allowed.includes(f.type)) {
       setMsg('❌ 仅支持 JPG/PNG/WEBP/GIF/HEIC');
       return;
@@ -93,10 +93,12 @@ export default function FanUpload() {
         setMsg('上传成功！感谢分享 ✨');
         setPreview(null);
         if (fileRef.current) fileRef.current.value = '';
+        setTimeout(() => setMsg(m => m.startsWith('上传成功') ? '' : m), 3000);
       } else {
         setMsg('❌ ' + (data.error || '上传失败'));
         if (res.status === 403) {
           localStorage.removeItem('gleams-code');
+          window.dispatchEvent(new Event('gleams-code-clear'));
           setVerified(false);
         }
       }
@@ -148,7 +150,7 @@ export default function FanUpload() {
         <input
           ref={fileRef}
           type="file"
-          accept="image/jpeg,image/png,image/webp,image/gif,image/heic"
+          accept="image/jpeg,image/png,image/webp,image/gif"
           onChange={handleFile}
           className="hidden"
           id="fan-upload-input"
