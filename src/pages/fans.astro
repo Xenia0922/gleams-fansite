@@ -35,11 +35,11 @@ import FanGallery from '../components/FanGallery';
     <div id="tab-post" class="hidden">
       <div class="mb-12" data-reveal>
         <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">✏️ 发留言</h2>
-        <MessageBoard client:load />
+        <MessageBoard client:idle />
       </div>
       <div data-reveal>
         <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">📸 分享现场照</h2>
-        <FanUpload client:load />
+        <FanUpload client:idle />
       </div>
       <p class="text-center mt-6">
         <button id="hint-btn" class="text-[11px] text-gray-400 hover:text-pink-400 dark:text-gray-500 dark:hover:text-pink-400 transition-colors bg-transparent border-none cursor-pointer">
