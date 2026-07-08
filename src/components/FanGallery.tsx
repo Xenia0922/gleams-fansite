@@ -78,8 +78,8 @@ export default function FanGallery() {
               <button onClick={e => { e.stopPropagation(); next(); }} className="absolute right-4 text-white/60 hover:text-white text-3xl z-10 p-4">›</button>
             </>
           )}
-          <div className="max-w-[90vw] max-h-[85vh]" onClick={e => e.stopPropagation()}>
-            <img src={photos[lightboxIdx].url} alt="" className="max-w-full max-h-[85vh] object-contain rounded-2xl" />
+          <div className="w-full h-full flex items-center justify-center p-8" onClick={e => e.stopPropagation()}>
+            <img src={photos[lightboxIdx].url} alt="" className="max-w-full max-h-full object-contain" />
           </div>
         </div>
       )}
