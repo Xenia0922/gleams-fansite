@@ -19,7 +19,7 @@ const allImages = [
   { src: '/images/members/kumo/kumo_07.webp', member: 'kumo' },
   { src: '/images/members/kumo/kumo_08.webp', member: 'kumo' },
   { src: '/images/members/kumo/kumo_09.webp', member: 'kumo' },
-  { src: '/images/members/yuzi/yuzi_01.webp', member: 'yuzi' },
+  { src: '/images/members/yuzi/yuzi_main.webp', member: 'yuzi' },
   { src: '/images/members/yuzi/yuzi_02.webp', member: 'yuzi' },
   { src: '/images/members/yuzi/yuzi_03.webp', member: 'yuzi' },
   { src: '/images/members/yuzi/yuzi_04.webp', member: 'yuzi' },
