@@ -10,6 +10,7 @@ export default function FanGallery() {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [lightbox, setLightbox] = useState<string | null>(null);
   const hasCached = useRef(false);
 
   const fetchPhotos = useCallback(async () => {
@@ -37,13 +38,18 @@ export default function FanGallery() {
     return () => window.removeEventListener('tab-browse-visible', fetchPhotos);
   }, [fetchPhotos]);
 
+  useEffect(() => {
+    if (!lightbox) return;
+    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') setLightbox(null); };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, [lightbox]);
+
   const handleImgError = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
     e.currentTarget.style.display = 'none';
   }, []);
 
-  if (loading) {
-    return <p className="text-center text-gray-400 py-8">加载中...</p>;
-  }
+  if (loading) return <p className="text-center text-gray-400 py-8">加载中...</p>;
 
   if (error) {
     return (
@@ -59,24 +65,31 @@ export default function FanGallery() {
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-      {photos.map(p => (
-        <a
-          key={p.key}
-          href={p.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="frost-card overflow-hidden block group"
-        >
-          <img
-            src={p.url}
-            alt=""
-            className="w-full aspect-[4/5] object-cover group-hover:scale-105 transition-transform duration-500"
-            loading="lazy"
-            onError={handleImgError}
-          />
-        </a>
-      ))}
-    </div>
+    <>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        {photos.map(p => (
+          <div
+            key={p.key}
+            onClick={() => setLightbox(p.url)}
+            className="frost-card overflow-hidden block group cursor-pointer"
+          >
+            <img
+              src={p.url}
+              alt=""
+              className="w-full aspect-[4/5] object-cover group-hover:scale-105 transition-transform duration-500"
+              loading="lazy"
+              onError={handleImgError}
+            />
+          </div>
+        ))}
+      </div>
+
+      {lightbox && (
+        <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center cursor-pointer" onClick={() => setLightbox(null)}>
+          <button onClick={() => setLightbox(null)} className="absolute top-6 right-6 text-white/60 hover:text-white text-sm z-10">✕ 关闭</button>
+          <img src={lightbox} alt="" className="max-w-[95vw] max-h-[95vh] object-contain" onClick={e => e.stopPropagation()} />
+        </div>
+      )}
+    </>
   );
 }
