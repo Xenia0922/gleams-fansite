@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { createPortal } from 'react-dom';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import ImageLightboxOverlay from './ImageLightboxOverlay';
 
 interface Photo {
   key: string;
@@ -13,6 +13,7 @@ export default function FanGallery() {
   const [error, setError] = useState('');
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
   const hasCached = useRef(false);
+  const lightboxImages = useMemo(() => photos.map(p => ({ src: p.url })), [photos]);
 
   const fetchPhotos = useCallback(async () => {
     try {
@@ -69,19 +70,14 @@ export default function FanGallery() {
         ))}
       </div>
 
-      {lightboxIdx !== null && createPortal(
-        <div className="fixed inset-0 z-[100] bg-black" onClick={close}>
-          <button onClick={close} className="absolute top-6 right-6 text-white/60 hover:text-white text-sm z-10">✕ 关闭</button>
-          <span className="absolute top-6 left-6 text-white/40 text-sm z-10">{lightboxIdx + 1} / {photos.length}</span>
-          {photos.length > 1 && (
-            <>
-              <button onClick={e => { e.stopPropagation(); prev(); }} className="absolute left-4 text-white/60 hover:text-white text-3xl z-10 p-4">‹</button>
-              <button onClick={e => { e.stopPropagation(); next(); }} className="absolute right-4 text-white/60 hover:text-white text-3xl z-10 p-4">›</button>
-            </>
-          )}
-          <img src={photos[lightboxIdx].url} alt="" className="w-screen h-screen object-contain" onClick={e => e.stopPropagation()} />
-        </div>,
-        document.body
+      {lightboxIdx !== null && (
+        <ImageLightboxOverlay
+          images={lightboxImages}
+          currentIndex={lightboxIdx}
+          onClose={close}
+          onPrev={prev}
+          onNext={next}
+        />
       )}
     </>
   );
