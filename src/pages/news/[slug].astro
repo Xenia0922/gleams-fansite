@@ -51,7 +51,12 @@ const evt = scheduleData.events.find((e: any) => e.date === dateStr);
   </article>
 
   <!-- 全屏图片预览 -->
-  <div id="img-overlay" class="hidden fixed inset-0 z-[100] bg-black/95 flex items-center justify-center cursor-pointer" onclick="this.classList.add('hidden')">
+  <div id="img-overlay" class="hidden fixed inset-0 z-[100] bg-black/95 flex items-center justify-center cursor-pointer" onclick="this.classList.add('hidden')" tabindex="0">
     <img id="full-img" src="" alt="" class="max-w-[95vw] max-h-[95vh] object-contain" />
   </div>
+  <script>
+    document.getElementById('img-overlay')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') e.currentTarget.classList.add('hidden');
+    });
+  </script>
 </BaseLayout>

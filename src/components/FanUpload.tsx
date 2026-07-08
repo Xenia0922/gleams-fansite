@@ -31,9 +31,13 @@ export default function FanUpload() {
   const [verified, setVerified] = useState(() => !!getCode());
   const fileRef = useRef<HTMLInputElement>(null);
   const readerRef = useRef<FileReader | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = useRef(true);
 
   useEffect(() => () => {
     readerRef.current?.abort();
+    if (timerRef.current) clearTimeout(timerRef.current);
+    mountedRef.current = false;
   }, []);
 
   const handleFile = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -93,7 +97,9 @@ export default function FanUpload() {
         setMsg('上传成功！感谢分享 ✨');
         setPreview(null);
         if (fileRef.current) fileRef.current.value = '';
-        setTimeout(() => setMsg(m => m.startsWith('上传成功') ? '' : m), 3000);
+        timerRef.current = setTimeout(() => {
+          if (mountedRef.current) setMsg('');
+        }, 3000);
       } else {
         setMsg('❌ ' + (data.error || '上传失败'));
         if (res.status === 403) {
