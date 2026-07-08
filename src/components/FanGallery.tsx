@@ -10,7 +10,6 @@ export default function FanGallery() {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [lightbox, setLightbox] = useState<string | null>(null);
   const hasCached = useRef(false);
 
   const fetchPhotos = useCallback(async () => {
@@ -39,11 +38,21 @@ export default function FanGallery() {
   }, [fetchPhotos]);
 
   useEffect(() => {
-    if (!lightbox) return;
-    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') setLightbox(null); };
-    window.addEventListener('keydown', h);
-    return () => window.removeEventListener('keydown', h);
-  }, [lightbox]);
+    const overlay = document.getElementById('fan-img-overlay');
+    if (!overlay) return;
+    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') overlay.classList.add('hidden'); };
+    overlay.addEventListener('keydown', h);
+    return () => overlay.removeEventListener('keydown', h);
+  }, []);
+
+  const openImg = (url: string) => {
+    const full = document.getElementById('fan-full-img') as HTMLImageElement;
+    const overlay = document.getElementById('fan-img-overlay');
+    if (full && overlay) {
+      full.src = url;
+      overlay.classList.remove('hidden');
+    }
+  };
 
   const handleImgError = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
     e.currentTarget.style.display = 'none';
@@ -70,7 +79,7 @@ export default function FanGallery() {
         {photos.map(p => (
           <div
             key={p.key}
-            onClick={() => setLightbox(p.url)}
+            onClick={() => openImg(p.url)}
             className="frost-card overflow-hidden block group cursor-pointer"
           >
             <img
@@ -84,12 +93,9 @@ export default function FanGallery() {
         ))}
       </div>
 
-      {lightbox && (
-        <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center cursor-pointer" onClick={() => setLightbox(null)}>
-          <button onClick={() => setLightbox(null)} className="absolute top-6 right-6 text-white/60 hover:text-white text-sm z-10">✕ 关闭</button>
-          <img src={lightbox} alt="" className="max-w-[95vw] max-h-[95vh] object-contain" onClick={e => e.stopPropagation()} />
-        </div>
-      )}
+      <div id="fan-img-overlay" className="hidden fixed inset-0 z-[100] bg-black/95 flex items-center justify-center cursor-pointer" onClick={e => { if (e.target === e.currentTarget) e.currentTarget.classList.add('hidden'); }} tabIndex={0}>
+        <img id="fan-full-img" src="" alt="" className="max-w-[95vw] max-h-[95vh] object-contain" onClick={e => e.stopPropagation()} />
+      </div>
     </>
   );
 }
