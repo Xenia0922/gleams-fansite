@@ -91,7 +91,7 @@ export default function GalleryGrid() {
             <img
               src={item.src}
               alt=""
-              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 lazy-blur"
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
               loading="lazy"
             />
           </div>
