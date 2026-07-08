@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ===== 全局背景装饰 ===== */
+/* ===== 全局背景 ===== */
 body {
   @apply text-gray-700 antialiased;
   font-family: 'Noto Sans SC', 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -23,110 +23,159 @@ body::before {
     radial-gradient(ellipse 60% 70% at 75% 50%, rgba(100, 160, 240, 0.06), transparent 60%),
     radial-gradient(ellipse 70% 50% at 50% 85%, rgba(100, 200, 160, 0.05), transparent 60%);
 }
-
 ::selection { @apply bg-pink-200 text-pink-900; }
 
-/* ===== 液态玻璃卡 ===== */
-.glass, .card {
-  border-radius: 1.5rem;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(32px) saturate(1.2);
-  -webkit-backdrop-filter: blur(32px) saturate(1.2);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+/* ===== 排版 ===== */
+.section-title { font-size: 1.5rem !important; font-weight: 800; letter-spacing: -0.02em; }
+@media (min-width: 768px) { .section-title { font-size: 1.875rem !important; } }
+.dark .section-title { color: #eeeef4; }
+.section-title-en {
+  font-size: 0.75rem; color: #9ca3af; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 0.5rem;
 }
-.glass:hover, .card:hover {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-  transform: translateY(-1px);
-}
-.glass-solid {
-  border-radius: 1.5rem;
-  overflow: hidden;
-  background: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.glass-solid:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
-  transform: translateY(-1px);
+.dark .section-title-en { color: #6b7280; }
+
+/* ===== 桌面端：全量玻璃效果 ===== */
+@media (min-width: 768px) {
+  .glass, .card {
+    border-radius: 1.5rem; overflow: hidden;
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(32px) saturate(1.2);
+    -webkit-backdrop-filter: blur(32px) saturate(1.2);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .glass:hover, .card:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    transform: translateY(-1px);
+  }
+  .glass-solid {
+    border-radius: 1.5rem; overflow: hidden;
+    background: #fff; border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .glass-solid:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    transform: translateY(-1px);
+  }
+  .dark .glass, .dark .card {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.06);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  }
+  .dark .glass:hover, .dark .card:hover { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); }
+  .dark .glass-solid {
+    background: #1a1a28; border-color: rgba(255, 255, 255, 0.06);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  }
+  .dark .glass-solid:hover { box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25); }
+
+  .frost {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(24px) saturate(1.2);
+    -webkit-backdrop-filter: blur(24px) saturate(1.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+  }
+  .frost-card {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(20px) saturate(1.2);
+    -webkit-backdrop-filter: blur(20px) saturate(1.2);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 1.5rem;
+  }
+  .dark .frost { background: rgba(13, 13, 22, 0.7); border-bottom-color: rgba(255, 255, 255, 0.05); }
+  .dark .frost-card { background: rgba(255, 255, 255, 0.04); border-color: rgba(255, 255, 255, 0.06); }
+
+  .btn-outline {
+    backdrop-filter: blur(20px) saturate(1.2);
+    -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  }
+
+  body::before { opacity: 1; }
 }
 
-/* dark */
-.dark .glass, .dark .card {
-  background: rgba(255, 255, 255, 0.03);
-  border-color: rgba(255, 255, 255, 0.06);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-}
-.dark .glass:hover, .dark .card:hover {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-}
-.dark .glass-solid {
-  background: #1a1a28;
-  border-color: rgba(255, 255, 255, 0.06);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
-}
-.dark .glass-solid:hover { box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25); }
+/* ===== 移动端：轻量玻璃效果（减速一半，不卡 GPU） ===== */
+@media (max-width: 767px) {
+  .glass, .card {
+    border-radius: 1.25rem; overflow: hidden;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    transition: opacity 0.3s ease-out;
+  }
+  .glass-solid {
+    border-radius: 1.25rem; overflow: hidden;
+    background: #fff; border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    transition: opacity 0.3s ease-out;
+  }
+  .dark .glass, .dark .card {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  }
+  .dark .glass-solid {
+    background: #1a1a28; border-color: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  }
 
-/* ===== 毛玻璃导航 / 浮层 ===== */
-.frost {
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(24px) saturate(1.2);
-  -webkit-backdrop-filter: blur(24px) saturate(1.2);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.4);
-}
-.frost-card {
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(20px) saturate(1.2);
-  -webkit-backdrop-filter: blur(20px) saturate(1.2);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 1.5rem;
-}
-.dark .frost {
-  background: rgba(13, 13, 22, 0.7);
-  border-bottom-color: rgba(255, 255, 255, 0.05);
-}
-.dark .frost-card {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.06);
+  .frost {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+  }
+  .frost-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 1.25rem;
+  }
+  .dark .frost { background: rgba(13, 13, 22, 0.8); border-bottom-color: rgba(255, 255, 255, 0.04); }
+  .dark .frost-card { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.05); }
+
+  .btn-outline {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .btn-pink, .btn-outline {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.9375rem;
+  }
+
+  /* 移动端减淡背景渐变 */
+  body::before { opacity: 0.6; }
+
+  /* 移动端图片圆角适配 */
+  .glass img, .card img, .frost-card img {
+    border-radius: inherit;
+  }
 }
 
-/* ===== 玻璃分隔线 ===== */
+/* ===== 通用：移动端禁用悬浮动效，桌面端保留 ===== */
+@media (hover: none) {
+  .glass:hover, .card:hover, .glass-solid:hover { transform: none; }
+  .btn-pink:hover { transform: none; }
+  .btn-outline:hover { transform: none; }
+}
+
+/* ===== 分隔线 ===== */
 .glass-divider {
   border-top: 1px solid rgba(0, 0, 0, 0.06);
 }
-.dark .glass-divider {
-  border-top-color: rgba(255, 255, 255, 0.04);
-}
+.dark .glass-divider { border-top-color: rgba(255, 255, 255, 0.04); }
 
-/* ===== 排版工具类 ===== */
-.section-title {
-  font-size: 1.5rem !important;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-@media (min-width: 768px) {
-  .section-title { font-size: 1.875rem !important; }
-}
-.dark .section-title { color: #eeeef4; }
-
-.section-title-en {
-  font-size: 0.75rem;
-  color: #9ca3af;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  margin-bottom: 0.5rem;
-}
-
+/* ===== 按钮 ===== */
 .btn-pink {
   display: inline-flex; align-items: center; gap: 0.5rem;
   padding: 0.625rem 1.5rem;
   border-radius: 9999px;
   background: var(--accent, #e83e8c);
-  color: #fff;
-  font-size: 0.875rem; font-weight: 700;
+  color: #fff; font-size: 0.875rem; font-weight: 700;
   box-shadow: 0 2px 8px rgba(232, 62, 140, 0.15);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -136,38 +185,32 @@ body::before {
 
 .btn-outline {
   display: inline-flex; align-items: center; gap: 0.5rem;
-  padding: 0.625rem 1.5rem;
-  border-radius: 9999px;
+  padding: 0.625rem 1.5rem; border-radius: 9999px;
   border: 1px solid rgba(0, 0, 0, 0.12);
-  color: #4b5563;
-  font-size: 0.875rem; font-weight: 700;
-  backdrop-filter: blur(20px) saturate(1.2);
-  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  color: #4b5563; font-size: 0.875rem; font-weight: 700;
   background: rgba(255, 255, 255, 0.6);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.btn-outline:hover {
-  border-color: #e83e8c;
-  color: #e83e8c;
-  transform: translateY(-1px);
-}
+.btn-outline:hover { border-color: #e83e8c; color: #e83e8c; transform: translateY(-1px); }
 .dark .btn-outline {
-  border-color: rgba(255, 255, 255, 0.1);
-  color: #c0c0cc;
+  border-color: rgba(255, 255, 255, 0.1); color: #c0c0cc;
   background: rgba(255, 255, 255, 0.04);
 }
-.dark .btn-outline:hover {
-  border-color: #f262a3;
-  color: #f262a3;
-}
+.dark .btn-outline:hover { border-color: #f262a3; color: #f262a3; }
 
-/* ===== 覆盖私有组件样式（ColorTheme 重写的文字色） ===== */
+/* ===== 覆盖 ===== */
 .dark .text-pink-500, .dark .text-pink-600 { color: #f262a3 !important; }
-
-/* ===== 兼容 ===== */
 .text-balance { text-wrap: balance; }
 
 /* ===== 性能 ===== */
 html { scroll-behavior: smooth; }
-[data-reveal] { content-visibility: auto; contain-intrinsic-size: 0 500px; }
+@media (min-width: 768px) {
+  [data-reveal] { content-visibility: auto; contain-intrinsic-size: 0 500px; }
+}
 img { content-visibility: auto; }
+
+/* ===== 移动端滚动优化 ===== */
+@media (max-width: 767px) {
+  * { -webkit-tap-highlight-color: transparent; }
+  input, textarea, button { font-size: 16px !important; }
+}

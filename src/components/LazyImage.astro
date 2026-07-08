@@ -2,10 +2,16 @@
 <style is:global>
   img.lazy-blur {
     filter: blur(10px);
-    transition: filter 0.5s ease-out;
+    transition: filter 0.4s ease-out;
   }
   img.lazy-blur.loaded {
     filter: blur(0);
+  }
+  @media (max-width: 767px) {
+    img.lazy-blur { transition-duration: 0.25s; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    img.lazy-blur { transition: none; filter: blur(0); }
   }
 </style>
 <script>
