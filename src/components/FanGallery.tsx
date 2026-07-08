@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 
 interface Photo {
   key: string;
@@ -68,7 +69,7 @@ export default function FanGallery() {
         ))}
       </div>
 
-      {lightboxIdx !== null && (
+      {lightboxIdx !== null && createPortal(
         <div className="fixed inset-0 z-[100] bg-black" onClick={close}>
           <button onClick={close} className="absolute top-6 right-6 text-white/60 hover:text-white text-sm z-10">✕ 关闭</button>
           <span className="absolute top-6 left-6 text-white/40 text-sm z-10">{lightboxIdx + 1} / {photos.length}</span>
@@ -78,8 +79,9 @@ export default function FanGallery() {
               <button onClick={e => { e.stopPropagation(); next(); }} className="absolute right-4 text-white/60 hover:text-white text-3xl z-10 p-4">›</button>
             </>
           )}
-          <img src={photos[lightboxIdx].url} alt="" className="absolute inset-0 m-auto max-w-full max-h-full object-contain" onClick={e => e.stopPropagation()} />
-        </div>
+          <img src={photos[lightboxIdx].url} alt="" className="w-screen h-screen object-contain" onClick={e => e.stopPropagation()} />
+        </div>,
+        document.body
       )}
     </>
   );
