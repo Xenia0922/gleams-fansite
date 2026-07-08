@@ -15,12 +15,27 @@
   }
 </style>
 <script>
-  document.querySelectorAll('img.lazy-blur').forEach(img => {
+  function initLazy(img) {
+    if (img.dataset.lazyInit) return;
+    img.dataset.lazyInit = '1';
     if (img.complete) {
       img.classList.add('loaded');
     } else {
       img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
       img.addEventListener('error', () => img.classList.add('loaded'), { once: true });
     }
-  });
+  }
+  // 初始扫描
+  document.querySelectorAll('img.lazy-blur').forEach(initLazy);
+  // 后续动态插入（React 渲染的图片）
+  new MutationObserver(mutations => {
+    mutations.forEach(m => {
+      m.addedNodes.forEach(node => {
+        if (node.nodeType === 1) {
+          if (node.matches?.('img.lazy-blur')) initLazy(node);
+          if (node.querySelectorAll) node.querySelectorAll?.('img.lazy-blur').forEach(initLazy);
+        }
+      });
+    });
+  }).observe(document.body, { childList: true, subtree: true });
 </script>
