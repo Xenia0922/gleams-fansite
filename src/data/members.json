@@ -11,9 +11,15 @@
       "status": "active",
       "image": "/images/members/hakusai/hakusai_01.webp",
       "gallery": [
+        "/images/members/hakusai/hakusai_01.webp",
         "/images/members/hakusai/hakusai_02.webp",
         "/images/members/hakusai/hakusai_03.webp",
-        "/images/members/hakusai/hakusai_05.webp"
+        "/images/members/hakusai/hakusai_04.webp",
+        "/images/members/hakusai/hakusai_05.webp",
+        "/images/members/hakusai/hakusai_06.webp",
+        "/images/members/hakusai/hakusai_07.webp",
+        "/images/members/hakusai/hakusai_08.webp",
+        "/images/members/hakusai/hakusai_09.webp"
       ],
       "weibo": "https://weibo.com/u/3639876511",
       "weiboName": "@白菜Hakusai_Gleams",
@@ -31,9 +37,15 @@
       "status": "active",
       "image": "/images/members/kumo/kumo_01.webp",
       "gallery": [
+        "/images/members/kumo/kumo_01.webp",
+        "/images/members/kumo/kumo_02.webp",
+        "/images/members/kumo/kumo_03.webp",
+        "/images/members/kumo/kumo_04.webp",
         "/images/members/kumo/kumo_05.webp",
         "/images/members/kumo/kumo_06.webp",
-        "/images/members/kumo/kumo_03.webp"
+        "/images/members/kumo/kumo_07.webp",
+        "/images/members/kumo/kumo_08.webp",
+        "/images/members/kumo/kumo_09.webp"
       ],
       "weibo": "https://weibo.com/u/5432863560",
       "weiboName": "@云团Kumo_Gleams",
@@ -49,11 +61,17 @@
       "birthday": "09-04",
       "constellation": "处女座",
       "status": "active",
-      "image": "/images/members/yuzi/yuzi_02.webp",
+      "image": "/images/members/yuzi/yuzi_01.webp",
       "gallery": [
+        "/images/members/yuzi/yuzi_01.webp",
+        "/images/members/yuzi/yuzi_02.webp",
+        "/images/members/yuzi/yuzi_03.webp",
+        "/images/members/yuzi/yuzi_04.webp",
         "/images/members/yuzi/yuzi_05.webp",
         "/images/members/yuzi/yuzi_06.webp",
-        "/images/members/yuzi/yuzi_07.webp"
+        "/images/members/yuzi/yuzi_07.webp",
+        "/images/members/yuzi/yuzi_08.webp",
+        "/images/members/yuzi/yuzi_09.webp"
       ],
       "weibo": "https://weibo.com/u/7148114625",
       "weiboName": "@柚子Yuzi_Gleams",
