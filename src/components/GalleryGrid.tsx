@@ -9,6 +9,7 @@ const allImages = [
   { src: '/images/members/hakusai/hakusai_06.webp', member: 'hakusai' },
   { src: '/images/members/hakusai/hakusai_07.webp', member: 'hakusai' },
   { src: '/images/members/hakusai/hakusai_08.webp', member: 'hakusai' },
+  { src: '/images/members/hakusai/hakusai_09.webp', member: 'hakusai' },
   { src: '/images/members/kumo/kumo_01.webp', member: 'kumo' },
   { src: '/images/members/kumo/kumo_02.webp', member: 'kumo' },
   { src: '/images/members/kumo/kumo_03.webp', member: 'kumo' },
@@ -17,6 +18,8 @@ const allImages = [
   { src: '/images/members/kumo/kumo_06.webp', member: 'kumo' },
   { src: '/images/members/kumo/kumo_07.webp', member: 'kumo' },
   { src: '/images/members/kumo/kumo_08.webp', member: 'kumo' },
+  { src: '/images/members/kumo/kumo_09.webp', member: 'kumo' },
+  { src: '/images/members/yuzi/yuzi_01.webp', member: 'yuzi' },
   { src: '/images/members/yuzi/yuzi_02.webp', member: 'yuzi' },
   { src: '/images/members/yuzi/yuzi_03.webp', member: 'yuzi' },
   { src: '/images/members/yuzi/yuzi_04.webp', member: 'yuzi' },
@@ -24,6 +27,7 @@ const allImages = [
   { src: '/images/members/yuzi/yuzi_06.webp', member: 'yuzi' },
   { src: '/images/members/yuzi/yuzi_07.webp', member: 'yuzi' },
   { src: '/images/members/yuzi/yuzi_08.webp', member: 'yuzi' },
+  { src: '/images/members/yuzi/yuzi_09.webp', member: 'yuzi' },
 ];
 
 type Filter = 'all' | 'hakusai' | 'kumo' | 'yuzi';
