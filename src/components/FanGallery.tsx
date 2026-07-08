@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface Photo {
   key: string;
@@ -10,6 +10,7 @@ export default function FanGallery() {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const hasCached = useRef(false);
 
   const fetchPhotos = useCallback(async () => {
     try {
@@ -19,11 +20,12 @@ export default function FanGallery() {
       if (Array.isArray(data)) {
         setPhotos(data);
         setError('');
+        hasCached.current = true;
       } else {
         setError('数据格式异常');
       }
     } catch {
-      if (photos.length === 0) setError('加载失败，请刷新重试');
+      if (!hasCached.current) setError('加载失败，请刷新重试');
     }
     setLoading(false);
   }, []);
