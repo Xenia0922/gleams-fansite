@@ -82,7 +82,7 @@ const navLinks = [
   </div>
 
   <!-- Mobile Menu -->
-  <div id="mobile-menu" class="md:hidden frost border-b border-pink-100/40 dark:border-white/[0.04] shadow-lg overflow-hidden transition-all duration-300 max-h-0 rounded-b-3xl">
+  <div id="mobile-menu" class="md:hidden closed frost border-b border-pink-100/40 dark:border-white/[0.04] shadow-lg rounded-b-3xl">
     <div class="px-4 py-2 space-y-0">
       {navLinks.map(link => {
         const isActive = currentPath === link.href || (link.href !== '/' && currentPath.startsWith(link.href));
@@ -95,6 +95,18 @@ const navLinks = [
     </div>
   </div>
 </header>
+
+<style>
+  .closed { display: none !important; }
+  .open {
+    display: block !important;
+    animation: menuSlide 0.2s ease-out forwards;
+  }
+  @keyframes menuSlide {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
 
 <!-- Spacer -->
 <div class="h-12 sm:h-14 md:h-16"></div>
@@ -109,11 +121,11 @@ const navLinks = [
   btn?.addEventListener('click', () => {
     menuOpen = !menuOpen;
     if (menuOpen) {
-      menu.style.display = 'block';
+      menu?.classList.add('open');
       openIcon?.classList.add('hidden');
       closeIcon?.classList.remove('hidden');
     } else {
-      menu.style.display = 'none';
+      menu?.classList.remove('open');
       openIcon?.classList.remove('hidden');
       closeIcon?.classList.add('hidden');
     }
