@@ -130,6 +130,17 @@ const navLinks = [
       closeIcon?.classList.add('hidden');
     }
   });
+
+  // 点击菜单内链接时先关闭菜单
+  menu?.addEventListener('click', (e) => {
+    const link = e.target.closest('a');
+    if (link && menuOpen) {
+      menu.classList.remove('open');
+      openIcon?.classList.remove('hidden');
+      closeIcon?.classList.add('hidden');
+      menuOpen = false;
+    }
+  });
 </script>
 
 <script>
