@@ -113,6 +113,7 @@ async function listPhotos(env) {
           key: o.key,
           url: `/api/photos?key=${encodeURIComponent(o.key)}`,
           uploaded: o.uploaded,
+          member: o.key.split('/')[1] || 'other',
           thumbUrl: thumbKeys.has(thumbKey)
             ? `/api/photos?key=${encodeURIComponent(thumbKey)}`
             : null,

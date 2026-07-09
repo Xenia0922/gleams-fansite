@@ -7,6 +7,20 @@ const MEMBERS = [
   { id: null, emoji: '⭐', name: '全员' },
 ];
 
+// 展示用成员元数据（含可读文字色，避免亮金/亮绿在浅底上糊）
+const MEMBER_META: Record<string, { emoji: string; name: string; color: string }> = {
+  hakusai: { emoji: '💛', name: '白菜', color: '#C99A00' },
+  kumo:    { emoji: '💙', name: '云团', color: '#2F6FED' },
+  yuzi:    { emoji: '💚', name: '柚子', color: '#1E9E6A' },
+  other:    { emoji: '⭐', name: '多人·其他', color: '#C2417A' },
+};
+
+// #RRGGBB → rgba(...)
+const tint = (hex: string, a: number) => {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
+};
+
 interface Message {
   id: string;
   name: string;
@@ -39,6 +53,7 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
   const [posting, setPosting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState('');
+  const [filter, setFilter] = useState<string | null>(null);
 
   const fetchMessages = useCallback(async () => {
     try {
@@ -62,11 +77,18 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
       if (c) { setCode(c); setVerified(true); }
     };
     const onClear = () => { setCode(''); setVerified(false); };
+    // 浏览页成员筛选
+    const onFilter = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      setFilter(detail === '' || detail == null ? null : detail);
+    };
     window.addEventListener('gleams-code-set', onSet);
     window.addEventListener('gleams-code-clear', onClear);
+    window.addEventListener('fan-member-filter', onFilter);
     return () => {
       window.removeEventListener('gleams-code-set', onSet);
       window.removeEventListener('gleams-code-clear', onClear);
+      window.removeEventListener('fan-member-filter', onFilter);
     };
   }, []);
 
@@ -117,22 +139,33 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
     return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   };
 
+  const visibleMessages = messages.filter(m => !filter || m.member === filter);
+
   const messageListEl = (
     <div className="space-y-3">
-      {messages.map(msg => (
+      {visibleMessages.map(msg => (
         <div key={msg.id} className="frost-card p-4">
           <div className="flex items-center gap-2 mb-1.5">
             <span className="text-sm font-bold text-gray-800 dark:text-gray-200">{msg.name}</span>
-            {msg.member && (
-              <span className="chip">
-                {MEMBERS.find(m => m.id === msg.member)?.emoji}
-              </span>
-            )}
+            {msg.member && MEMBER_META[msg.member] && (() => {
+              const m = MEMBER_META[msg.member];
+              return (
+                <span
+                  className="inline-flex items-center gap-1 text-[13px] font-semibold px-2 py-0.5 rounded-full"
+                  style={{ color: m.color, backgroundColor: tint(m.color, 0.12) }}
+                >
+                  {m.emoji} {m.name}
+                </span>
+              );
+            })()}
             <span className="text-xs text-gray-400 ml-auto">{formatTime(msg.created_at)}</span>
           </div>
           <p className="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-wrap break-words">{msg.message}</p>
         </div>
       ))}
+      {visibleMessages.length === 0 && (
+        <p className="text-center text-gray-400 py-8">该成员还没有留言 ✨</p>
+      )}
     </div>
   );
 

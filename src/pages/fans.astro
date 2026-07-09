@@ -21,6 +21,14 @@ import FanGallery from '../components/FanGallery';
 
     <!-- 浏览模式（默认） -->
     <div id="tab-browse">
+      <!-- 成员筛选 -->
+      <div id="fan-member-filter" class="flex flex-wrap justify-center gap-2 mb-10">
+        <button class="fan-filter-btn active" data-member="" style="--c: var(--accent)">全部</button>
+        <button class="fan-filter-btn" data-member="hakusai" style="--c: #C99A00">💛 白菜</button>
+        <button class="fan-filter-btn" data-member="kumo" style="--c: #2F6FED">💙 云团</button>
+        <button class="fan-filter-btn" data-member="yuzi" style="--c: #1E9E6A">💚 柚子</button>
+        <button class="fan-filter-btn" data-member="other" style="--c: #C2417A">🐙 多人·其他</button>
+      </div>
       <div class="mb-12" data-reveal>
         <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">💬 应援留言板</h2>
         <MessageBoard client:load readonly />
@@ -79,4 +87,32 @@ import FanGallery from '../components/FanGallery';
     hintOn = !hintOn;
     hint.textContent = hintOn ? 'Gleams应援会QQ群：480408977' : '不知道暗号？点这里试试！';
   });
+
+  // 成员筛选：广播给 MessageBoard / FanGallery 两个孤岛
+  const filterBtns = document.querySelectorAll('#fan-member-filter button');
+  filterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      filterBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      window.dispatchEvent(new CustomEvent('fan-member-filter', { detail: btn.dataset.member }));
+    });
+  });
 </script>
+
+<style>
+  .fan-filter-btn {
+    font-size: 0.8125rem; font-weight: 600;
+    padding: 0.4rem 0.95rem; border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.55); color: var(--text-soft);
+    border: 1px solid rgba(20, 14, 40, 0.06);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    transition: all 0.2s var(--ease); cursor: pointer;
+  }
+  .fan-filter-btn:hover { color: var(--c); border-color: color-mix(in srgb, var(--c) 35%, transparent); }
+  .fan-filter-btn.active {
+    color: #fff; background: var(--c); border-color: transparent;
+    box-shadow: 0 6px 16px -8px var(--c);
+  }
+  .dark .fan-filter-btn { background: rgba(255, 255, 255, 0.05); color: #a9a4bd; border-color: rgba(255, 255, 255, 0.08); }
+  .dark .fan-filter-btn:hover { color: var(--c); }
+</style>
