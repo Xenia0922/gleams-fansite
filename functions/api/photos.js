@@ -1,8 +1,8 @@
 /**
- * GET  /api/photos?suffix      — 列出已上传的照片
+ * GET  /api/photos?suffix      — 列出已上传的照片（含缩略图 URL）
  * GET  /api/photos?suffix&key=xxx — 读取单张图片
- * POST /api/photos             — 上传照片（需暗号）
- * DELETE /api/photos           — 删除照片（需 ADMIN_CODE）
+ * POST /api/photos             — 上传照片 + 可选缩略图（需暗号）
+ * DELETE /api/photos           — 删除照片（含缩略图，需 ADMIN_CODE）
  */
 
 export async function onRequest(context) {
@@ -28,10 +28,21 @@ export async function onRequest(context) {
   return new Response('Method not allowed', { status: 405 });
 }
 
+const THUMB_SUFFIX = '_thumb';
+
+function isThumbKey(key) {
+  return new RegExp(`${THUMB_SUFFIX}\\.\\w+$`).test(key);
+}
+
+function toThumbKey(key) {
+  return key.replace(/\.(\w+)$/, `${THUMB_SUFFIX}.$1`);
+}
+
 async function uploadPhoto(request, env) {
   try {
     const formData = await request.formData();
     const file = formData.get('file');
+    const thumb = formData.get('thumb'); // 可选：浏览器端生成的缩略图
     const member = formData.get('member') || 'other';
     const nickname = formData.get('nickname')?.slice(0, 20) || '匿名骑士';
     const code = formData.get('code')?.trim() || '';
@@ -41,17 +52,34 @@ async function uploadPhoto(request, env) {
     if (file.size > 15 * 1024 * 1024) return json({ error: '图片不能超过 15MB' }, 400);
 
     const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    if (!allowed.includes(file.type)) return json({ error: '仅支持 JPG/PNG/WEBP/GIF/HEIC' }, 400);
+    if (!allowed.includes(file.type)) return json({ error: '仅支持 JPG/PNG/WEBP/GIF' }, 400);
 
     const ext = file.name.split('.').pop() || 'jpg';
-    const key = `uploads/${member}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${ext}`;
+    const id = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
+    const key = `uploads/${member}/${id}.${ext}`;
 
     await env.PHOTOS.put(key, file.stream(), {
       httpMetadata: { contentType: file.type },
       customMetadata: { nickname, member, uploadedAt: new Date().toISOString() },
     });
 
-    return json({ ok: true, url: `/api/photos?key=${encodeURIComponent(key)}`, key });
+    let thumbUrl = null;
+    if (thumb && thumb instanceof File) {
+      const thumbExt = (thumb.name.split('.').pop() || 'webp').replace(/_thumb$/, '');
+      const thumbKey = `uploads/${member}/${id}${THUMB_SUFFIX}.${thumbExt}`;
+      await env.PHOTOS.put(thumbKey, thumb.stream(), {
+        httpMetadata: { contentType: thumb.type },
+        customMetadata: { original: key },
+      });
+      thumbUrl = `/api/photos?key=${encodeURIComponent(thumbKey)}`;
+    }
+
+    return json({
+      ok: true,
+      url: `/api/photos?key=${encodeURIComponent(key)}`,
+      key,
+      thumbUrl,
+    });
   } catch (e) {
     return json({ error: '上传失败: ' + e.message }, 500);
   }
@@ -74,11 +102,20 @@ async function servePhoto(env, key) {
 async function listPhotos(env) {
   try {
     const { objects } = await env.PHOTOS.list({ limit: 50, prefix: 'uploads/' });
-    const photos = objects.map(o => ({
-      key: o.key,
-      url: `/api/photos?key=${encodeURIComponent(o.key)}`,
-      uploaded: o.uploaded,
-    }));
+    const thumbKeys = new Set(objects.filter(o => isThumbKey(o.key)).map(o => o.key));
+    const photos = objects
+      .filter(o => !isThumbKey(o.key))
+      .map(o => {
+        const thumbKey = toThumbKey(o.key);
+        return {
+          key: o.key,
+          url: `/api/photos?key=${encodeURIComponent(o.key)}`,
+          uploaded: o.uploaded,
+          thumbUrl: thumbKeys.has(thumbKey)
+            ? `/api/photos?key=${encodeURIComponent(thumbKey)}`
+            : null,
+        };
+      });
     return json(photos);
   } catch (e) {
     return json({ error: e.message }, 500);
@@ -92,6 +129,8 @@ async function deletePhoto(request, env) {
     const { key } = await request.json();
     if (!key || !key.startsWith('uploads/')) return json({ error: '无效 key' }, 400);
     await env.PHOTOS.delete(key);
+    // 最佳努力删除配套缩略图
+    await env.PHOTOS.delete(toThumbKey(key)).catch(() => {});
     return json({ ok: true });
   } catch (e) {
     return json({ error: e.message }, 500);

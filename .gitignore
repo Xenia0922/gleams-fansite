@@ -20,3 +20,6 @@ Thumbs.db
 # Astro
 .astro/
 weibo-crawler/
+
+# Agent working memory (not project source)
+.workbuddy/

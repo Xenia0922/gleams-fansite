@@ -7,6 +7,39 @@ const MEMBERS = [
   { id: 'other', emoji: '⭐', name: '多人/其他' },
 ];
 
+/**
+ * 浏览器端生成缩略图：把原图按长边缩放到 maxEdge，导出 webp（不支持则 jpeg）。
+ * 返回 null 时调用方应回退为只上传原图。
+ */
+async function makeThumbnail(file: File, maxEdge = 480): Promise<File | null> {
+  try {
+    if (typeof document === 'undefined') return null;
+    const bmp = await createImageBitmap(file);
+    const scale = Math.min(1, maxEdge / Math.max(bmp.width, bmp.height));
+    const w = Math.max(1, Math.round(bmp.width * scale));
+    const h = Math.max(1, Math.round(bmp.height * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      bmp.close?.();
+      return null;
+    }
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(bmp, 0, 0, w, h);
+    bmp.close?.();
+    const blob: Blob | null = await new Promise((res) =>
+      canvas.toBlob(res, 'image/webp', 0.82)
+    );
+    if (!blob) return null;
+    const ext = blob.type === 'image/webp' ? 'webp' : 'jpg';
+    return new File([blob], `thumb.${ext}`, { type: blob.type });
+  } catch {
+    return null;
+  }
+}
+
 function getCode(): string | null {
   if (typeof window === 'undefined') return null;
   const entry = localStorage.getItem('gleams-code');
@@ -85,8 +118,10 @@ export default function FanUpload() {
     if (!file) return;
     setUploading(true);
     setMsg('');
+    const thumb = await makeThumbnail(file);
     const fd = new FormData();
     fd.append('file', file);
+    if (thumb) fd.append('thumb', thumb);
     fd.append('member', member);
     fd.append('nickname', nickname || '匿名骑士');
     fd.append('code', code.trim());

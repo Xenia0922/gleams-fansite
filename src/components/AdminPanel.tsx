@@ -4,6 +4,7 @@ interface Photo {
   key: string;
   url: string;
   uploaded: string;
+  thumbUrl?: string | null;
 }
 
 interface Message {
@@ -159,7 +160,7 @@ export default function AdminPanel() {
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {photos.map(p => (
             <div key={p.key} className="frost-card overflow-hidden group relative">
-              <img src={p.url} alt="" className="w-full aspect-[4/5] object-cover" loading="lazy" />
+              <img src={p.thumbUrl || p.url} alt="" className="w-full aspect-[4/5] object-cover" loading="lazy" />
               <button
                 onClick={() => delPhoto(p)}
                 className="absolute top-2 right-2 text-xs bg-red-500/80 hover:bg-red-600 text-white px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"

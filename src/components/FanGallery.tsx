@@ -5,6 +5,7 @@ interface Photo {
   key: string;
   url: string;
   uploaded: string;
+  thumbUrl?: string | null;
 }
 
 export default function FanGallery() {
@@ -52,8 +53,11 @@ export default function FanGallery() {
     return () => window.removeEventListener('keydown', handler);
   }, [lightboxIdx, close, prev, next]);
 
-  const handleImgError = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
-    e.currentTarget.style.display = 'none';
+  const handleImgError = useCallback((e: React.SyntheticEvent<HTMLImageElement>, fallback: string) => {
+    const img = e.currentTarget;
+    if (img.dataset.fallback) return;
+    img.dataset.fallback = '1';
+    img.src = fallback;
   }, []);
 
   if (loading) return <p className="text-center text-gray-400 py-8">加载中...</p>;
@@ -65,7 +69,7 @@ export default function FanGallery() {
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         {photos.map((p, i) => (
           <div key={p.key} className="frost-card overflow-hidden cursor-pointer group" onClick={() => setLightboxIdx(i)}>
-            <img src={p.url} alt="" className="w-full aspect-[4/5] object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" onError={handleImgError} />
+            <img src={p.thumbUrl || p.url} alt="" className="w-full aspect-[4/5] object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" onError={(e) => handleImgError(e, p.url)} />
           </div>
         ))}
       </div>

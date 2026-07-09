@@ -16,9 +16,4 @@ export default defineConfig({
   build: {
     inlineStylesheets: 'auto',
   },
-  vite: {
-    ssr: {
-      noExternal: ['framer-motion', 'lucide-react'],
-    },
-  },
 });
