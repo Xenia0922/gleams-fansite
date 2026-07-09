@@ -29,7 +29,10 @@ export default function FanGallery() {
   const [filter, setFilter] = useState<string | null>(null);
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
   const hasCached = useRef(false);
-  const visiblePhotos = photos.filter(p => !filter || p.member === filter);
+  const NAMED = ['hakusai', 'kumo', 'yuzi'];
+  const visiblePhotos = photos.filter(p =>
+    !filter || (filter === 'other' ? !NAMED.includes(p.member ?? '') : p.member === filter)
+  );
   const lightboxImages = useMemo(() => visiblePhotos.map(p => ({ src: p.url })), [visiblePhotos]);
 
   const fetchPhotos = useCallback(async () => {

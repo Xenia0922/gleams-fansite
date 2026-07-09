@@ -114,9 +114,6 @@ export default function ImageLightboxOverlay({
         <img
           src={image.src}
           alt={image.alt || ''}
-          onLoad={() => {
-            /* noop */
-          }}
           onClick={onImgClick}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}

@@ -139,7 +139,10 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
     return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   };
 
-  const visibleMessages = messages.filter(m => !filter || m.member === filter);
+  const NAMED = ['hakusai', 'kumo', 'yuzi'];
+  const visibleMessages = messages.filter(m =>
+    !filter || (filter === 'other' ? !NAMED.includes(m.member ?? '') : m.member === filter)
+  );
 
   const messageListEl = (
     <div className="space-y-3">
