@@ -124,7 +124,7 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
           <div className="flex items-center gap-2 mb-1.5">
             <span className="text-sm font-bold text-gray-800 dark:text-gray-200">{msg.name}</span>
             {msg.member && (
-              <span className="text-xs bg-white/40 dark:bg-white/10 px-2 py-0.5 rounded-full text-gray-500">
+              <span className="chip">
                 {MEMBERS.find(m => m.id === msg.member)?.emoji}
               </span>
             )}

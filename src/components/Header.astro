@@ -18,24 +18,20 @@ const navLinks = [
   <div class="frost">
     <div class="max-w-7xl mx-auto px-3 sm:px-4">
       <div class="flex items-center justify-between h-12 sm:h-14 md:h-16 relative">
-        <a href="/" class="flex items-center gap-2 sm:gap-2.5 flex-shrink-0">
-          <img src="/logo.png" alt={site.name} class="w-7 h-7 sm:w-8 sm:h-8 rounded-full" />
-          <span class="text-base sm:text-lg md:text-xl font-extrabold tracking-tight text-pink-500">{site.name}</span>
+        <a href="/" class="flex items-center gap-2 sm:gap-2.5 flex-shrink-0 group">
+          <img src="/logo.png" alt={site.name} class="w-7 h-7 sm:w-8 sm:h-8 rounded-full ring-2 ring-white/70 shadow-sm group-hover:ring-[color-mix(in_srgb,var(--accent)_40%,white)] transition-all" />
+          <span class="text-base sm:text-lg md:text-xl font-extrabold tracking-tight text-gradient">{site.name}</span>
           <span class="hidden sm:inline text-[8px] sm:text-[10px] text-gray-400 tracking-widest">Fansite</span>
         </a>
 
         <!-- Desktop Nav — centered with absolute -->
-        <nav class="hidden md:flex items-center gap-0 absolute left-1/2 -translate-x-1/2">
+        <nav class="hidden md:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
           {navLinks.map(link => {
             const isActive = currentPath === link.href || (link.href !== '/' && currentPath.startsWith(link.href));
             return (
               <a
                 href={link.href}
-                class={`relative px-3 py-5 text-xs tracking-widest transition-all duration-200 border-b-2 ${
-                  isActive
-                    ? 'text-pink-500 border-pink-500 font-bold dark:text-pink-400'
-                    : 'text-gray-500 dark:text-gray-400 border-transparent hover:text-pink-500 hover:border-pink-300'
-                }`}
+                class={`nav-link px-3.5 py-2 text-xs tracking-widest ${isActive ? 'nav-active' : ''}`}
               >
                 {link.label}
               </a>
@@ -45,13 +41,13 @@ const navLinks = [
 
         <!-- SNS Icons + Dark Mode -->
         <div class="hidden md:flex items-center gap-3">
-          <a href={site.weibo} target="_blank" rel="noopener" class="opacity-40 hover:opacity-100 transition-opacity" title="微博">
+          <a href={site.weibo} target="_blank" rel="noopener" class="opacity-50 hover:opacity-100 hover:scale-110 transition-all duration-200" title="微博">
             <img src="/icon-weibo.png" alt="微博" class="w-4 h-4" />
           </a>
-          <a href={site.xiaohongshu} target="_blank" rel="noopener" class="opacity-40 hover:opacity-100 transition-opacity" title="小红书">
+          <a href={site.xiaohongshu} target="_blank" rel="noopener" class="opacity-50 hover:opacity-100 hover:scale-110 transition-all duration-200" title="小红书">
             <img src="/icon-xhs.png" alt="小红书" class="w-4 h-4" />
           </a>
-          <a href={site.douyin} target="_blank" rel="noopener" class="opacity-40 hover:opacity-100 transition-opacity" title="抖音">
+          <a href={site.douyin} target="_blank" rel="noopener" class="opacity-50 hover:opacity-100 hover:scale-110 transition-all duration-200" title="抖音">
             <img src="/icon-douyin.png" alt="抖音" class="w-4 h-4" />
           </a>
           <span class="text-gray-300 dark:text-gray-600">|</span>
@@ -87,7 +83,7 @@ const navLinks = [
       {navLinks.map(link => {
         const isActive = currentPath === link.href || (link.href !== '/' && currentPath.startsWith(link.href));
         return (
-          <a href={link.href} class={`block py-3 px-3 text-sm tracking-widest border-l-2 transition-colors ${isActive ? 'text-pink-500 border-pink-500 font-bold dark:text-pink-400 bg-pink-50 dark:bg-gray-800' : 'text-gray-600 border-transparent hover:text-pink-400 hover:bg-pink-50'}`}>
+          <a href={link.href} class={`block py-3 px-3 text-sm tracking-widest rounded-xl border-l-2 transition-colors ${isActive ? 'm-active' : 'text-gray-600 border-transparent hover:text-[var(--accent)] hover:bg-white/50 dark:hover:bg-white/5'}`}>
             {link.label}
           </a>
         );
