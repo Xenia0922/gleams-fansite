@@ -1,4 +1,4 @@
-<!-- 成员色主题切换 -->
+<!-- 成员色主题切换（首屏初始化已移至 BaseLayout <head> 内联脚本，避免粉色闪一下） -->
 <script>
   const themeColors = {
     hakusai: '#FFD700',
@@ -6,14 +6,6 @@
     yuzi: '#48D1A0',
     default: '#e83e8c'
   };
-
-  // 从 localStorage 读取
-  const saved = localStorage.getItem('gleams-theme');
-  if (saved && themeColors[saved]) {
-    document.documentElement.style.setProperty('--accent', themeColors[saved]);
-  } else {
-    document.documentElement.style.setProperty('--accent', themeColors.default);
-  }
 
   // 监听成员色点击
   document.addEventListener('click', (e) => {

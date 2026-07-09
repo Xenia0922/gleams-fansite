@@ -49,6 +49,18 @@ const pageTitle = title ? `${title} | ${site.name}` : `${site.name} - 偶像应�
     <link rel="preconnect" href="https://fonts.loli.net" />
     <link rel="preconnect" href="https://gstatic.loli.net" crossorigin />
     <link href="https://fonts.loli.net/css2?family=Noto+Sans+SC:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
+
+    <!-- 防 FOUC：首屏绘制前同步应用成员色，避免先闪默认粉色 -->
+    <script is:inline>
+      (function () {
+        var themeColors = { hakusai: '#FFD700', kumo: '#4DA6FF', yuzi: '#48D1A0', default: '#e83e8c' };
+        try {
+          var saved = localStorage.getItem('gleams-theme');
+          var c = (saved && themeColors[saved]) ? themeColors[saved] : themeColors.default;
+          document.documentElement.style.setProperty('--accent', c);
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <Header />
