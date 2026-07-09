@@ -102,7 +102,7 @@ export default function AdminPanel() {
           value={code}
           onChange={e => setCode(e.target.value)}
           placeholder="管理员暗号"
-          className="w-full px-4 py-2 rounded-full text-sm text-center bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 outline-none focus:border-pink-400 transition-colors mb-3"
+          className="w-full px-4 py-2 rounded-full text-sm text-center bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 outline-none focus:border-[var(--accent)] transition-colors mb-3"
           onKeyDown={e => e.key === 'Enter' && login()}
         />
         <button onClick={login} className="btn-pink text-xs !px-4 !py-1.5">进入</button>

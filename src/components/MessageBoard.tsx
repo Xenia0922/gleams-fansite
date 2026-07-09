@@ -151,7 +151,7 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
           value={code}
           onChange={e => setCode(e.target.value)}
           placeholder="暗号（在 QQ 群获取）"
-          className="w-full max-w-xs px-4 py-2 rounded-full text-sm text-center bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 outline-none focus:border-pink-400 transition-colors"
+          className="w-full max-w-xs px-4 py-2 rounded-full text-sm text-center bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 outline-none focus:border-[var(--accent)] transition-colors"
           onKeyDown={e => e.key === 'Enter' && handleVerify()}
         />
         <button onClick={handleVerify} className="btn-pink text-xs mt-3 !px-4 !py-1.5">
@@ -187,7 +187,7 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
           onChange={e => setName(e.target.value)}
           placeholder="你的昵称（选填）"
           maxLength={30}
-          className="w-full px-4 py-2 rounded-full text-sm bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 outline-none focus:border-pink-400 transition-colors mb-3"
+          className="w-full px-4 py-2 rounded-full text-sm bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 outline-none focus:border-[var(--accent)] transition-colors mb-3"
         />
         <textarea
           value={text}
@@ -195,7 +195,7 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
           placeholder="写下你想对 Gleams 说的话..."
           maxLength={500}
           rows={3}
-          className="w-full px-4 py-3 rounded-3xl text-sm bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 outline-none focus:border-pink-400 transition-colors resize-none"
+          className="w-full px-4 py-3 rounded-3xl text-sm bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 outline-none focus:border-[var(--accent)] transition-colors resize-none"
         />
         <div className="flex justify-between items-center mt-2">
           <span className="text-xs text-gray-400">{text.length}/500</span>
