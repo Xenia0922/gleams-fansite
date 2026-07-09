@@ -98,21 +98,11 @@ body::after {
 .dark .section-title { color: #f1eef8; }
 
 .section-title-en {
-  display: inline-flex; align-items: center; gap: 0.5rem;
-  font-size: 0.6875rem; font-weight: 700;
+  font-size: 0.8125rem; font-weight: 600;
   color: var(--accent);
-  letter-spacing: 0.18em; text-transform: uppercase;
-  padding: 0.25rem 0.85rem; margin-bottom: 0.85rem;
-  background: var(--accent-soft);
-  border: 1px solid var(--accent-line);
-  border-radius: 9999px;
+  letter-spacing: 0.22em;
+  margin-bottom: 0.6rem;
 }
-.section-title-en::before {
-  content: ''; width: 5px; height: 5px; border-radius: 9999px;
-  background: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
-}
-.dark .section-title-en { background: color-mix(in srgb, var(--accent) 18%, transparent); }
 
 /* 渐变文字（适配成员色） */
 .text-gradient {
