@@ -203,11 +203,12 @@ body::before {
 .text-balance { text-wrap: balance; }
 
 /* ===== 性能 ===== */
-html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
 @media (min-width: 768px) {
   [data-reveal] { content-visibility: auto; contain-intrinsic-size: 0 500px; }
 }
-img { content-visibility: auto; }
 
 /* ===== 移动端滚动优化 ===== */
 @media (max-width: 767px) {

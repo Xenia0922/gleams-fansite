@@ -43,7 +43,8 @@ async function uploadPhoto(request, env) {
     const formData = await request.formData();
     const file = formData.get('file');
     const thumb = formData.get('thumb'); // 可选：浏览器端生成的缩略图
-    const member = formData.get('member') || 'other';
+    const rawMember = formData.get('member');
+    const member = ['hakusai', 'kumo', 'yuzi', 'other'].includes(rawMember) ? rawMember : 'other';
     const nickname = formData.get('nickname')?.slice(0, 20) || '匿名骑士';
     const code = formData.get('code')?.trim() || '';
 
@@ -54,7 +55,8 @@ async function uploadPhoto(request, env) {
     const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
     if (!allowed.includes(file.type)) return json({ error: '仅支持 JPG/PNG/WEBP/GIF' }, 400);
 
-    const ext = file.name.split('.').pop() || 'jpg';
+    const rawExt = (file.name.split('.').pop() || '').toLowerCase();
+    const ext = ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(rawExt) ? rawExt : 'jpg';
     const id = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
     const key = `uploads/${member}/${id}.${ext}`;
 
