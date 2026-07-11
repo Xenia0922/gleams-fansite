@@ -136,7 +136,7 @@ export default function AdminPanel() {
 
   // ---------- 广告管理 ----------
   const EMPTY_FORM: RecruitForm = {
-    id: null, title: '', subtitle: '', body: '', cta_text: '查看详情 →',
+    id: null, title: '', subtitle: '', body: '', cta_text: '',
     cta_url: '', deadline: '', enabled: true, sort_order: 0,
   };
   const [form, setForm] = useState<RecruitForm>(EMPTY_FORM);
@@ -162,7 +162,7 @@ export default function AdminPanel() {
       title: form.title.trim(),
       subtitle: form.subtitle.trim(),
       body: form.body.trim(),
-      cta_text: form.cta_text.trim() || '查看详情 →',
+      cta_text: form.cta_text.trim(),
       cta_url: form.cta_url.trim(),
       deadline: form.deadline || null,
       enabled: form.enabled ? 1 : 0,
@@ -416,7 +416,7 @@ export default function AdminPanel() {
               />
               <input
                 value={form.cta_text} onChange={e => setForm({ ...form, cta_text: e.target.value })}
-                placeholder="按钮文案（默认「查看详情 →」）" className={INPUT_CLS}
+                placeholder="按钮文案（可留空，默认「查看详情 →」）" className={INPUT_CLS}
               />
               <input
                 value={form.cta_url} onChange={e => setForm({ ...form, cta_url: e.target.value })}
