@@ -14,6 +14,7 @@ interface Member {
 
 export default function MembersList({ initial }: { initial: Member[] }) {
   const [members, setMembers] = useState<Member[]>(initial || []);
+  const [activeColor, setActiveColor] = useState('');
 
   useEffect(() => {
     let alive = true;
@@ -23,6 +24,16 @@ export default function MembersList({ initial }: { initial: Member[] }) {
       .catch(() => {});
     return () => { alive = false; };
   }, []);
+
+  useEffect(() => {
+    setActiveColor(typeof window !== 'undefined' ? (localStorage.getItem('gleams-accent') || '') : '');
+    const onTheme = (e: Event) => setActiveColor((e as CustomEvent<{ color: string }>).detail?.color || '');
+    window.addEventListener('gleams:theme', onTheme as EventListener);
+    return () => window.removeEventListener('gleams:theme', onTheme as EventListener);
+  }, []);
+
+  const isActive = (c?: string) =>
+    !!c && !!activeColor && c.toLowerCase() === activeColor.toLowerCase();
 
   const active = members.filter(m => m.status !== 'graduated');
   const graduated = members.filter(m => m.status === 'graduated');
@@ -40,7 +51,13 @@ export default function MembersList({ initial }: { initial: Member[] }) {
       <h3 className="text-base font-extrabold text-gray-900 dark:text-gray-100">{m.name}</h3>
       <p className="text-xs text-gray-400 dark:text-gray-500">{m.name_jp}</p>
       <div className="flex items-center justify-center gap-1.5 mt-1">
-        <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ background: m.color }} />
+        <span
+          data-member-color={m.id}
+          data-color={m.color}
+          className={'inline-block w-2.5 h-2.5 rounded-full ' + (isActive(m.color) ? 'ring-2 ring-offset-1 dark:ring-offset-gray-900 ring-[var(--accent)]' : '')}
+          style={{ background: m.color }}
+          title={`切换${m.name}主题色`}
+        />
         <span className="text-xs text-gray-500 dark:text-gray-400">{m.birthday} · {m.constellation}</span>
       </div>
     </a>

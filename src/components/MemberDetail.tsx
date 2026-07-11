@@ -31,6 +31,14 @@ export default function MemberDetail({ slug, initial }: { slug?: string; initial
   const [member, setMember] = useState<Member | null>(initial || null);
   const [loading, setLoading] = useState(!initial);
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
+  const [activeColor, setActiveColor] = useState('');
+
+  useEffect(() => {
+    setActiveColor(typeof window !== 'undefined' ? (localStorage.getItem('gleams-accent') || '') : '');
+    const onTheme = (e: Event) => setActiveColor((e as CustomEvent<{ color: string }>).detail?.color || '');
+    window.addEventListener('gleams:theme', onTheme as EventListener);
+    return () => window.removeEventListener('gleams:theme', onTheme as EventListener);
+  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -94,7 +102,12 @@ export default function MemberDetail({ slug, initial }: { slug?: string; initial
         <div className="flex flex-wrap gap-2 text-sm justify-center md:justify-start">
           <span className="frost-card px-3 py-1 rounded-full text-gray-600">{month}月{day}日</span>
           <span className="frost-card px-3 py-1 rounded-full text-gray-600">{member.constellation}</span>
-          <span className="inline-flex items-center gap-1.5 frost-card px-3 py-1 rounded-full text-gray-600">
+          <span
+            data-member-color={member.id}
+            data-color={member.color}
+            className={'inline-flex items-center gap-1.5 frost-card px-3 py-1 rounded-full text-gray-600 cursor-pointer ' + (activeColor && activeColor.toLowerCase() === (member.color || '').toLowerCase() ? 'ring-2 ring-[var(--accent)]' : '')}
+            title={`切换${member.name}主题色`}
+          >
             <span className="w-2.5 h-2.5 rounded-full" style={{ background: member.color }} />成员色
           </span>
         </div>
