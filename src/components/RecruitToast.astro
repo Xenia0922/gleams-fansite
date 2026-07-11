@@ -118,14 +118,20 @@ const FALLBACK = {
   .recruit-close:hover { background: rgba(20, 14, 40, 0.06); color: var(--text); }
   :global(.dark) .recruit-close:hover { background: rgba(255, 255, 255, 0.08); color: #ece9f4; }
 
-  /* 移动端：留出右下角返回顶部按钮的空间 */
+  /* 移动端：缩小体积、固定在左下角，不占满屏幕也不挤占右下角返回顶部 */
   @media (max-width: 767px) {
     .recruit-toast {
-      left: 1rem;
-      right: 4.5rem;
+      left: 0.75rem;
+      bottom: calc(0.75rem + env(safe-area-inset-bottom));
+      right: auto;
       width: auto;
-      max-width: none;
+      max-width: min(74vw, 260px);
+      padding: 0.7rem 0.85rem 0.8rem;
     }
+    .recruit-title { font-size: 0.8125rem; margin-bottom: 0.25rem; }
+    .recruit-sub { font-size: 0.6875rem; margin-bottom: 0.4rem; }
+    .recruit-meta { font-size: 0.6875rem; margin-bottom: 0.5rem; }
+    .recruit-cta { font-size: 0.75rem; }
   }
 
   /* 无障碍：减少动态效果时只淡入、不位移 */
