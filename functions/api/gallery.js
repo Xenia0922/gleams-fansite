@@ -169,17 +169,17 @@ export async function onRequest(context) {
       // 支持两种格式：
       //   新：{ groups: [{ member, ids:[...] }, ...] } —— 按成员分组，组内单独排序
       //   旧：{ order: [id,...] } —— 全局扁平排序（兼容保留）
-      const assignments: { id: string; sort: number }[] = [];
+      const assignments = [];
       if (Array.isArray(b.groups)) {
         let gi = 0;
         for (const grp of b.groups) {
           if (!grp || !Array.isArray(grp.ids)) continue;
           const ids = grp.ids.map(String).filter(Boolean);
-          ids.forEach((id: string, wi: number) => assignments.push({ id, sort: gi * 1000000 + wi }));
+          ids.forEach((id, wi) => assignments.push({ id, sort: gi * 1000000 + wi }));
           gi++;
         }
       } else if (Array.isArray(b.order)) {
-        b.order.forEach((id: string, i: number) => assignments.push({ id, sort: i + 1 }));
+        b.order.forEach((id, i) => assignments.push({ id, sort: i + 1 }));
       }
       if (!assignments.length) return json({ error: '缺少排序' }, 400);
       const stmt = env.DB.prepare('UPDATE gallery_photos SET sort = ? WHERE id = ?');
