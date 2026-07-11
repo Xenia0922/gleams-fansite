@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, type CSSProperties } from 'react';
 
 interface Photo {
   key: string;
@@ -198,6 +198,49 @@ export default function AdminPanel() {
     }
   };
 
+  // 广告实时预览（浅色 / 暗色），随表单输入即时更新
+  const fmtDeadline = (d: string) => {
+    if (!d) return '';
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d);
+    if (!m) return d;
+    return parseInt(m[2], 10) + '.' + m[3];
+  };
+
+  const AdCard = ({ dark }: { dark: boolean }) => {
+    const title = form.title.trim() || '研修生招募';
+    const subtitle = form.subtitle.trim() || '公主风王道系地下偶像团体';
+    const body = form.body.trim() || '微博转发关注抽 52 元偶活基金';
+    const cta = form.cta_text.trim() || '查看详情 →';
+    const dl = fmtDeadline(form.deadline);
+    const accent = 'var(--accent)';
+    const cardStyle: CSSProperties = dark
+      ? {
+          background: 'linear-gradient(160deg, rgba(255,255,255,0.07), rgba(255,255,255,0.035))',
+          border: '1px solid rgba(255,255,255,0.09)',
+          borderLeft: `3px solid ${accent}`,
+          color: '#c8c3da',
+          boxShadow: 'var(--shadow-md), inset 0 1px 0 rgba(255,255,255,0.07)',
+        }
+      : {
+          background: 'linear-gradient(160deg, rgba(255,255,255,0.72), rgba(255,255,255,0.52))',
+          border: '1px solid rgba(255,255,255,0.6)',
+          borderLeft: `3px solid ${accent}`,
+          color: 'var(--text)',
+          boxShadow: 'var(--shadow-md), inset 0 1px 0 rgba(255,255,255,0.5)',
+        };
+    return (
+      <div style={cardStyle} className="rounded-2xl p-4">
+        <p style={{ color: accent }} className="font-bold text-[15px] leading-snug mb-1.5">{title}</p>
+        <p style={{ color: dark ? '#a59fc0' : 'var(--text-soft)' }} className="text-xs leading-snug mb-2">{subtitle}</p>
+        <p style={{ color: dark ? '#a59fc0' : 'var(--text-soft)' }} className="text-xs leading-snug mb-2.5">
+          {dl && <span style={{ color: accent }} className="font-bold">报名截止 {dl}</span>}
+          {dl && ' · '}{body}
+        </p>
+        <span style={{ color: accent }} className="inline-flex items-center gap-1 text-[13px] font-bold">{cta}</span>
+      </div>
+    );
+  };
+
   if (!authed) {
     return (
       <div className="frost-card p-8 text-center max-w-sm mx-auto">
@@ -331,6 +374,25 @@ export default function AdminPanel() {
             {recruits.length === 0 && (
               <p className="text-center text-gray-400 py-8">暂无广告，在下方表单新建第一条</p>
             )}
+          </div>
+
+          {/* 实时预览：浅色 / 暗色 */}
+          <div className="frost-card p-5">
+            <h3 className="text-sm font-bold text-gray-800 dark:text-gray-100 mb-3">实时预览（浅色 / 暗色）</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <p className="text-[11px] text-gray-400 mb-1.5">浅色模式</p>
+                <div style={{ background: '#f5f2fb', padding: '10px', borderRadius: '16px' }}>
+                  <AdCard dark={false} />
+                </div>
+              </div>
+              <div>
+                <p className="text-[11px] text-gray-400 mb-1.5">暗色模式</p>
+                <div style={{ background: '#0c0b14', padding: '10px', borderRadius: '16px' }}>
+                  <AdCard dark={true} />
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* 新建 / 编辑表单 */}
