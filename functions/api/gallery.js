@@ -166,10 +166,24 @@ export async function onRequest(context) {
     if (!adminOk(request, env)) return json({ error: '无权限' }, 403);
     try {
       const b = await request.json().catch(() => ({}));
-      const order = Array.isArray(b.order) ? b.order.map(String).filter(Boolean) : [];
-      if (!order.length) return json({ error: '缺少排序' }, 400);
+      // 支持两种格式：
+      //   新：{ groups: [{ member, ids:[...] }, ...] } —— 按成员分组，组内单独排序
+      //   旧：{ order: [id,...] } —— 全局扁平排序（兼容保留）
+      const assignments: { id: string; sort: number }[] = [];
+      if (Array.isArray(b.groups)) {
+        let gi = 0;
+        for (const grp of b.groups) {
+          if (!grp || !Array.isArray(grp.ids)) continue;
+          const ids = grp.ids.map(String).filter(Boolean);
+          ids.forEach((id: string, wi: number) => assignments.push({ id, sort: gi * 1000000 + wi }));
+          gi++;
+        }
+      } else if (Array.isArray(b.order)) {
+        b.order.forEach((id: string, i: number) => assignments.push({ id, sort: i + 1 }));
+      }
+      if (!assignments.length) return json({ error: '缺少排序' }, 400);
       const stmt = env.DB.prepare('UPDATE gallery_photos SET sort = ? WHERE id = ?');
-      const batch = order.map((id, i) => stmt.bind(i + 1, id));
+      const batch = assignments.map((a) => stmt.bind(a.sort, a.id));
       await env.DB.batch(batch);
       return json({ ok: true });
     } catch (e) {
