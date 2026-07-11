@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import ImageUpload from './ImageUpload';
+import MemberGalleryUpload from './MemberGalleryUpload';
 
 interface Member {
   id: string;
@@ -27,7 +28,6 @@ export default function AdminMembers({ code }: { code: string }) {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Member | null>(null); // null=列表, 'new'=新建, Member=编辑
   const [form, setForm] = useState<Partial<Member>>({});
-  const [galleryText, setGalleryText] = useState('');
   const [err, setErr] = useState('');
 
   const load = useCallback(async () => {
@@ -48,25 +48,22 @@ export default function AdminMembers({ code }: { code: string }) {
   const startNew = () => {
     setErr('');
     setForm({ status: 'active', gallery: [], sort_order: list.length + 1 });
-    setGalleryText('');
     setEditing({ id: 'new' } as Member);
   };
 
   const startEdit = (m: Member) => {
     setErr('');
     setForm({ ...m });
-    setGalleryText((m.gallery || []).join('\n'));
     setEditing(m);
   };
 
   const save = async () => {
     if (!form.name?.trim()) { setErr('名称必填'); return; }
     setErr('');
-    const gallery = galleryText.split('\n').map(s => s.trim()).filter(Boolean);
     const body = {
       ...form,
       name: form.name.trim(),
-      gallery,
+      gallery: Array.isArray(form.gallery) ? form.gallery : [],
       sort_order: Number.isFinite(+form.sort_order) ? +form.sort_order : 99,
     };
     try {
@@ -137,8 +134,8 @@ export default function AdminMembers({ code }: { code: string }) {
         <Field label="头像">
           <ImageUpload code={code} section="members" value={form.image || ''} onChange={v => set('image', v)} />
         </Field>
-        <Field label="画廊图片（每行一个链接）">
-          <textarea value={galleryText} onChange={e => setGalleryText(e.target.value)} rows={4} className={INPUT + ' resize-none'} placeholder="/images/members/xxx/01.webp" />
+        <Field label="画廊图片（九宫格，逐个上传）">
+          <MemberGalleryUpload code={code} section="members" value={form.gallery || []} onChange={v => set('gallery', v)} />
         </Field>
         <div className="grid grid-cols-2 gap-3">
           <Field label="微博链接">
