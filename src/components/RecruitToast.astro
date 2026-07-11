@@ -2,6 +2,7 @@
 // 招募公告 · 非阻断式左下角玻璃卡
 // 内容运行时从 /api/recruits 读取（管理员可在后台自助编辑/多条投放）；
 // 组件内写死一条 fallback（CF 不可用时仍展示），deadline 过期则整体不显示。
+// 多条有效广告时自动轮播（悬停/聚焦暂停、关闭记忆全部）。
 // 设计原则：不挡 Hero、不引起布局抖动（fixed 浮层）、可关闭、localStorage 按 id 记忆不再弹
 const FALLBACK = {
   id: 'default',
@@ -29,6 +30,7 @@ const FALLBACK = {
   <p class="recruit-sub" data-field="subtitle">{FALLBACK.subtitle}</p>
   <p class="recruit-meta" data-field="meta"></p>
   <a class="recruit-cta" data-field="cta" href={FALLBACK.cta_url} target="_blank" rel="noopener">{FALLBACK.cta_text}</a>
+  <div class="recruit-dots" data-field="dots" aria-hidden="true"></div>
 </div>
 
 <style>
@@ -60,7 +62,7 @@ const FALLBACK = {
     visibility: visible;
     pointer-events: auto;
   }
-  .dark .recruit-toast {
+  :global(.dark) .recruit-toast {
     background: linear-gradient(160deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.035));
     border-color: rgba(255, 255, 255, 0.09);
     border-left-color: var(--accent);
@@ -72,17 +74,17 @@ const FALLBACK = {
     font-size: 0.9375rem; font-weight: 700; color: var(--accent);
     margin-bottom: 0.35rem; line-height: 1.3;
   }
-  .dark .recruit-title { color: var(--accent); }
+  :global(.dark) .recruit-title { color: var(--accent); }
   .recruit-sub {
     font-size: 0.75rem; color: var(--text-soft); line-height: 1.4;
     margin-bottom: 0.55rem;
   }
-  .dark .recruit-sub { color: #a59fc0; }
+  :global(.dark) .recruit-sub { color: #a59fc0; }
   .recruit-meta {
     font-size: 0.75rem; color: var(--text-soft); line-height: 1.45; margin-bottom: 0.7rem;
   }
   .recruit-accent { color: var(--accent); font-weight: 700; }
-  .dark .recruit-meta { color: #a59fc0; }
+  :global(.dark) .recruit-meta { color: #a59fc0; }
   .recruit-cta {
     display: inline-flex; align-items: center; gap: 0.25rem;
     font-size: 0.8125rem; font-weight: 700; color: var(--accent);
@@ -90,6 +92,21 @@ const FALLBACK = {
     transition: gap 0.2s var(--ease);
   }
   .recruit-cta:hover { gap: 0.5rem; }
+
+  /* 多广告指示点（仅多条时出现） */
+  .recruit-dots {
+    display: flex; gap: 0.3rem; margin-top: 0.55rem;
+  }
+  .recruit-dots:empty { display: none; }
+  .recruit-dot {
+    width: 6px; height: 6px; border-radius: 9999px;
+    background: color-mix(in srgb, var(--text-soft) 55%, transparent);
+    transition: background 0.25s var(--ease), transform 0.25s var(--ease);
+  }
+  .recruit-dot.active { background: var(--accent); transform: scale(1.15); }
+  :global(.dark) .recruit-dot { background: rgba(255, 255, 255, 0.18); }
+  :global(.dark) .recruit-dot.active { background: var(--accent); }
+
   .recruit-close {
     position: absolute; top: 0.5rem; right: 0.5rem;
     width: 1.5rem; height: 1.5rem; border-radius: 9999px;
@@ -99,7 +116,7 @@ const FALLBACK = {
     transition: background 0.2s var(--ease), color 0.2s var(--ease);
   }
   .recruit-close:hover { background: rgba(20, 14, 40, 0.06); color: var(--text); }
-  .dark .recruit-close:hover { background: rgba(255, 255, 255, 0.08); color: #ece9f4; }
+  :global(.dark) .recruit-close:hover { background: rgba(255, 255, 255, 0.08); color: #ece9f4; }
 
   /* 移动端：留出右下角返回顶部按钮的空间 */
   @media (max-width: 767px) {
@@ -125,18 +142,20 @@ const FALLBACK = {
 
     // 按 id 记忆已关闭的招募，互不干扰
     var KEY_CLOSED = 'gleams-recruit-closed';
-    function getClosed() {
+    var closed = (function () {
       try { return JSON.parse(localStorage.getItem(KEY_CLOSED) || '[]'); } catch (e) { return []; }
-    }
+    })();
+    function isClosed(id) { return closed.indexOf(String(id)) !== -1; }
     function addClosed(id) {
       try {
-        var a = getClosed();
-        if (a.indexOf(id) === -1) a.push(id);
-        localStorage.setItem(KEY_CLOSED, JSON.stringify(a));
+        if (closed.indexOf(String(id)) === -1) closed.push(String(id));
+        localStorage.setItem(KEY_CLOSED, JSON.stringify(closed));
       } catch (e) {}
     }
 
-    // 当前生效条目（先取组件内写死的 fallback）
+    var reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+    // 当前展示条目（初始为组件内写死的 fallback）
     var current = {
       id: el.dataset.id || 'default',
       title: el.querySelector('[data-field="title"]').textContent,
@@ -146,9 +165,6 @@ const FALLBACK = {
       cta_url: el.querySelector('[data-field="cta"]').getAttribute('href'),
       deadline: el.dataset.deadline || null,
     };
-
-    // 先用 fallback 渲染（含强调色 meta 行），fetch 成功后再覆盖
-    renderMeta();
 
     // 按本地时间判定：deadline 为 'YYYY-MM-DD'，视为该日北京时间 23:59:59 前有效
     function isActive(deadline) {
@@ -180,6 +196,14 @@ const FALLBACK = {
       }
     }
 
+    function mapAd(r) {
+      return {
+        id: r.id, title: r.title, subtitle: r.subtitle || '',
+        body: r.body, cta_text: r.cta_text, cta_url: r.cta_url,
+        deadline: r.deadline || null,
+      };
+    }
+
     function applyRecruit(r) {
       el.dataset.id = String(r.id);
       el.dataset.deadline = r.deadline || '';
@@ -197,46 +221,112 @@ const FALLBACK = {
       cta.setAttribute('href', r.cta_url || '#');
     }
 
+    // ---- 多广告轮播 ----
+    var allAds = null;   // 后端返回的有效广告数组（按 sort_order 升序）
+    var idx = 0;
     var shown = false;
-    function showCurrent() {
-      if (shown) return;
-      if (getClosed().indexOf(String(current.id)) !== -1) return;  // 关过不再弹
-      if (!isActive(current.deadline)) { el.remove(); return; }     // 过期则整体不显示
-      shown = true;
+    var timer = null;
+
+    function renderDots() {
+      var box = el.querySelector('[data-field="dots"]');
+      box.textContent = '';
+      if (!allAds || allAds.length < 2) return;
+      for (var i = 0; i < allAds.length; i++) {
+        var d = document.createElement('span');
+        d.className = 'recruit-dot' + (i === idx ? ' active' : '');
+        box.appendChild(d);
+      }
+    }
+
+    function reveal() {
       requestAnimationFrame(function () {
         requestAnimationFrame(function () { el.classList.add('show'); });
       });
     }
 
+    // 从 fromIdx 起寻找下一条「未关闭且未过期」的广告并展示；返回是否成功
+    function showNext(fromIdx) {
+      if (!allAds || !allAds.length) {
+        // 无后端广告：展示写死的 fallback
+        if (isClosed(current.id) || !isActive(current.deadline)) { el.remove(); return false; }
+        renderMeta(); renderDots(); reveal(); shown = true; return true;
+      }
+      var n = allAds.length;
+      for (var k = 0; k < n; k++) {
+        var j = (fromIdx + k) % n;
+        var ad = allAds[j];
+        if (!isClosed(ad.id) && isActive(ad.deadline)) {
+          idx = j;
+          current = mapAd(ad);
+          applyRecruit(current);
+          renderDots();
+          if (!shown) { shown = true; reveal(); }
+          return true;
+        }
+      }
+      el.remove();   // 全部已关闭/过期
+      return false;
+    }
+
+    function startCycling() {
+      if (!el.isConnected) return;
+      if (reduceMotion || !allAds || allAds.length < 2) return;
+      stopCycling();
+      timer = setInterval(function () {
+        showNext((idx + 1) % allAds.length);
+      }, 8000);
+    }
+    function stopCycling() { if (timer) { clearInterval(timer); timer = null; } }
+
     function close() {
+      // 关闭：记忆所有当前有效广告 id，整体隐藏
+      if (allAds && allAds.length) {
+        for (var i = 0; i < allAds.length; i++) addClosed(allAds[i].id);
+      } else {
+        addClosed(current.id);
+      }
+      stopCycling();
       el.classList.remove('show');
-      addClosed(String(current.id));
+      el.remove();
     }
     var closeBtn = el.querySelector('.recruit-close');
     if (closeBtn) closeBtn.addEventListener('click', close);
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && el.classList.contains('show')) close();
     });
+    // 悬停/聚焦时暂停轮播，方便阅读
+    el.addEventListener('mouseenter', stopCycling);
+    el.addEventListener('mouseleave', startCycling);
+    el.addEventListener('focusin', stopCycling);
+    el.addEventListener('focusout', startCycling);
 
-    // 拉取后端有效条目（sort_order 升序首条），成功则覆盖 fallback
+    // 先用 fallback 渲染（含强调色 meta 行），fetch 成功后再覆盖
+    renderMeta();
+
     fetch('/api/recruits')
       .then(function (r) { return r.json(); })
       .then(function (list) {
         if (Array.isArray(list) && list.length) {
-          var r = list[0];
-          current = {
-            id: r.id, title: r.title, subtitle: r.subtitle || '',
-            body: r.body,
-            cta_text: r.cta_text, cta_url: r.cta_url,
-            deadline: r.deadline || null,
-          };
-          applyRecruit(current);
+          // 仅保留未关闭且未过期的条目
+          allAds = list.filter(function (r) {
+            return !isClosed(r.id) && isActive(r.deadline);
+          });
+          if (!allAds.length) { el.remove(); return; }
+        } else if (Array.isArray(list)) {
+          // 后端正常但无广告：不展示（不回退到写死的示例）
+          el.remove();
+          return;
         }
-        showCurrent();
+        // 展示首条（单条或多条首条都会走到这里）；多条则启动轮播
+        if (!shown) showNext(0);
+        startCycling();
       })
-      .catch(function () { showCurrent(); });
+      .catch(function () {
+        // 接口异常：保留写死的 fallback 兜底
+        if (!shown) showNext(0);
+      });
 
-    // 兜底：fetch 缓慢时 2s 后按 fallback 显示，不阻塞
-    setTimeout(function () { if (!shown) showCurrent(); }, 2000);
+    // 兜底：fetch 缓慢时 2s 后按当前状态显示，不阻塞
+    setTimeout(function () { if (!shown) showNext(0); }, 2000);
   })();
 </script>
