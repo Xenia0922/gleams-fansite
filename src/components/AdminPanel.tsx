@@ -237,9 +237,9 @@ export default function AdminPanel() {
   };
 
   const AdCard = ({ dark }: { dark: boolean }) => {
-    const title = form.title.trim() || '研修生招募';
-    const subtitle = form.subtitle.trim() || '公主风王道系地下偶像团体';
-    const body = form.body.trim() || '微博转发关注抽 52 元偶活基金';
+    const title = form.title.trim() || '主标题';
+    const subtitle = form.subtitle.trim() ? form.subtitle.trim() : '';
+    const body = form.body.trim() || '正文内容';
     const cta = form.cta_text.trim() || '查看详情 →';
     const dl = fmtDeadline(form.deadline);
     const accent = 'var(--accent)';
@@ -261,10 +261,13 @@ export default function AdminPanel() {
     return (
       <div style={cardStyle} className="rounded-2xl p-4">
         <p style={{ color: accent }} className="font-bold text-[15px] leading-snug mb-1.5">{title}</p>
-        <p style={{ color: dark ? '#a59fc0' : 'var(--text-soft)' }} className="text-xs leading-snug mb-2">{subtitle}</p>
+        <p style={{ color: dark ? '#a59fc0' : 'var(--text-soft)' }} className="text-xs leading-snug mb-2">{subtitle || '副标题'}</p>
         <p style={{ color: dark ? '#a59fc0' : 'var(--text-soft)' }} className="text-xs leading-snug mb-2.5">
-          {dl && <span style={{ color: accent }} className="font-bold">报名截止 {dl}</span>}
-          {dl && ' · '}{body}
+          {dl ? (
+            <><span style={{ color: accent }} className="font-bold">报名截止 {dl}</span> · {body || '正文内容'}</>
+          ) : (
+            body
+          )}
         </p>
         <span style={{ color: accent }} className="inline-flex items-center gap-1 text-[13px] font-bold">{cta}</span>
       </div>
