@@ -9,6 +9,7 @@ interface EventRow {
   venue?: string;
   performers?: string[];
   status?: string;
+  image?: string;
 }
 interface Member {
   id: string;
@@ -69,7 +70,7 @@ export default function ScheduleList({
             {evs.map(evt => {
               const d = new Date(evt.date);
               const isPast = evt.status === 'past';
-              const img = getEventImage(evt.id);
+              const img = evt.image || getEventImage(evt.id);
               const slug = reportMap[evt.date] || evt.date;
               return (
                 <a

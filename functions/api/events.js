@@ -16,6 +16,7 @@ const DDL = `CREATE TABLE IF NOT EXISTS events (
   venue TEXT,
   performers TEXT NOT NULL DEFAULT '[]',
   status TEXT NOT NULL DEFAULT 'upcoming',
+  image TEXT,
   created_at TEXT NOT NULL
 );`;
 
@@ -34,16 +35,20 @@ const SEED = [
 
 async function ensureTable(env) {
   await env.DB.prepare(DDL).run();
+  // 旧表补 image 列（部署前已存在 events 表时）
+  try {
+    await env.DB.prepare('ALTER TABLE events ADD COLUMN image TEXT').run();
+  } catch (e) { /* 列已存在则忽略 */ }
   try {
     const { results } = await env.DB.prepare('SELECT COUNT(*) AS c FROM events').all();
     if (results[0] && results[0].c === 0) {
       for (const e of SEED) {
         await env.DB
           .prepare(
-            `INSERT INTO events (id,date,time,title,venue,performers,status,created_at)
-             VALUES (?,?,?,?,?,?,?,?)`
+            `INSERT INTO events (id,date,time,title,venue,performers,status,image,created_at)
+             VALUES (?,?,?,?,?,?,?,?,?)`
           )
-          .bind(e.id, e.date, e.time || '', e.title, e.venue || '', JSON.stringify(e.performers || []), e.status || 'past', new Date().toISOString())
+          .bind(e.id, e.date, e.time || '', e.title, e.venue || '', JSON.stringify(e.performers || []), e.status || 'past', String(e.image || ''), new Date().toISOString())
           .run();
       }
     }
@@ -99,11 +104,11 @@ async function createEvent(request, env) {
     const performers = Array.isArray(b.performers) ? b.performers : [];
     await env.DB
       .prepare(
-        `INSERT INTO events (id,date,time,title,venue,performers,status,created_at)
-         VALUES (?,?,?,?,?,?,?,?)`
+        `INSERT INTO events (id,date,time,title,venue,performers,status,image,created_at)
+         VALUES (?,?,?,?,?,?,?,?,?)`
       )
       .bind(id, String(b.date), String(b.time || '').slice(0, 10), title, String(b.venue || '').slice(0, 80),
-        JSON.stringify(performers), b.status === 'upcoming' || b.status === 'past' ? b.status : 'upcoming', new Date().toISOString())
+        JSON.stringify(performers), b.status === 'upcoming' || b.status === 'past' ? b.status : 'upcoming', String(b.image || '').slice(0, 255), new Date().toISOString())
       .run();
     return json({ ok: true, id });
   } catch (e) {
@@ -126,6 +131,7 @@ async function putEvent(request, env) {
     if (b.venue !== undefined) { sets.push('venue = ?'); binds.push(String(b.venue).slice(0, 80)); }
     if (b.performers !== undefined) { sets.push('performers = ?'); binds.push(JSON.stringify(Array.isArray(b.performers) ? b.performers : [])); }
     if (b.status !== undefined) { sets.push('status = ?'); binds.push(b.status === 'upcoming' || b.status === 'past' ? b.status : 'upcoming'); }
+    if (b.image !== undefined) { sets.push('image = ?'); binds.push(String(b.image || '').slice(0, 255)); }
     if (sets.length === 0) return json({ ok: true });
     binds.push(id);
     await env.DB.prepare(`UPDATE events SET ${sets.join(', ')} WHERE id = ?`).bind(...binds).run();

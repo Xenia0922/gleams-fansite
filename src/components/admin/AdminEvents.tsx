@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import ImageUpload from './ImageUpload';
 
 interface EventRow {
   id: string;
@@ -8,6 +9,7 @@ interface EventRow {
   venue?: string;
   performers?: string[];
   status?: string;
+  image?: string;
 }
 
 const MEMBER_OPTS = [
@@ -123,6 +125,10 @@ export default function AdminEvents({ code }: { code: string }) {
         <label className="block">
           <span className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">地点</span>
           <input value={form.venue || ''} onChange={e => set('venue', e.target.value)} className={INPUT} />
+        </label>
+        <label className="block sm:col-span-2">
+          <span className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">活动图片（海报 / 现场图）</span>
+          <ImageUpload code={code} section="events" value={form.image || ''} onChange={v => set('image', v)} label="活动图片" />
         </label>
         <div>
           <span className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">参演成员</span>
