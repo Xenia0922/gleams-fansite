@@ -19,16 +19,14 @@ export default function MemberGalleryUpload({ code, section, value, onChange, la
   const [err, setErr] = useState('');
   const [dragIdx, setDragIdx] = useState<number | null>(null);
 
-  // 始终持有最新数组，所有写操作都基于它累加，避免异步上传/并发操作互相覆盖（表现为「添加一张却丢一张」）
+  // 渲染期把最新 value 直接挂到 ref（React 官方推荐的「最新值」写法，比 useEffect 异步同步更及时、无时序缝隙）。
+  // 所有写操作都基于它累加，彻底杜绝「旧 prop / 异步上传相交导致添加丢图、删错图」。
   const valueRef = useRef<string[]>(value);
-  // 用 useEffect 同步（而非渲染期直接赋值），避免在渲染中途被旧 prop 覆盖，最稳妥
-  useEffect(() => { valueRef.current = value; }, [value]);
+  valueRef.current = value;
 
-  // 单一入口：基于最新值计算新数组并回传，确保 添加/删除/排序 之间不会互相覆盖
+  // 单一入口：基于最新值计算新数组并回传。添加 / 删除 / 排序全部走这里，互不覆盖。
   const commit = (updater: (prev: string[]) => string[]) => {
-    const next = updater(valueRef.current);
-    valueRef.current = next;
-    onChange(next);
+    onChange(updater(valueRef.current));
   };
 
   const add = async (file?: File | null) => {
@@ -52,13 +50,12 @@ export default function MemberGalleryUpload({ code, section, value, onChange, la
     }
   };
 
-  // 让文档级粘贴也能捕获剪贴板图片（焦点不在输入框时）。用 ref 持有最新 add，避免反复绑定/解绑。
+  // 文档级粘贴捕获（焦点不在输入框时）。用 ref 持有最新 add，避免反复绑定 / 解绑。
   const addRef = useRef<(f?: File | null) => void>(() => {});
   addRef.current = add;
   useEffect(() => {
     const onDocPaste = (e: ClipboardEvent) => {
       const t = e.target as HTMLElement | null;
-      // 正在文本框/文本域输入时，不要把粘贴的图片抢走
       if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
       const item = Array.from(e.clipboardData?.items ?? []).find(i => i.type.startsWith('image/'));
       if (item) {
@@ -70,7 +67,7 @@ export default function MemberGalleryUpload({ code, section, value, onChange, la
     return () => document.removeEventListener('paste', onDocPaste);
   }, []);
 
-  // 删除按 URL 而非下标：无论列表顺序、并发上传如何变化，都精确删掉点的那张，绝不误删
+  // 删除按 URL 而非下标：无论列表顺序、并发上传如何变化，都精确删掉点的那张，绝不误删。
   const remove = (url: string) => commit(prev => prev.filter(u => u !== url));
 
   const onPick = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -108,11 +105,12 @@ export default function MemberGalleryUpload({ code, section, value, onChange, la
             onDragEnd={() => setDragIdx(null)}
             className="relative group aspect-square rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-white/10 cursor-grab active:cursor-grabbing"
           >
-            <img src={url} alt="" className="w-full h-full object-cover" />
+            <img src={url} alt="" className="w-full h-full object-cover" loading="lazy" />
             <button
               type="button"
               onClick={e => { e.stopPropagation(); e.preventDefault(); remove(url); }}
               onMouseDown={e => e.stopPropagation()}
+              onDragStart={e => e.stopPropagation()}
               aria-label="删除图片"
               className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/50 text-white text-xs leading-none flex items-center justify-center opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity z-10"
             >×</button>
