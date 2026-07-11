@@ -4,6 +4,7 @@ import Footer from '../components/Footer.astro';
 import ScrollFx from '../components/ScrollFx.astro';
 import ColorTheme from '../components/ColorTheme.astro';
 import LazyImage from '../components/LazyImage.astro';
+import RecruitToast from '../components/RecruitToast.astro';
 import site from '../data/site.json';
 import '../styles/globals.css';
 
@@ -71,5 +72,6 @@ const pageTitle = title ? `${title} | ${site.name}` : `${site.name} - 偶像应�
     <ScrollFx />
     <ColorTheme />
     <LazyImage />
+    <RecruitToast />
   </body>
 </html>

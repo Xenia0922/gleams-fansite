@@ -1,0 +1,124 @@
+---
+// 官博招募公告 · 非阻断式左下角玻璃卡
+// 设计原则：不挡 Hero、不引起布局抖动（fixed 浮层）、可关闭、localStorage 记忆不再弹
+const WEIBO_URL = 'https://weibo.com/7972735157/R7KNSzPdt';
+const STORAGE_KEY = 'gleams-recruit-dismissed';
+---
+
+<div id="recruit-toast" class="recruit-toast" role="status" aria-live="polite">
+  <button type="button" class="recruit-close" aria-label="关闭招募通知">&times;</button>
+  <p class="recruit-kicker">研修生招募</p>
+  <p class="recruit-title">广西南宁地下偶像团体</p>
+  <p class="recruit-meta">报名截止 <strong>8.10</strong> · 转发关注抽 52 元偶活基金</p>
+  <a class="recruit-cta" href={WEIBO_URL} target="_blank" rel="noopener">查看详情 →</a>
+</div>
+
+<style>
+  .recruit-toast {
+    position: fixed;
+    left: 1.25rem;
+    bottom: calc(1.25rem + env(safe-area-inset-bottom));
+    z-index: 40;
+    width: 320px;
+    max-width: calc(100vw - 2.5rem);
+    padding: 1rem 1.1rem 1.1rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-left: 3px solid var(--accent);
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.52));
+    backdrop-filter: blur(20px) saturate(1.2);
+    -webkit-backdrop-filter: blur(20px) saturate(1.2);
+    box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    color: var(--text);
+    opacity: 0;
+    transform: translateY(16px);
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.5s var(--ease), transform 0.5s var(--ease), visibility 0.5s var(--ease);
+  }
+  .recruit-toast.show {
+    opacity: 1;
+    transform: translateY(0);
+    visibility: visible;
+    pointer-events: auto;
+  }
+  .dark .recruit-toast {
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.035));
+    border-color: rgba(255, 255, 255, 0.09);
+    border-left-color: var(--accent);
+    box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+    color: #c8c3da;
+  }
+
+  .recruit-kicker {
+    font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.16em;
+    color: var(--accent); margin-bottom: 0.25rem;
+  }
+  .recruit-title {
+    font-size: 0.9375rem; font-weight: 700; color: var(--text-strong);
+    margin-bottom: 0.3rem; line-height: 1.3;
+  }
+  .dark .recruit-title { color: #ece9f4; }
+  .recruit-meta {
+    font-size: 0.75rem; color: var(--text-soft); line-height: 1.45; margin-bottom: 0.7rem;
+  }
+  .recruit-meta strong { color: var(--accent); font-weight: 700; }
+  .recruit-cta {
+    display: inline-flex; align-items: center; gap: 0.25rem;
+    font-size: 0.8125rem; font-weight: 700; color: var(--accent);
+    text-decoration: none;
+    transition: gap 0.2s var(--ease);
+  }
+  .recruit-cta:hover { gap: 0.5rem; }
+  .recruit-close {
+    position: absolute; top: 0.5rem; right: 0.5rem;
+    width: 1.5rem; height: 1.5rem; border-radius: 9999px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; line-height: 1; color: var(--text-soft);
+    background: transparent; border: none; cursor: pointer;
+    transition: background 0.2s var(--ease), color 0.2s var(--ease);
+  }
+  .recruit-close:hover { background: rgba(20, 14, 40, 0.06); color: var(--text); }
+  .dark .recruit-close:hover { background: rgba(255, 255, 255, 0.08); color: #ece9f4; }
+
+  /* 移动端：留出右下角返回顶部按钮的空间 */
+  @media (max-width: 767px) {
+    .recruit-toast {
+      left: 1rem;
+      right: 4.5rem;
+      width: auto;
+      max-width: none;
+    }
+  }
+
+  /* 无障碍：减少动态效果时只淡入、不位移 */
+  @media (prefers-reduced-motion: reduce) {
+    .recruit-toast { transition: opacity 0.25s ease; transform: none; }
+    .recruit-toast.show { transform: none; }
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    var KEY = 'gleams-recruit-dismissed';
+    try { if (localStorage.getItem(KEY)) return; } catch (e) {}
+    var el = document.getElementById('recruit-toast');
+    if (!el) return;
+    var show = function () {
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () { el.classList.add('show'); });
+      });
+    };
+    var hide = function () {
+      el.classList.remove('show');
+      try { localStorage.setItem(KEY, '1'); } catch (e) {}
+    };
+    var closeBtn = el.querySelector('.recruit-close');
+    if (closeBtn) closeBtn.addEventListener('click', hide);
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && el.classList.contains('show')) hide();
+    });
+    // 进场 2s 后浮现，不挡 Hero 与首屏浏览
+    setTimeout(show, 2000);
+  })();
+</script>
