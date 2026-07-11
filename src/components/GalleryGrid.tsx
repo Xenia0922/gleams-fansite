@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import ImageLightboxOverlay from './ImageLightboxOverlay';
-import ImageUpload from './admin/ImageUpload';
 
-// 画廊页已彻底独立：只读取 /api/gallery 返回的 gallery_photos（首次从成员简介九宫格复制的快照），
-// 不再实时聚合 members.gallery，增删互不影响。
+// 画廊页为纯展示：只读取 /api/gallery 返回的 gallery_photos（后台独立维护的快照），
+// 前台不提供任何上传/删除入口——编辑全部在后台「画廊」Tab 进行，粉丝投稿请去广场。
 interface Photo {
   id: string;
   url: string;
@@ -21,29 +20,17 @@ export default function GalleryGrid() {
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [adminCode, setAdminCode] = useState('');
-  const [draft, setDraft] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState('');
 
-  // 拉取独立的画廊照片；若本浏览器已登录后台则显示增删控件。
   const reload = useCallback(async () => {
-    const code =
-      adminCode || (typeof localStorage !== 'undefined' ? localStorage.getItem('gleams-admin') || '' : '');
     try {
-      const res = await fetch('/api/gallery', code ? { headers: { 'x-admin-code': code } } : undefined);
+      const res = await fetch('/api/gallery');
       const data = await res.json();
       if (Array.isArray(data.photos)) setPhotos(data.photos);
-      if (data.isAdmin) {
-        setIsAdmin(true);
-        setAdminCode(code);
-      }
     } catch {
       /* 离线时保留当前 */
     }
     setLoading(false);
-  }, [adminCode]);
+  }, []);
 
   useEffect(() => {
     reload();
@@ -95,44 +82,6 @@ export default function GalleryGrid() {
     return () => window.removeEventListener('keydown', handler);
   }, [lightboxIdx, close, prev, next]);
 
-  const addPhoto = async (url: string) => {
-    if (!url || !isAdmin) return;
-    setBusy(true);
-    setErr('');
-    try {
-      const res = await fetch('/api/gallery', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-admin-code': adminCode },
-        body: JSON.stringify({ url }),
-      });
-      const data = await res.json();
-      if (data.ok) {
-        setDraft('');
-        reload();
-      } else setErr(data.error || '添加失败');
-    } catch {
-      setErr('添加失败');
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const delPhoto = async (id: string) => {
-    if (!isAdmin) return;
-    if (!confirm('从画廊删除这张照片？')) return;
-    try {
-      const res = await fetch('/api/gallery?id=' + encodeURIComponent(id), {
-        method: 'DELETE',
-        headers: { 'x-admin-code': adminCode },
-      });
-      const data = await res.json();
-      if (data.ok) reload();
-      else alert(data.error || '删除失败');
-    } catch {
-      alert('删除失败');
-    }
-  };
-
   const filters = useMemo(
     () => [
       { key: 'all', label: '全部', emoji: '⭐', color: '#e83e8c' },
@@ -165,28 +114,7 @@ export default function GalleryGrid() {
         ))}
       </div>
 
-      {/* 后台：添加画廊照片（仅已登录后台的浏览器显示） */}
-      {isAdmin && (
-        <div className="max-w-md mx-auto mb-8">
-          <ImageUpload
-            code={adminCode}
-            section="gallery"
-            value={draft}
-            onChange={(u) => {
-              if (u) addPhoto(u);
-              setDraft('');
-            }}
-            label="添加画廊照片"
-          />
-          {busy && <p className="text-xs text-gray-400 mt-1 text-center">上传中…</p>}
-          {err && <p className="text-xs text-red-500 mt-1 text-center">{err}</p>}
-          <p className="text-[11px] text-gray-400 mt-2 text-center">
-            画廊照片已独立保存，增删都不影响成员简介九宫格。
-          </p>
-        </div>
-      )}
-
-      {/* 图片网格（按成员分组） */}
+      {/* 图片网格（按成员分组，纯展示） */}
       {loading ? (
         <p className="text-center text-gray-400 py-16">加载中…</p>
       ) : (
@@ -218,24 +146,13 @@ export default function GalleryGrid() {
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                           loading="lazy"
                         />
-                        {isAdmin && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              delPhoto(p.id);
-                            }}
-                            className="absolute top-2 right-2 text-xs bg-red-500/80 hover:bg-red-600 text-white px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            删除
-                          </button>
-                        )}
                       </div>
                     );
                   })}
                 </div>
               </div>
             ))}
-          {photos.length === 0 && <div className="text-center py-16 text-gray-400">暂无照片，去后台添加吧</div>}
+          {photos.length === 0 && <div className="text-center py-16 text-gray-400">画廊还空着，敬请期待 ✨</div>}
         </div>
       )}
 
