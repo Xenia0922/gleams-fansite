@@ -19,12 +19,13 @@ export default function MemberGalleryUpload({ code, section, value, onChange, la
   const [err, setErr] = useState('');
   const [dragIdx, setDragIdx] = useState<number | null>(null);
 
-  // 始终持有最新数组，避免异步上传时闭包拿到过期 value 导致互相覆盖（表现为「超过9张自动删一张」）
+  // 始终持有最新数组，所有写操作都基于它累加，避免异步上传/并发操作互相覆盖（表现为「添加一张却丢一张」）
   const valueRef = useRef<string[]>(value);
   valueRef.current = value;
 
-  const append = (url: string) => {
-    const next = [...valueRef.current, url];
+  // 单一入口：基于最新值计算新数组并回传，确保 添加/删除/排序 之间不会互相覆盖
+  const commit = (updater: (prev: string[]) => string[]) => {
+    const next = updater(valueRef.current);
     valueRef.current = next;
     onChange(next);
   };
@@ -41,7 +42,7 @@ export default function MemberGalleryUpload({ code, section, value, onChange, la
       fd.append('section', section);
       const res = await fetch('/api/upload', { method: 'POST', headers: { 'x-admin-code': code }, body: fd });
       const data = await res.json();
-      if (data.ok) append(data.url);
+      if (data.ok) commit(prev => [...prev, data.url]);
       else setErr(data.error || '上传失败');
     } catch {
       setErr('上传失败，请重试');
@@ -68,7 +69,7 @@ export default function MemberGalleryUpload({ code, section, value, onChange, la
     return () => document.removeEventListener('paste', onDocPaste);
   }, []);
 
-  const remove = (i: number) => onChange(value.filter((_, idx) => idx !== i));
+  const remove = (i: number) => commit(prev => prev.filter((_, idx) => idx !== i));
 
   const onPick = (e: React.ChangeEvent<HTMLInputElement>) => {
     add(e.target.files?.[0]);
@@ -83,19 +84,21 @@ export default function MemberGalleryUpload({ code, section, value, onChange, la
 
   const handleReorder = (i: number) => {
     if (dragIdx === null || dragIdx === i) return;
-    const next = [...value];
-    const [moved] = next.splice(dragIdx, 1);
-    next.splice(i, 0, moved);
-    onChange(next);
+    commit(prev => {
+      const next = [...prev];
+      const [moved] = next.splice(dragIdx, 1);
+      next.splice(i, 0, moved);
+      return next;
+    });
     setDragIdx(null);
   };
 
   return (
     <div>
       <div className={'grid grid-cols-3 sm:grid-cols-4 gap-2 ' + (drag ? 'rounded-xl ring-2 ring-[var(--accent)]/40' : '')}>
-        {value.map((url, i) => (
+        {value.map((url) => (
           <div
-            key={i}
+            key={url}
             draggable
             onDragStart={() => setDragIdx(i)}
             onDragOver={e => e.preventDefault()}
