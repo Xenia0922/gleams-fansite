@@ -135,7 +135,7 @@ export default function AdminMembers({ code }: { code: string }) {
           <ImageUpload code={code} section="members" value={form.image || ''} onChange={v => set('image', v)} />
         </Field>
         <Field label="画廊图片（九宫格，逐个上传）">
-          <MemberGalleryUpload code={code} section="members" value={form.gallery || []} onChange={v => set('gallery', v)} />
+          <MemberGalleryUpload code={code} section="members" value={form.gallery || []} onChange={updater => setForm(f => ({ ...f, gallery: updater(f.gallery || []) }))} />
         </Field>
         <div className="grid grid-cols-2 gap-3">
           <Field label="微博链接">

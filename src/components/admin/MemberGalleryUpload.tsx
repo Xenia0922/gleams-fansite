@@ -4,7 +4,7 @@ interface Props {
   code: string;
   section: string;
   value: string[];
-  onChange: (urls: string[]) => void;
+  onChange: (updater: (prev: string[]) => string[]) => void;
   label?: string;
 }
 
@@ -19,13 +19,10 @@ export default function MemberGalleryUpload({ code, section, value, onChange, la
   const [err, setErr] = useState('');
   const [dragIdx, setDragIdx] = useState<number | null>(null);
 
-  // 始终持有最新值，供异步上传回调安全累加，避免闭包拿到旧数组导致覆盖/丢图。
-  const latest = useRef<string[]>(value);
-  useEffect(() => { latest.current = value; }, [value]);
-
-  // 统一出口：基于最新值计算新数组并回传。添加 / 删除 / 排序全部走这里，互不覆盖。
+  // onChange 直接透传 updater 给父组件的函数式 setState，
+  // 父组件用 updater(最新 state) 计算新值——零延迟、单一真相源，不再需要 ref 中间层。
   const update = useCallback((updater: (prev: string[]) => string[]) => {
-    onChange(updater(latest.current));
+    onChange(updater);
   }, [onChange]);
 
   const addFile = useCallback(async (file?: File | null) => {
