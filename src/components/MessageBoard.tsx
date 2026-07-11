@@ -8,6 +8,9 @@ const MEMBERS = [
   { id: null, emoji: '⭐', name: '全员' },
 ];
 
+// 与返图发布页（FanUpload）同款下拉/输入框样式，保证两套表单视觉一致
+const selCls = 'w-full px-4 py-2 rounded-full text-sm text-center bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 outline-none focus:border-[var(--accent)] transition-colors';
+
 // 展示用成员元数据（含可读文字色，避免亮金/亮绿在浅底上糊）
 const MEMBER_META: Record<string, { emoji: string; name: string; color: string }> = {
   hakusai: { emoji: '💛', name: '白菜', color: '#C99A00' },
@@ -217,43 +220,35 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
 
   return (
     <div className="w-full">
-      {/* 发留言（UI 与返图发布统一：成员色大按钮 + 玻璃卡；发布页不展示他人留言） */}
-      <div className="frost-card p-6">
-        <div className="flex flex-wrap gap-2 mb-4 justify-center">
-          {MEMBERS.map(m => (
-            <button
-              key={String(m.id)}
-              onClick={() => setMember(m.id)}
-              className={`inline-flex items-center gap-1 px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                member === m.id ? 'text-white shadow-md' : 'text-gray-500 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10'
-              }`}
-              style={member === m.id ? { backgroundColor: m.id === 'hakusai' ? '#FFD700' : m.id === 'kumo' ? '#4DA6FF' : m.id === 'yuzi' ? '#48D1A0' : '#e83e8c' } : {}}
-            >
-              {m.emoji} {m.name}
-            </button>
-          ))}
-        </div>
+      {/* 成员选择 + 关联场次 — 与返图发布页一致，置于白框外（不再把成员选择包进底框） */}
+      <div className="flex flex-wrap gap-2 mb-4 justify-center">
+        {MEMBERS.map(m => (
+          <button
+            key={String(m.id)}
+            onClick={() => setMember(m.id)}
+            className={`inline-flex items-center gap-1 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+              member === m.id ? 'text-white shadow-md' : 'text-gray-500 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10'
+            }`}
+            style={member === m.id ? { backgroundColor: m.id === 'hakusai' ? '#FFD700' : m.id === 'kumo' ? '#4DA6FF' : m.id === 'yuzi' ? '#48D1A0' : '#e83e8c' } : {}}
+          >
+            {m.emoji} {m.name}
+          </button>
+        ))}
+      </div>
 
-        <select
-          value={event}
-          onChange={e => setEvent(e.target.value)}
-          className="w-full px-4 py-2 rounded-full text-sm text-center bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 outline-none focus:border-[var(--accent)] transition-colors max-w-xs mx-auto block mb-4"
-        >
-          <option value="">🎫 关联场次（选填）</option>
-          {events.map(e => (
-            <option key={e.id} value={e.id}>{e.date} {e.title}</option>
-          ))}
-        </select>
+      <select
+        value={event}
+        onChange={e => setEvent(e.target.value)}
+        className={`${selCls} max-w-xs mx-auto block mb-4`}
+      >
+        <option value="">🎫 关联场次（选填）</option>
+        {events.map(e => (
+          <option key={e.id} value={e.id}>{e.date} {e.title}</option>
+        ))}
+      </select>
 
-        <input
-          type="text"
-          value={name}
-          onChange={e => setName(e.target.value)}
-          placeholder="你的昵称（选填）"
-          maxLength={30}
-          className="w-full px-4 py-2 rounded-full text-sm text-center bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 outline-none focus:border-[var(--accent)] transition-colors max-w-xs mx-auto block mb-3"
-        />
-
+      {/* 白框内只放正文 + 底部昵称 + 发送，结构与返图一致 */}
+      <div className="frost-card p-6 text-center">
         <textarea
           value={text}
           onChange={e => setText(e.target.value)}
@@ -263,17 +258,28 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
           className="w-full px-4 py-3 rounded-3xl text-sm text-left bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 outline-none focus:border-[var(--accent)] transition-colors resize-none"
         />
 
-        <div className="flex justify-between items-center mt-2">
-          <span className="text-xs text-gray-400">{text.length}/500</span>
-          <button
-            onClick={handlePost}
-            disabled={!text.trim() || posting}
-            className="btn-pink text-sm disabled:opacity-50"
-          >
-            {posting ? '发送中...' : '发送留言'}
-          </button>
-        </div>
-        {msg && <p className={`mt-2 text-xs ${msg.startsWith('❌') ? 'text-red-400' : 'text-green-500'}`}>{msg}</p>}
+        <input
+          type="text"
+          value={name}
+          onChange={e => setName(e.target.value)}
+          placeholder="你的昵称（选填）"
+          maxLength={30}
+          className={`${selCls} mt-4 block mx-auto w-full max-w-xs`}
+        />
+
+        <button
+          onClick={handlePost}
+          disabled={!text.trim() || posting}
+          className="btn-pink mt-4 text-sm disabled:opacity-50"
+        >
+          {posting ? '发送中...' : '发送留言'}
+        </button>
+
+        {msg && (
+          <p className={`mt-3 text-sm ${msg.startsWith('❌') ? 'text-red-400' : 'text-green-500'}`}>
+            {msg}
+          </p>
+        )}
       </div>
     </div>
   );
