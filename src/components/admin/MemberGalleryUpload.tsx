@@ -96,7 +96,7 @@ export default function MemberGalleryUpload({ code, section, value, onChange, la
   return (
     <div>
       <div className={'grid grid-cols-3 sm:grid-cols-4 gap-2 ' + (drag ? 'rounded-xl ring-2 ring-[var(--accent)]/40' : '')}>
-        {value.map((url) => (
+        {value.map((url, i) => (
           <div
             key={url}
             draggable

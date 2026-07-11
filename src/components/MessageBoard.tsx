@@ -217,17 +217,15 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
 
   return (
     <div className="w-full">
-      {/* 发留言 */}
-      <div className="frost-card p-5 mb-6">
-        <div className="flex flex-wrap gap-1.5 mb-3 justify-center">
+      {/* 发留言（UI 与返图发布统一：成员色大按钮 + 玻璃卡；发布页不展示他人留言） */}
+      <div className="frost-card p-6">
+        <div className="flex flex-wrap gap-2 mb-4 justify-center">
           {MEMBERS.map(m => (
             <button
               key={String(m.id)}
               onClick={() => setMember(m.id)}
-              className={`text-xs px-3 py-1 rounded-full transition-all ${
-                member === m.id
-                  ? 'text-white'
-                  : 'bg-gray-100 dark:bg-white/5 text-gray-500 hover:bg-gray-200 dark:hover:bg-white/10'
+              className={`inline-flex items-center gap-1 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                member === m.id ? 'text-white shadow-md' : 'text-gray-500 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10'
               }`}
               style={member === m.id ? { backgroundColor: m.id === 'hakusai' ? '#FFD700' : m.id === 'kumo' ? '#4DA6FF' : m.id === 'yuzi' ? '#48D1A0' : '#e83e8c' } : {}}
             >
@@ -235,53 +233,48 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
             </button>
           ))}
         </div>
-        <input
-          type="text"
-          value={name}
-          onChange={e => setName(e.target.value)}
-          placeholder="你的昵称（选填）"
-          maxLength={30}
-          className="w-full px-4 py-2 rounded-full text-sm bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 outline-none focus:border-[var(--accent)] transition-colors mb-3"
-        />
+
         <select
           value={event}
           onChange={e => setEvent(e.target.value)}
-          className="w-full px-4 py-2 rounded-full text-sm bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 outline-none focus:border-[var(--accent)] transition-colors mb-3"
+          className="w-full px-4 py-2 rounded-full text-sm text-center bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 outline-none focus:border-[var(--accent)] transition-colors max-w-xs mx-auto block mb-4"
         >
           <option value="">🎫 关联场次（选填）</option>
           {events.map(e => (
             <option key={e.id} value={e.id}>{e.date} {e.title}</option>
           ))}
         </select>
+
+        <input
+          type="text"
+          value={name}
+          onChange={e => setName(e.target.value)}
+          placeholder="你的昵称（选填）"
+          maxLength={30}
+          className="w-full px-4 py-2 rounded-full text-sm text-center bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 outline-none focus:border-[var(--accent)] transition-colors max-w-xs mx-auto block mb-3"
+        />
+
         <textarea
           value={text}
           onChange={e => setText(e.target.value)}
           placeholder="写下你想对 Gleams 说的话..."
           maxLength={500}
           rows={3}
-          className="w-full px-4 py-3 rounded-3xl text-sm bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 outline-none focus:border-[var(--accent)] transition-colors resize-none"
+          className="w-full px-4 py-3 rounded-3xl text-sm text-left bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 outline-none focus:border-[var(--accent)] transition-colors resize-none"
         />
+
         <div className="flex justify-between items-center mt-2">
           <span className="text-xs text-gray-400">{text.length}/500</span>
           <button
             onClick={handlePost}
             disabled={!text.trim() || posting}
-            className="btn-pink text-xs !px-4 !py-1.5"
+            className="btn-pink text-sm disabled:opacity-50"
           >
             {posting ? '发送中...' : '发送留言'}
           </button>
         </div>
         {msg && <p className={`mt-2 text-xs ${msg.startsWith('❌') ? 'text-red-400' : 'text-green-500'}`}>{msg}</p>}
       </div>
-
-      {/* 留言列表 */}
-      {loading ? (
-        <p className="text-center text-gray-400 py-8">加载中...</p>
-      ) : messages.length === 0 ? (
-        <p className="text-center text-gray-400 py-8">还没有留言，来当第一个吧 ✨</p>
-      ) : (
-        messageListEl
-      )}
     </div>
   );
 }
