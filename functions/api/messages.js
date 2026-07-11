@@ -6,6 +6,8 @@
 
 export async function onRequest(context) {
   const { request, env } = context;
+  // 旧手动建表补 event 列（幂等，仅首次执行）
+  try { await ensureColumns(env); } catch (e) { /* 忽略，交由各 handler 处理 */ }
   if (request.method === 'GET') return listMessages(env);
   if (request.method === 'POST') return postMessage(request, env);
   if (request.method === 'PUT') return editMessage(request, env);
@@ -17,6 +19,13 @@ function adminOk(request, env) {
   return (request.headers.get('x-admin-code') || '') === env.ADMIN_CODE;
 }
 
+// messages 表为手动建表，这里补 event 列（部署前已存在的旧表兼容）
+async function ensureColumns(env) {
+  try {
+    await env.DB.prepare('ALTER TABLE messages ADD COLUMN event TEXT').run();
+  } catch (e) { /* 列已存在则忽略 */ }
+}
+
 async function postMessage(request, env) {
   try {
     const body = await request.json();
@@ -24,6 +33,7 @@ async function postMessage(request, env) {
     const name = body.name?.trim().slice(0, 30) || '匿名骑士';
     const message = body.message?.trim().slice(0, 500);
     const member = body.member || null;
+    const event = body.event?.trim().slice(0, 40) || null;
     const code = body.code?.trim() || '';
 
     if (!message) return json({ error: '内容不能为空' }, 400);
@@ -42,10 +52,10 @@ async function postMessage(request, env) {
 
     const id = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
     const ip = request.headers.get('cf-connecting-ip') || 'unknown';
-    await env.DB.prepare('INSERT INTO messages (id, name, message, member, ip) VALUES (?,?,?,?,?)')
-      .bind(id, name, message, member, ip).run();
+    await env.DB.prepare('INSERT INTO messages (id, name, message, member, event, ip) VALUES (?,?,?,?,?,?)')
+      .bind(id, name, message, member, event, ip).run();
 
-    return json({ ok: true, msg: { id, name, message, member } });
+    return json({ ok: true, msg: { id, name, message, member, event } });
   } catch (e) {
     return json({ error: '留言失败: ' + e.message }, 500);
   }
@@ -63,6 +73,7 @@ async function editMessage(request, env) {
     if (b.name !== undefined) { sets.push('name = ?'); binds.push(String(b.name).trim().slice(0, 30)); }
     if (b.message !== undefined) { sets.push('message = ?'); binds.push(String(b.message).trim().slice(0, 500)); }
     if (b.member !== undefined) { sets.push('member = ?'); binds.push(b.member || null); }
+    if (b.event !== undefined) { sets.push('event = ?'); binds.push(b.event ? String(b.event).slice(0, 40) : null); }
     if (sets.length === 0) return json({ ok: true });
     binds.push(id);
     await env.DB.prepare(`UPDATE messages SET ${sets.join(', ')} WHERE id = ?`).bind(...binds).run();
@@ -75,7 +86,7 @@ async function editMessage(request, env) {
 async function listMessages(env) {
   try {
     const { results } = await env.DB
-      .prepare('SELECT id, name, message, member, created_at FROM messages ORDER BY created_at DESC LIMIT 50')
+      .prepare('SELECT id, name, message, member, event, created_at FROM messages ORDER BY created_at DESC LIMIT 50')
       .all();
     return json(results);
   } catch (e) {

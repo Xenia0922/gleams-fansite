@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useEvents } from './useEvents';
 
 const MEMBERS = [
   { id: 'hakusai', emoji: '💛', name: '白菜' },
@@ -26,6 +27,7 @@ interface Message {
   name: string;
   message: string;
   member: string | null;
+  event?: string | null;
   created_at: string;
 }
 
@@ -44,10 +46,12 @@ function getCode(): string | null {
 }
 
 export default function MessageBoard({ readonly }: { readonly?: boolean }) {
+  const { events, map } = useEvents();
   const [messages, setMessages] = useState<Message[]>([]);
   const [name, setName] = useState('');
   const [text, setText] = useState('');
   const [member, setMember] = useState<string | null>(null);
+  const [event, setEvent] = useState('');
   const [code, setCode] = useState(() => getCode() || '');
   const [verified, setVerified] = useState(() => !!getCode());
   const [posting, setPosting] = useState(false);
@@ -111,6 +115,7 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
           name: name.trim() || '匿名骑士',
           message: text.trim(),
           member,
+          event: event || null,
           code: code.trim(),
         }),
       });
@@ -161,6 +166,11 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
                 </span>
               );
             })()}
+            {msg.event && map[msg.event] && (
+              <span className="inline-flex items-center gap-1 text-[12px] font-medium px-2 py-0.5 rounded-full bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400">
+                🎫 {map[msg.event].date} {map[msg.event].title}
+              </span>
+            )}
             <span className="text-xs text-gray-400 ml-auto">{formatTime(msg.created_at)}</span>
           </div>
           <p className="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-wrap break-words">{msg.message}</p>
@@ -225,6 +235,16 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
           maxLength={30}
           className="w-full px-4 py-2 rounded-full text-sm bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 outline-none focus:border-[var(--accent)] transition-colors mb-3"
         />
+        <select
+          value={event}
+          onChange={e => setEvent(e.target.value)}
+          className="w-full px-4 py-2 rounded-full text-sm bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 outline-none focus:border-[var(--accent)] transition-colors mb-3"
+        >
+          <option value="">🎫 关联场次（选填）</option>
+          {events.map(e => (
+            <option key={e.id} value={e.id}>{e.date} {e.title}</option>
+          ))}
+        </select>
         <textarea
           value={text}
           onChange={e => setText(e.target.value)}

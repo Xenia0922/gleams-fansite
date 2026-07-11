@@ -1,9 +1,11 @@
 /**
- * GET  /api/photos?suffix      — 列出已上传的照片（含缩略图 URL）
- * GET  /api/photos?suffix&key=xxx — 读取单张图片
- * POST /api/photos             — 上传照片 + 可选缩略图（需暗号）
- * DELETE /api/photos           — 删除照片（含缩略图，需 ADMIN_CODE）
+ * GET  /api/photos?key=xxx        — 读取单张图片
+ * GET  /api/photos                 — 列出已上传的照片（含缩略图 URL + 关联场次 event）
+ * POST /api/photos                 — 上传照片（支持一次多张，最多 9 张，单张 ≤23MB，需暗号）
+ * DELETE /api/photos               — 删除照片（含缩略图，需 ADMIN_CODE）
  */
+
+import { rateAllow, rateLog } from './_rate.js';
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -33,6 +35,9 @@ function adminOk(request, env) {
 }
 
 const THUMB_SUFFIX = '_thumb';
+const MAX_FILES = 9;
+const MAX_SIZE = 23 * 1024 * 1024;
+const ALLOWED = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 function isThumbKey(key) {
   return new RegExp(`${THUMB_SUFFIX}\\.\\w+$`).test(key);
@@ -45,50 +50,67 @@ function toThumbKey(key) {
 async function uploadPhoto(request, env) {
   try {
     const formData = await request.formData();
-    const file = formData.get('file');
-    const thumb = formData.get('thumb'); // 可选：浏览器端生成的缩略图
-    const rawMember = formData.get('member');
     const isAdmin = adminOk(request, env);
-    // 后台可上传到任意分组；粉丝须用白名单分组
+
+    // 收集文件：兼容多文件 fields=('files') 与旧单文件('file')
+    let files = formData.getAll('files').filter(f => f instanceof File);
+    const single = formData.get('file');
+    if (single && single instanceof File) files.push(single);
+    if (files.length === 0) return json({ error: '请选择图片' }, 400);
+    if (files.length > MAX_FILES) return json({ error: `一次最多上传 ${MAX_FILES} 张` }, 400);
+
+    const code = formData.get('code')?.trim() || '';
+    if (!isAdmin && code !== env.SECRET_CODE) return json({ error: '暗号不对哦' }, 403);
+
+    // 逐张校验类型与大小
+    for (const f of files) {
+      if (!ALLOWED.includes(f.type)) return json({ error: '仅支持 JPG/PNG/WEBP/GIF' }, 400);
+      if (f.size > MAX_SIZE) return json({ error: '单张图片不能超过 23MB' }, 400);
+    }
+
+    // 限流（粉丝）：5 秒内本 IP 上传图片总数不超过 MAX_FILES
+    const ip = request.headers.get('cf-connecting-ip') || 'unknown';
+    if (!isAdmin) {
+      const allowed = await rateAllow(env, ip, 'photo', MAX_FILES, 5000, files.length);
+      if (!allowed) return json({ error: '操作太频繁，请 5 秒后再试' }, 429);
+    }
+
+    const rawMember = formData.get('member');
     const member = isAdmin
       ? (rawMember || 'other')
       : (['hakusai', 'kumo', 'yuzi', 'other'].includes(rawMember) ? rawMember : 'other');
     const nickname = formData.get('nickname')?.slice(0, 20) || '匿名骑士';
-    const code = formData.get('code')?.trim() || '';
+    const event = (formData.get('event') || '').slice(0, 40) || null;
 
-    if (!file || !(file instanceof File)) return json({ error: '请选择图片' }, 400);
-    if (!isAdmin && code !== env.SECRET_CODE) return json({ error: '暗号不对哦' }, 403);
-    if (file.size > 15 * 1024 * 1024) return json({ error: '图片不能超过 15MB' }, 400);
+    const urls = [];
+    const keys = [];
+    const thumbUrls = [];
 
-    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    if (!allowed.includes(file.type)) return json({ error: '仅支持 JPG/PNG/WEBP/GIF' }, 400);
-
-    const rawExt = (file.name.split('.').pop() || '').toLowerCase();
-    const ext = ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(rawExt) ? rawExt : 'jpg';
-    const id = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
-    const key = `uploads/${member}/${id}.${ext}`;
-
-    await env.PHOTOS.put(key, file.stream(), {
-      httpMetadata: { contentType: file.type },
-      customMetadata: { nickname, member, uploadedAt: new Date().toISOString() },
-    });
-
-    let thumbUrl = null;
-    if (thumb && thumb instanceof File) {
-      const thumbExt = (thumb.name.split('.').pop() || 'webp').replace(/_thumb$/, '');
-      const thumbKey = `uploads/${member}/${id}${THUMB_SUFFIX}.${thumbExt}`;
-      await env.PHOTOS.put(thumbKey, thumb.stream(), {
-        httpMetadata: { contentType: thumb.type },
-        customMetadata: { original: key },
+    for (const file of files) {
+      const rawExt = (file.name.split('.').pop() || '').toLowerCase();
+      const ext = ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(rawExt) ? rawExt : 'jpg';
+      const id = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
+      const key = `uploads/${member}/${id}.${ext}`;
+      await env.PHOTOS.put(key, file.stream(), {
+        httpMetadata: { contentType: file.type },
+        customMetadata: { nickname, member, event: event || '', uploadedAt: new Date().toISOString() },
       });
-      thumbUrl = `/api/photos?key=${encodeURIComponent(thumbKey)}`;
+      urls.push(`/api/photos?key=${encodeURIComponent(key)}`);
+      keys.push(key);
+      thumbUrls.push(null);
+      if (!isAdmin) await rateLog(env, ip, 'photo');
     }
 
     return json({
       ok: true,
-      url: `/api/photos?key=${encodeURIComponent(key)}`,
-      key,
-      thumbUrl,
+      count: files.length,
+      urls,
+      keys,
+      thumbUrls,
+      // 兼容单图消费的旧客户端
+      url: urls[0] || null,
+      key: keys[0] || null,
+      thumbUrl: thumbUrls[0] || null,
     });
   } catch (e) {
     return json({ error: '上传失败: ' + e.message }, 500);
@@ -122,6 +144,7 @@ async function listPhotos(env) {
           url: `/api/photos?key=${encodeURIComponent(o.key)}`,
           uploaded: o.uploaded,
           member: o.key.split('/')[1] || 'other',
+          event: o.customMetadata?.event || null,
           thumbUrl: thumbKeys.has(thumbKey)
             ? `/api/photos?key=${encodeURIComponent(thumbKey)}`
             : null,
@@ -140,7 +163,6 @@ async function deletePhoto(request, env) {
     const { key } = await request.json();
     if (!key || !key.startsWith('uploads/')) return json({ error: '无效 key' }, 400);
     await env.PHOTOS.delete(key);
-    // 最佳努力删除配套缩略图
     await env.PHOTOS.delete(toThumbKey(key)).catch(() => {});
     return json({ ok: true });
   } catch (e) {

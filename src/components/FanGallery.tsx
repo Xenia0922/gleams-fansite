@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import ImageLightboxOverlay from './ImageLightboxOverlay';
+import { useEvents } from './useEvents';
 
 interface Photo {
   key: string;
   url: string;
   uploaded: string;
   member?: string;
+  event?: string | null;
   thumbUrl?: string | null;
 }
 
@@ -23,6 +25,7 @@ const tint = (hex: string, a: number) => {
 };
 
 export default function FanGallery() {
+  const { map } = useEvents();
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -104,6 +107,11 @@ export default function FanGallery() {
                 style={{ color: MEMBER_META[p.member].color, backgroundColor: 'rgba(255,255,255,0.72)' }}
               >
                 {MEMBER_META[p.member].emoji} {MEMBER_META[p.member].name}
+              </span>
+            )}
+            {p.event && map[p.event] && (
+              <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full backdrop-blur bg-white/75 text-gray-600">
+                🎫 {map[p.event].date}
               </span>
             )}
           </div>

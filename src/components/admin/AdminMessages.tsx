@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useEvents } from '../useEvents';
 
 const MEMBER_OPTS = [
   { id: '', label: '无 / 其他' },
@@ -14,6 +15,7 @@ interface Msg {
   name: string;
   message: string;
   member: string | null;
+  event?: string | null;
   created_at: string;
 }
 
@@ -21,10 +23,11 @@ const INPUT =
   'w-full px-3 py-2 rounded-xl text-sm bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 outline-none focus:border-[var(--accent)] transition-colors';
 
 export default function AdminMessages({ code }: { code: string }) {
+  const { events } = useEvents();
   const [list, setList] = useState<Msg[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Msg | null>(null);
-  const [form, setForm] = useState({ name: '', message: '', member: '' });
+  const [form, setForm] = useState({ name: '', message: '', member: '', event: '' });
   const [err, setErr] = useState('');
 
   const load = useCallback(async () => {
@@ -40,13 +43,13 @@ export default function AdminMessages({ code }: { code: string }) {
 
   useEffect(() => { load(); }, [load]);
 
-  const startEdit = (m: Msg) => { setErr(''); setForm({ name: m.name, message: m.message, member: m.member || '' }); setEditing(m); };
-  const startNew = () => { setErr(''); setForm({ name: '', message: '', member: '' }); setEditing({ id: 'new' } as Msg); };
+  const startEdit = (m: Msg) => { setErr(''); setForm({ name: m.name, message: m.message, member: m.member || '', event: m.event || '' }); setEditing(m); };
+  const startNew = () => { setErr(''); setForm({ name: '', message: '', member: '', event: '' }); setEditing({ id: 'new' } as Msg); };
 
   const save = async () => {
     if (!form.message.trim()) { setErr('内容必填'); return; }
     setErr('');
-    const body = { name: form.name.trim() || '匿名骑士', message: form.message.trim(), member: form.member || null };
+    const body = { name: form.name.trim() || '匿名骑士', message: form.message.trim(), member: form.member || null, event: form.event || null };
     try {
       const isNew = !editing || editing.id === 'new';
       const res = await fetch('/api/messages', {
@@ -89,6 +92,10 @@ export default function AdminMessages({ code }: { code: string }) {
               {MEMBER_OPTS.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
             </select>
           </div>
+          <select value={form.event} onChange={e => setForm(f => ({ ...f, event: e.target.value }))} className={INPUT}>
+            <option value="">🎫 关联场次（选填）</option>
+            {events.map(ev => <option key={ev.id} value={ev.id}>{ev.date} {ev.title}</option>)}
+          </select>
           <textarea value={form.message} onChange={e => setForm(f => ({ ...f, message: e.target.value }))} rows={3} placeholder="留言内容" className={INPUT + ' resize-none'} />
           {err && <p className="text-xs text-red-500">{err}</p>}
           <div className="flex gap-2">
@@ -103,6 +110,7 @@ export default function AdminMessages({ code }: { code: string }) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <span className="text-sm font-bold text-gray-800 dark:text-gray-100">{m.name}</span>
+              {m.event && <span className="text-[11px] text-gray-400">🎫 {m.event}</span>}
               <span className="text-xs text-gray-400">{new Date(m.created_at + 'Z').toLocaleString('zh-CN')}</span>
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-300 break-words">{m.message}</p>

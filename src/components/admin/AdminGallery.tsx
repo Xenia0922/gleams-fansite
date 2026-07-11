@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useEvents } from '../useEvents';
 
 interface Photo {
   key: string;
   url: string;
   uploaded: string;
   member?: string;
+  event?: string | null;
   thumbUrl?: string | null;
 }
 
@@ -17,10 +19,12 @@ const MEMBER_OPTS = [
 ];
 
 export default function AdminGallery({ code }: { code: string }) {
+  const { events } = useEvents();
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
   const [file, setFile] = useState<File | null>(null);
   const [member, setMember] = useState('other');
+  const [event, setEvent] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
 
@@ -44,6 +48,7 @@ export default function AdminGallery({ code }: { code: string }) {
       const fd = new FormData();
       fd.append('file', file);
       fd.append('member', member);
+      fd.append('event', event);
       const res = await fetch('/api/photos', { method: 'POST', headers: { 'x-admin-code': code }, body: fd });
       const data = await res.json();
       if (data.ok) { setFile(null); load(); }
@@ -74,6 +79,10 @@ export default function AdminGallery({ code }: { code: string }) {
           <input type="file" accept="image/*" onChange={e => setFile(e.target.files?.[0] || null)} className="text-xs" />
           <select value={member} onChange={e => setMember(e.target.value)} className="text-sm px-3 py-2 rounded-xl bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10">
             {MEMBER_OPTS.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
+          </select>
+          <select value={event} onChange={e => setEvent(e.target.value)} className="text-sm px-3 py-2 rounded-xl bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10">
+            <option value="">🎫 关联场次（选填）</option>
+            {events.map(ev => <option key={ev.id} value={ev.id}>{ev.date} {ev.title}</option>)}
           </select>
           <button onClick={upload} disabled={!file || busy} className="btn-pink text-xs !px-4 !py-1.5 disabled:opacity-50">
             {busy ? '上传中…' : '上传'}
