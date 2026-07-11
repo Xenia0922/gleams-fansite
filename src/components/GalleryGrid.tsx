@@ -49,26 +49,10 @@ const filters: { key: Filter; label: string; emoji: string; color: string }[] = 
 export default function GalleryGrid() {
   const [filter, setFilter] = useState<Filter>('all');
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
+  // 照片画廊只展示成员简介图（广场返图在 fans.astro 的 FanGallery 单独展示）。
+  // 注意：不要在这里 fetch /api/photos —— 它只列 R2 uploads/ 下的广场返图，
+  // 会直接把成员图整个顶掉。
   const [photos, setPhotos] = useState<Photo[]>(initialImages.map(i => ({ ...i, thumb: i.src })));
-
-  useEffect(() => {
-    let alive = true;
-    fetch('/api/photos')
-      .then(r => r.json())
-      .then(d => {
-        if (alive && Array.isArray(d) && d.length) {
-          setPhotos(
-            d.map((p: { url: string; thumbUrl?: string | null; member?: string }) => ({
-              src: p.url,
-              thumb: p.thumbUrl || p.url,
-              member: p.member || 'other',
-            }))
-          );
-        }
-      })
-      .catch(() => {});
-    return () => { alive = false; };
-  }, []);
 
   const filtered = useMemo(
     () => (filter === 'all' ? photos : photos.filter(p => p.member === filter)),
