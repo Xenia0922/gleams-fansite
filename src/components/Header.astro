@@ -44,7 +44,7 @@ const navLinks = [
         <div class="hidden md:flex items-center gap-3">
           <SiteSocial client:load variant="icons" initial={{ weibo: site.weibo, xiaohongshu: site.xiaohongshu, douyin: site.douyin }} />
           <span class="text-gray-300 dark:text-gray-600">|</span>
-          <button id="dark-toggle" class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors z-10 relative" aria-label="暗黑模式" title="暗黑模式">
+          <button id="dark-toggle" class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors z-10 relative" aria-label="切换深色模式" aria-pressed="false" title="深色模式">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path class="sun" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
               <path class="moon hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
@@ -54,13 +54,13 @@ const navLinks = [
 
         <!-- Mobile: dark toggle + hamburger -->
         <div class="flex md:hidden items-center gap-1">
-          <button id="dark-toggle-m" class="p-2 text-gray-400 z-10 relative" aria-label="暗黑模式">
+          <button id="dark-toggle-m" class="p-2 text-gray-400 z-10 relative" aria-label="切换深色模式" aria-pressed="false">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path class="sun" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
               <path class="moon hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
             </svg>
           </button>
-        <button id="mobile-menu-btn" class="md:hidden p-2 text-gray-500" aria-label="菜单">
+        <button id="mobile-menu-btn" class="md:hidden p-2 text-gray-500" aria-label="打开主菜单" aria-expanded="false" aria-controls="mobile-menu">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path class="menu-open" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
             <path class="menu-close hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 6l12 12M6 18L18 6"/>
@@ -71,7 +71,7 @@ const navLinks = [
   </div>
 
   <!-- Mobile Menu -->
-  <div id="mobile-menu" class="md:hidden closed frost border-b border-pink-100/40 dark:border-white/[0.04] shadow-lg rounded-b-3xl">
+  <div id="mobile-menu" class="md:hidden closed frost border-b border-pink-100/40 dark:border-white/[0.04] shadow-lg rounded-b-3xl" role="region" aria-label="主导航">
     <div class="px-4 py-2 space-y-0">
       {navLinks.map(link => {
         const isActive = currentPath === link.href || (link.href !== '/' && currentPath.startsWith(link.href));
@@ -107,9 +107,11 @@ const navLinks = [
   const closeIcon = document.querySelector('.menu-close') as HTMLElement;
 
   let menuOpen = false;
-  btn?.addEventListener('click', () => {
-    menuOpen = !menuOpen;
-    if (menuOpen) {
+  function setMenu(open: boolean) {
+    menuOpen = open;
+    btn?.setAttribute('aria-expanded', String(open));
+    btn?.setAttribute('aria-label', open ? '关闭主菜单' : '打开主菜单');
+    if (open) {
       menu?.classList.add('open');
       openIcon?.classList.add('hidden');
       closeIcon?.classList.remove('hidden');
@@ -118,17 +120,18 @@ const navLinks = [
       openIcon?.classList.remove('hidden');
       closeIcon?.classList.add('hidden');
     }
-  });
+  }
+  btn?.addEventListener('click', () => setMenu(!menuOpen));
 
   // 点击菜单内链接时先关闭菜单
   menu?.addEventListener('click', (e) => {
     const link = e.target.closest('a');
-    if (link && menuOpen) {
-      menu.classList.remove('open');
-      openIcon?.classList.remove('hidden');
-      closeIcon?.classList.add('hidden');
-      menuOpen = false;
-    }
+    if (link && menuOpen) setMenu(false);
+  });
+
+  // ESC 键关闭菜单
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && menuOpen) setMenu(false);
   });
 </script>
 
@@ -142,6 +145,10 @@ const navLinks = [
       const d = document.documentElement.classList.contains('dark');
       document.querySelectorAll('.sun').forEach(s => { if (d) s.classList.add('hidden'); else s.classList.remove('hidden'); });
       document.querySelectorAll('.moon').forEach(s => { if (d) s.classList.remove('hidden'); else s.classList.add('hidden'); });
+      document.querySelectorAll('#dark-toggle, #dark-toggle-m').forEach(b => {
+        b.setAttribute('aria-pressed', String(d));
+        b.setAttribute('aria-label', d ? '切换为浅色模式' : '切换为深色模式');
+      });
     }
 
     document.getElementById('dark-toggle')?.addEventListener('click', (e) => { e.preventDefault(); toggle(); });

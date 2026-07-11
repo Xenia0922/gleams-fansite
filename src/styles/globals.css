@@ -22,7 +22,7 @@
   /* 文字 */
   --text: #4b4760;
   --text-strong: #211d33;
-  --text-soft: #918da6;
+  --text-soft: #6f6b86;  /* WCAG AA: 4.98:1 on glass(白62%+body), 原 #918da6 仅 3.13:1 不达标 */
 
   /* 阴影（分层、柔和、带玻璃边缘高光） */
   --shadow-xs: 0 1px 2px rgba(20, 14, 40, 0.04);
@@ -83,6 +83,31 @@ body::after {
   outline-offset: 2px;
   border-radius: 8px;
 }
+
+/* 跳过导航：键盘用户按 Tab 第一站即可跳到主内容 */
+.skip-link {
+  position: fixed;
+  top: -100px;
+  left: 1rem;
+  z-index: 100;
+  padding: 0.625rem 1.25rem;
+  border-radius: 9999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 700;
+  box-shadow: var(--shadow-md);
+  transition: top 0.2s var(--ease);
+}
+.skip-link:focus {
+  top: 1rem;
+}
+
+/* 可访问性：Tailwind gray-400 (#9ca3af) 在浅色背景仅 2.54:1 不达标，覆盖为 gray-500 值。
+   暗色下 gray-500 (#6b7280) 在 #0c0b14 上仅 4.18:1，覆盖回 gray-400 值 (#9ca3af, 6.7:1)。 */
+.text-gray-400 { color: #6b7280; }
+.dark .text-gray-400 { color: #9ca3af; }
+.dark .text-gray-500 { color: #9ca3af; }
 
 /* =========================================================
    排版

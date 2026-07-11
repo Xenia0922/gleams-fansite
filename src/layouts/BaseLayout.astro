@@ -62,8 +62,9 @@ const pageTitle = title ? `${title} | ${site.name}` : `${site.name} - 偶像应�
     </script>
   </head>
   <body>
+    <a href="#main" class="skip-link">跳到主内容</a>
     <Header />
-    <main class="min-h-screen">
+    <main id="main" class="min-h-screen">
       <slot />
     </main>
     <Footer />
