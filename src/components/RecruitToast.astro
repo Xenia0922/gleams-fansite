@@ -1,15 +1,30 @@
 ---
-// 官博招募公告 · 非阻断式左下角玻璃卡
-// 设计原则：不挡 Hero、不引起布局抖动（fixed 浮层）、可关闭、localStorage 记忆不再弹
-const WEIBO_URL = 'https://weibo.com/7972735157/R7KNSzPdt';
-const STORAGE_KEY = 'gleams-recruit-dismissed';
+// 招募公告 · 非阻断式左下角玻璃卡
+// 内容运行时从 /api/recruits 读取（管理员可在后台自助编辑/多条投放）；
+// 组件内写死一条 fallback（CF 不可用时仍展示），deadline 过期则整体不显示。
+// 设计原则：不挡 Hero、不引起布局抖动（fixed 浮层）、可关闭、localStorage 按 id 记忆不再弹
+const FALLBACK = {
+  id: 'default',
+  title: 'Gleams 研修生招募',
+  body: '报名截止 8.10 · 微博转发关注抽 52 元偶活基金',
+  cta_text: '查看详情 →',
+  cta_url: 'https://weibo.com/7972735157/R7KNSzPdt',
+  deadline: '2026-08-10',
+};
 ---
 
-<div id="recruit-toast" class="recruit-toast" role="status" aria-live="polite">
+<div
+  id="recruit-toast"
+  class="recruit-toast"
+  role="status"
+  aria-live="polite"
+  data-id={FALLBACK.id}
+  data-deadline={FALLBACK.deadline}
+>
   <button type="button" class="recruit-close" aria-label="关闭招募通知">&times;</button>
-  <p class="recruit-title">Gleams 研修生招募</p>
-  <p class="recruit-meta">报名截止 <strong>8.10</strong> · 微博转发关注抽 52 元偶活基金</p>
-  <a class="recruit-cta" href={WEIBO_URL} target="_blank" rel="noopener">查看详情 →</a>
+  <p class="recruit-title" data-field="title">{FALLBACK.title}</p>
+  <p class="recruit-meta" data-field="body">{FALLBACK.body}</p>
+  <a class="recruit-cta" data-field="cta" href={FALLBACK.cta_url} target="_blank" rel="noopener">{FALLBACK.cta_text}</a>
 </div>
 
 <style>
@@ -95,25 +110,88 @@ const STORAGE_KEY = 'gleams-recruit-dismissed';
 
 <script is:inline>
   (function () {
-    var KEY = 'gleams-recruit-dismissed';
-    try { if (localStorage.getItem(KEY)) return; } catch (e) {}
     var el = document.getElementById('recruit-toast');
     if (!el) return;
-    var show = function () {
+
+    // 按 id 记忆已关闭的招募，互不干扰
+    var KEY_CLOSED = 'gleams-recruit-closed';
+    function getClosed() {
+      try { return JSON.parse(localStorage.getItem(KEY_CLOSED) || '[]'); } catch (e) { return []; }
+    }
+    function addClosed(id) {
+      try {
+        var a = getClosed();
+        if (a.indexOf(id) === -1) a.push(id);
+        localStorage.setItem(KEY_CLOSED, JSON.stringify(a));
+      } catch (e) {}
+    }
+
+    // 当前生效条目（先取组件内写死的 fallback）
+    var current = {
+      id: el.dataset.id || 'default',
+      title: el.querySelector('[data-field="title"]').textContent,
+      body: el.querySelector('[data-field="body"]').textContent,
+      cta_text: el.querySelector('[data-field="cta"]').textContent,
+      cta_url: el.querySelector('[data-field="cta"]').getAttribute('href'),
+      deadline: el.dataset.deadline || null,
+    };
+
+    // 按本地时间判定：deadline 为 'YYYY-MM-DD'，视为该日北京时间 23:59:59 前有效
+    function isActive(deadline) {
+      if (!deadline) return true;
+      var end = new Date(deadline + 'T23:59:59+08:00');
+      return Date.now() <= end.getTime();
+    }
+
+    function applyRecruit(r) {
+      el.dataset.id = String(r.id);
+      el.dataset.deadline = r.deadline || '';
+      el.querySelector('[data-field="title"]').textContent = r.title;
+      el.querySelector('[data-field="body"]').textContent = r.body;
+      var cta = el.querySelector('[data-field="cta"]');
+      cta.textContent = r.cta_text || '查看详情 →';
+      cta.setAttribute('href', r.cta_url || '#');
+    }
+
+    var shown = false;
+    function showCurrent() {
+      if (shown) return;
+      if (getClosed().indexOf(String(current.id)) !== -1) return;  // 关过不再弹
+      if (!isActive(current.deadline)) { el.remove(); return; }     // 过期则整体不显示
+      shown = true;
       requestAnimationFrame(function () {
         requestAnimationFrame(function () { el.classList.add('show'); });
       });
-    };
-    var hide = function () {
+    }
+
+    function close() {
       el.classList.remove('show');
-      try { localStorage.setItem(KEY, '1'); } catch (e) {}
-    };
+      addClosed(String(current.id));
+    }
     var closeBtn = el.querySelector('.recruit-close');
-    if (closeBtn) closeBtn.addEventListener('click', hide);
+    if (closeBtn) closeBtn.addEventListener('click', close);
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && el.classList.contains('show')) hide();
+      if (e.key === 'Escape' && el.classList.contains('show')) close();
     });
-    // 进场 2s 后浮现，不挡 Hero 与首屏浏览
-    setTimeout(show, 2000);
+
+    // 拉取后端有效条目（sort_order 升序首条），成功则覆盖 fallback
+    fetch('/api/recruits')
+      .then(function (r) { return r.json(); })
+      .then(function (list) {
+        if (Array.isArray(list) && list.length) {
+          var r = list[0];
+          current = {
+            id: r.id, title: r.title, body: r.body,
+            cta_text: r.cta_text, cta_url: r.cta_url,
+            deadline: r.deadline || null,
+          };
+          applyRecruit(current);
+        }
+        showCurrent();
+      })
+      .catch(function () { showCurrent(); });
+
+    // 兜底：fetch 缓慢时 2s 后按 fallback 显示，不阻塞
+    setTimeout(function () { if (!shown) showCurrent(); }, 2000);
   })();
 </script>
