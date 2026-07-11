@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 
 interface Props {
   code: string;
@@ -19,6 +19,16 @@ export default function MemberGalleryUpload({ code, section, value, onChange, la
   const [err, setErr] = useState('');
   const [dragIdx, setDragIdx] = useState<number | null>(null);
 
+  // 始终持有最新数组，避免异步上传时闭包拿到过期 value 导致互相覆盖（表现为「超过9张自动删一张」）
+  const valueRef = useRef<string[]>(value);
+  valueRef.current = value;
+
+  const append = (url: string) => {
+    const next = [...valueRef.current, url];
+    valueRef.current = next;
+    onChange(next);
+  };
+
   const add = async (file?: File | null) => {
     if (!file) return;
     if (!ACCEPT.includes(file.type)) { setErr('仅支持 JPG / PNG / WEBP / GIF'); return; }
@@ -31,7 +41,7 @@ export default function MemberGalleryUpload({ code, section, value, onChange, la
       fd.append('section', section);
       const res = await fetch('/api/upload', { method: 'POST', headers: { 'x-admin-code': code }, body: fd });
       const data = await res.json();
-      if (data.ok) onChange([...value, data.url]);
+      if (data.ok) append(data.url);
       else setErr(data.error || '上传失败');
     } catch {
       setErr('上传失败，请重试');
@@ -39,6 +49,24 @@ export default function MemberGalleryUpload({ code, section, value, onChange, la
       setBusy(false);
     }
   };
+
+  // 让文档级粘贴也能捕获剪贴板图片（焦点不在输入框时）。用 ref 持有最新 add，避免反复绑定/解绑。
+  const addRef = useRef<(f?: File | null) => void>(() => {});
+  addRef.current = add;
+  useEffect(() => {
+    const onDocPaste = (e: ClipboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      // 正在文本框/文本域输入时，不要把粘贴的图片抢走
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+      const item = Array.from(e.clipboardData?.items ?? []).find(i => i.type.startsWith('image/'));
+      if (item) {
+        e.preventDefault();
+        addRef.current(item.getAsFile());
+      }
+    };
+    document.addEventListener('paste', onDocPaste);
+    return () => document.removeEventListener('paste', onDocPaste);
+  }, []);
 
   const remove = (i: number) => onChange(value.filter((_, idx) => idx !== i));
 
@@ -53,11 +81,6 @@ export default function MemberGalleryUpload({ code, section, value, onChange, la
     add(e.dataTransfer.files?.[0]);
   };
 
-  const onPaste = (e: React.ClipboardEvent) => {
-    const item = Array.from(e.clipboardData.items).find(i => i.type.startsWith('image/'));
-    if (item) { e.preventDefault(); add(item.getAsFile()); }
-  };
-
   const handleReorder = (i: number) => {
     if (dragIdx === null || dragIdx === i) return;
     const next = [...value];
@@ -68,8 +91,8 @@ export default function MemberGalleryUpload({ code, section, value, onChange, la
   };
 
   return (
-    <div onPaste={onPaste}>
-      <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+    <div>
+      <div className={'grid grid-cols-3 sm:grid-cols-4 gap-2 ' + (drag ? 'rounded-xl ring-2 ring-[var(--accent)]/40' : '')}>
         {value.map((url, i) => (
           <div
             key={i}
@@ -97,7 +120,7 @@ export default function MemberGalleryUpload({ code, section, value, onChange, la
           role="button"
           tabIndex={0}
           onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!busy) inputRef.current?.click(); } }}
-          aria-label={`${label}：点击或拖拽图片上传`}
+          aria-label={`${label}：点击或拖拽图片上传，也可直接粘贴剪贴板图片`}
           className={
             'relative flex items-center justify-center aspect-square rounded-xl cursor-pointer border transition-colors ' +
             (drag
@@ -114,7 +137,7 @@ export default function MemberGalleryUpload({ code, section, value, onChange, la
       </div>
       <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={onPick} />
       {err && <p className="text-xs text-red-500 mt-1">{err}</p>}
-      <p className="text-[10px] text-gray-400 mt-1">逐个上传，拖动缩略图可调整顺序；JPG / PNG / WEBP / GIF，≤15MB</p>
+      <p className="text-[10px] text-gray-400 mt-1">逐个上传，拖动缩略图可调整顺序；也可直接 Ctrl/⌘+V 粘贴剪贴板图片；JPG / PNG / WEBP / GIF，≤15MB</p>
     </div>
   );
 }
