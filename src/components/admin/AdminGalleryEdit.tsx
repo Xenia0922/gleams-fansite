@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import ImageUpload from './ImageUpload';
+import ImageLightboxOverlay from '../ImageLightboxOverlay';
 
 interface Photo {
   id: string;
@@ -22,7 +23,7 @@ const CATEGORY_OPTS: { value: string; label: string }[] = [
 ];
 
 // 后台「画廊」管理：编辑的是已独立的 gallery_photos（首次从成员简介九宫格复制的快照）。
-// 在此增删只影响画廊页，与成员简介九宫格完全隔离。
+// 在此增删/排序只影响画廊页，与成员简介九宫格完全隔离；前台画廊按 sort 顺序展示，与此处一一对应。
 export default function AdminGalleryEdit({ code }: { code: string }) {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,6 +31,13 @@ export default function AdminGalleryEdit({ code }: { code: string }) {
   const [cat, setCat] = useState('__extra__');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
+  const photosRef = useRef<Photo[]>([]);
+  useEffect(() => {
+    photosRef.current = photos;
+  }, [photos]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -85,13 +93,41 @@ export default function AdminGalleryEdit({ code }: { code: string }) {
     }
   };
 
+  // ---- 拖拽排序：本地重排后写回 sort ----
+  const moveTo = useCallback((fromId: string, toId: string) => {
+    setPhotos((prev) => {
+      const from = prev.findIndex((p) => p.id === fromId);
+      const to = prev.findIndex((p) => p.id === toId);
+      if (from < 0 || to < 0 || from === to) return prev;
+      const next = [...prev];
+      const [item] = next.splice(from, 1);
+      next.splice(to, 0, item);
+      return next;
+    });
+  }, []);
+
+  const saveOrder = useCallback(async () => {
+    setSaving(true);
+    try {
+      await fetch('/api/gallery', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'x-admin-code': code },
+        body: JSON.stringify({ order: photosRef.current.map((p) => p.id) }),
+      });
+    } catch {
+      /* 忽略 */
+    } finally {
+      setTimeout(() => setSaving(false), 800);
+    }
+  }, [code]);
+
   const labelOf = (m: string) => META[m] || (m === '__extra__' ? '全部 / 不分类' : m);
 
   return (
     <div className="frost-card p-5">
       <h3 className="text-sm font-bold text-gray-800 dark:text-gray-100 mb-1">画廊照片（独立）</h3>
       <p className="text-xs text-gray-400 mb-3">
-        这里展示的是画廊页的独立照片（首次部署已从成员简介九宫格复制了一份快照）。在此增删只影响画廊页，不碰成员简介九宫格。
+        这里展示的是画廊页的独立照片（首次部署已从成员简介九宫格复制了一份快照）。在此增删/排序只影响画廊页，不碰成员简介九宫格；拖拽卡片可调整顺序，松手自动保存，前台画廊按此顺序展示。
       </p>
 
       <div className="flex items-center gap-2 mb-3">
@@ -124,14 +160,40 @@ export default function AdminGalleryEdit({ code }: { code: string }) {
         <p className="text-center text-gray-400 py-6">加载中…</p>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4">
-          {photos.map((p) => (
-            <div key={p.id} className="frost-card overflow-hidden group relative">
-              <img src={p.url} alt="" className="w-full aspect-[4/5] object-cover" loading="lazy" />
-              <div className="absolute bottom-0 left-0 right-0 bg-black/45 text-white text-[10px] px-2 py-1 truncate">
+          {photos.map((p, i) => (
+            <div
+              key={p.id}
+              draggable
+              onDragStart={() => setDragId(p.id)}
+              onDragOver={(e) => {
+                e.preventDefault();
+                if (dragId && dragId !== p.id) moveTo(dragId, p.id);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                setDragId(null);
+                saveOrder();
+              }}
+              onClick={() => setLightboxIdx(i)}
+              className={`relative aspect-[4/5] rounded-3xl overflow-hidden glass cursor-grab active:cursor-grabbing group ${
+                dragId === p.id ? 'ring-2 ring-[var(--accent)] opacity-60' : ''
+              }`}
+            >
+              <img
+                src={p.url}
+                alt=""
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                loading="lazy"
+                draggable={false}
+              />
+              <span className="absolute top-2 left-2 text-[10px] bg-black/45 text-white px-2 py-1 rounded-full">
                 {labelOf(p.member)}
-              </div>
+              </span>
               <button
-                onClick={() => del(p)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  del(p);
+                }}
                 className="absolute top-2 right-2 text-xs bg-red-500/80 hover:bg-red-600 text-white px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
               >
                 删除
@@ -142,6 +204,18 @@ export default function AdminGalleryEdit({ code }: { code: string }) {
             <p className="text-center text-gray-400 py-6 col-span-full">还没有照片，上方添加第一张吧</p>
           )}
         </div>
+      )}
+
+      {saving && <p className="text-xs text-gray-400 mt-2 text-center">排序已保存</p>}
+
+      {lightboxIdx !== null && (
+        <ImageLightboxOverlay
+          images={photos.map((p) => ({ src: p.url }))}
+          currentIndex={lightboxIdx}
+          onClose={() => setLightboxIdx(null)}
+          onPrev={() => setLightboxIdx((i) => (i !== null ? (i - 1 + photos.length) % photos.length : null))}
+          onNext={() => setLightboxIdx((i) => (i !== null ? (i + 1) % photos.length : null))}
+        />
       )}
     </div>
   );

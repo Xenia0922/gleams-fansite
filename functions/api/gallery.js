@@ -7,7 +7,8 @@
  *             复制一份快照 + 合并原 gallery_extras），之后与 members.gallery 完全解耦。
  *             isAdmin 仅当请求带正确 x-admin-code 时为 true（供前台决定是否显示增删控件）
  *
- *   POST   /api/gallery  （需 ADMIN_CODE） body { url } → 新增一张画廊照片
+ *   POST   /api/gallery  （需 ADMIN_CODE） body { url,member } → 新增一张画廊照片
+ *   PATCH  /api/gallery  （需 ADMIN_CODE） body { order:[id,...] } → 按数组顺序重排 sort
  *   DELETE /api/gallery?id=xxx （需 ADMIN_CODE） → 删除一张画廊照片
  *
  * 表 gallery_photos / gallery_meta 由本接口首次请求时自动创建（无需手动 migration）。
@@ -156,6 +157,21 @@ export async function onRequest(context) {
         .bind(id, url, String(b.member || '__extra__'), (max ? max.m : 0) + 1, new Date().toISOString())
         .run();
       return json({ ok: true, id });
+    } catch (e) {
+      return json({ error: e.message }, 500);
+    }
+  }
+
+  if (request.method === 'PATCH') {
+    if (!adminOk(request, env)) return json({ error: '无权限' }, 403);
+    try {
+      const b = await request.json().catch(() => ({}));
+      const order = Array.isArray(b.order) ? b.order.map(String).filter(Boolean) : [];
+      if (!order.length) return json({ error: '缺少排序' }, 400);
+      const stmt = env.DB.prepare('UPDATE gallery_photos SET sort = ? WHERE id = ?');
+      const batch = order.map((id, i) => stmt.bind(i + 1, id));
+      await env.DB.batch(batch);
+      return json({ ok: true });
     } catch (e) {
       return json({ error: e.message }, 500);
     }
