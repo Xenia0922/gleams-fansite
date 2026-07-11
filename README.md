@@ -51,12 +51,26 @@ npm run build    # 构建到 dist/
 - 画廊网格 / 后台列表使用缩略图，灯箱大图使用原图
 - 已存在的历史返图无缩略图时自动回退显示原图，不影响现有数据
 
-## 招募广告（recruits 表）
+## 部署到 Cloudflare Pages
+
+1. **Cloudflare 控制台** → **Workers & Pages** → **Create** → **Pages** → 连接 GitHub 仓库 `Xenia0922/gleams-fansite`。
+2. **构建设置**：构建命令 `npm run build`，输出目录 `dist`（选 Astro 框架预设会自动填好，核对一下即可）。
+3. **环境变量与绑定**（首次部署前在 **Settings** 中配置）：
+   - `DB`：先到 **Storage & Databases → D1** 新建数据库（如 `gleams`），再到项目 **Settings → Functions → D1 database bindings** 绑定为变量名 `DB`；
+   - `PHOTOS`：到 **R2** 新建存储桶（如 `gleams-photos`），在项目 **Settings → Functions → R2 buckets bindings** 绑定为变量名 `PHOTOS`；
+   - `SECRET_CODE`、`ADMIN_CODE`：在 **Settings → Environment variables** 添加（自行设定，分别用于粉丝上传暗号与 `/admin` 后台管理暗号）。
+4. **保存并部署**（或推送代码触发自动部署）。`functions/api/*.js` 会被 Pages Functions 自动识别部署，无需额外配置。
+5. **建表**：`recruits` 及留言/照片相关表会在对应接口**首次被请求时自动创建**，无需手动执行 SQL。
+6. 部署后访问站点，到 `/admin` 用 `ADMIN_CODE` 登录，即可在「广告」Tab 管理投放。
+
+> 注意：`functions/` 目录须保留在仓库根（与 `src/` 同级），否则 Pages Functions 不会被加载。
+
+## 广告（recruits 表）
 
 左下角非阻断玻璃卡公告，内容支持后台自助管理、可投多条、按截止日自动失效。
 
 - **数据结构**：D1 的 `recruits` 表由 `/api/recruits` 在首次请求时**自动创建**（`CREATE TABLE IF NOT EXISTS`），无需在 Cloudflare 控制台手动执行 migration
-- **管理方式**：`/admin` 后台 →「招募广告」Tab，可新建 / 编辑 / 删除 / 启停（字段：标题、正文、按钮文案、跳转链接、截止日、排序）
+- **管理方式**：`/admin` 后台 →「广告」Tab，可新建 / 编辑 / 删除 / 启停（字段：标题、副标题、正文、按钮文案、跳转链接、截止日、排序）
 - **前端读取**：`RecruitToast` 在页面加载后 `fetch('/api/recruits')` 取「启用且未过期」中 `sort_order` 最小的一条渲染；后端不可用时回退到组件内写死的默认条目
 - **自动失效**：条目 `deadline` 字段（格式 `YYYY-MM-DD`，北京时间当天 23:59:59 前有效）过期后，前端判定不显示、后端公开接口也不再返回——无需手动下架
 - **关闭记忆**：访客关闭后写入 `localStorage`（按 id 记忆），不再重复弹出

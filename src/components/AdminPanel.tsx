@@ -134,7 +134,7 @@ export default function AdminPanel() {
     }
   };
 
-  // ---------- 招募广告管理 ----------
+  // ---------- 广告管理 ----------
   const EMPTY_FORM: RecruitForm = {
     id: null, title: '', subtitle: '', body: '', cta_text: '查看详情 →',
     cta_url: '', deadline: '', enabled: true, sort_order: 0,
@@ -240,7 +240,7 @@ export default function AdminPanel() {
             tab === 'recruits' ? 'btn-pink' : 'btn-outline'
           }`}
         >
-          招募广告
+          广告
         </button>
       </div>
 
@@ -329,14 +329,14 @@ export default function AdminPanel() {
               </div>
             ))}
             {recruits.length === 0 && (
-              <p className="text-center text-gray-400 py-8">暂无招募广告，在下方表单新建第一条</p>
+              <p className="text-center text-gray-400 py-8">暂无广告，在下方表单新建第一条</p>
             )}
           </div>
 
           {/* 新建 / 编辑表单 */}
           <div className="frost-card p-5">
             <h3 className="text-sm font-bold text-gray-800 dark:text-gray-100 mb-4">
-              {form.id ? `编辑 #${form.id}` : '新建招募广告'}
+              {form.id ? `编辑 #${form.id}` : '新建广告'}
             </h3>
             <div className="space-y-3">
               <input
