@@ -67,7 +67,7 @@ export async function onRequest(context) {
   try { await ensureTable(env); } catch (e) { console.error('[recruits] ensureTable error:', e.message); }
   if (request.method === 'GET') return withTable(env, () => listRecruits(request, env));
   if (request.method === 'POST') return withTable(env, () => createRecruit(request, env));
-  if (request.method === 'PUT') return withTable(env, () => updateRecruit(request, env));
+  if (request.method === 'PUT') return withTable(env, () => putRecruit(request, env));
   if (request.method === 'DELETE') return withTable(env, () => deleteRecruit(request, env));
   return new Response('Method not allowed', { status: 405 });
 }
@@ -111,7 +111,13 @@ async function createRecruit(request, env) {
     const cta_url = String(b.cta_url || '').trim().slice(0, 500);
     const deadline = b.deadline ? String(b.deadline).slice(0, 10) : null;
     const enabled = b.enabled === false || b.enabled === 0 ? 0 : 1;
-    const sort_order = Number.isFinite(+b.sort_order) ? +b.sort_order : 0;
+    let sort_order = Number.isFinite(+b.sort_order) ? +b.sort_order : 0;
+    // 未指定或 <=0 时自动排到已有广告之后
+    if (!sort_order || sort_order < 0) {
+      const { results } = await env.DB.prepare('SELECT MAX(sort_order) AS m FROM recruits').all();
+      const maxSo = results[0] && results[0].m != null ? results[0].m : 0;
+      sort_order = maxSo + 1;
+    }
 
     if (!title || !body || !cta_url) return json({ error: '标题 / 正文 / 链接必填' }, 400);
     if (!/^https?:\/\//.test(cta_url)) return json({ error: '链接需以 http(s):// 开头' }, 400);
@@ -130,10 +136,31 @@ async function createRecruit(request, env) {
   }
 }
 
-async function updateRecruit(request, env) {
+// PUT 入口：body 含 order 数组 → 批量重排；否则单条更新
+async function putRecruit(request, env) {
   if (!adminOk(request, env)) return json({ error: '无权限' }, 403);
   try {
     const b = await request.json();
+    if (Array.isArray(b.order)) return reorderRecruits(b.order, env);
+    return updateRecruit(b, env);
+  } catch (e) {
+    return json({ error: e.message }, 500);
+  }
+}
+
+async function reorderRecruits(order, env) {
+  for (const item of order) {
+    const id = +item.id;
+    const so = Number.isFinite(+item.sort_order) ? +item.sort_order : 0;
+    if (id) {
+      await env.DB.prepare('UPDATE recruits SET sort_order = ? WHERE id = ?').bind(so, id).run();
+    }
+  }
+  return json({ ok: true });
+}
+
+async function updateRecruit(b, env) {
+  try {
     const id = +b.id;
     if (!id) return json({ error: '缺少 id' }, 400);
 

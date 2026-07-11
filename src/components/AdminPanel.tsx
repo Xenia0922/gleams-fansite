@@ -198,6 +198,36 @@ export default function AdminPanel() {
     }
   };
 
+  // 批量重排：按传入顺序重写每条的 sort_order
+  const reorderRecruits = async (order: { id: number; sort_order: number }[]) => {
+    try {
+      const res = await fetch('/api/recruits', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'x-admin-code': code },
+        body: JSON.stringify({ order }),
+      });
+      const data = await res.json();
+      if (data.ok) fetchRecruits();
+      else alert(data.error || '排序保存失败');
+    } catch {
+      alert('网络错误，排序保存失败');
+    }
+  };
+
+  const [dragId, setDragId] = useState<number | null>(null);
+  const handleDrop = (targetId: number) => {
+    if (dragId == null || dragId === targetId) { setDragId(null); return; }
+    const from = recruits.findIndex(r => r.id === dragId);
+    const to = recruits.findIndex(r => r.id === targetId);
+    if (from === -1 || to === -1) { setDragId(null); return; }
+    const next = [...recruits];
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    setRecruits(next);
+    reorderRecruits(next.map((r, i) => ({ id: r.id, sort_order: i })));
+    setDragId(null);
+  };
+
   // 广告实时预览（浅色 / 暗色），随表单输入即时更新
   const fmtDeadline = (d: string) => {
     if (!d) return '';
@@ -331,9 +361,23 @@ export default function AdminPanel() {
         <div className="max-w-2xl mx-auto space-y-4">
           {/* 列表 */}
           <div className="space-y-3">
+            <p className="text-[11px] text-gray-400">拖动卡片左侧 ⠿ 可调整投放顺序（越靠前越优先展示）</p>
             {recruits.map(r => (
-              <div key={r.id} className="frost-card p-4">
+              <div
+                key={r.id}
+                className="frost-card p-4"
+                draggable
+                onDragStart={(e) => { setDragId(r.id); e.dataTransfer.effectAllowed = 'move'; }}
+                onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
+                onDrop={() => handleDrop(r.id)}
+                onDragEnd={() => setDragId(null)}
+                style={dragId === r.id ? { opacity: 0.4 } : undefined}
+              >
                 <div className="flex items-start gap-3">
+                  <span
+                    className="flex-shrink-0 cursor-grab active:cursor-grabbing select-none text-gray-300 dark:text-gray-600 mt-0.5 text-lg leading-none"
+                    title="拖动调整顺序"
+                  >⠿</span>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <span className="text-sm font-bold text-[var(--accent)]">{r.title}</span>
