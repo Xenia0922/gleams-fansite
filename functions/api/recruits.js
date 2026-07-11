@@ -14,7 +14,7 @@ const DDL = `CREATE TABLE IF NOT EXISTS recruits (
   title TEXT NOT NULL,
   subtitle TEXT,
   body TEXT NOT NULL,
-  cta_text TEXT NOT NULL DEFAULT '查看详情 →',
+  cta_text TEXT NOT NULL DEFAULT '查看详情',
   cta_url TEXT NOT NULL,
   deadline TEXT,
   enabled INTEGER NOT NULL DEFAULT 1,
@@ -22,12 +22,10 @@ const DDL = `CREATE TABLE IF NOT EXISTS recruits (
   created_at TEXT NOT NULL
 );`;
 
-export async function onRequest(context) {
-  const { request, env } = context;
-  try { await env.DB.exec(DDL); } catch (e) { /* 表已存在，忽略 */ }
-  // 旧表补列（CREATE TABLE 不会自动加字段）
-  try { await env.DB.exec('ALTER TABLE recruits ADD COLUMN subtitle TEXT'); } catch (e) { /* 已存在则忽略 */ }
-  // 空表时写入默认招募，部署后即可展示，无需手动录入
+// 与项目内其余 D1 调用一致，用 prepare().run() 建表（exec 在部分 D1 环境下不可靠）
+async function ensureTable(env) {
+  await env.DB.prepare(DDL).run();
+  try { await env.DB.prepare('ALTER TABLE recruits ADD COLUMN subtitle TEXT').run(); } catch (e) { /* 已存在则忽略 */ }
   try {
     const { results } = await env.DB.prepare('SELECT COUNT(*) AS c FROM recruits').all();
     if (results[0] && results[0].c === 0) {
@@ -49,12 +47,28 @@ export async function onRequest(context) {
         )
         .run();
     }
-  } catch (e) { /* 种子失败不阻断 */ }
+  } catch (e) { console.error('[recruits] seed failed:', e.message); }
+}
 
-  if (request.method === 'GET') return listRecruits(request, env);
-  if (request.method === 'POST') return createRecruit(request, env);
-  if (request.method === 'PUT') return updateRecruit(request, env);
-  if (request.method === 'DELETE') return deleteRecruit(request, env);
+// 表不存在时自动建表并重试一次，避免首请求直接 500
+async function withTable(env, fn) {
+  try { return await fn(); }
+  catch (e) {
+    if (/no such table/i.test(e.message || '')) {
+      await ensureTable(env);
+      return await fn();
+    }
+    throw e;
+  }
+}
+
+export async function onRequest(context) {
+  const { request, env } = context;
+  try { await ensureTable(env); } catch (e) { console.error('[recruits] ensureTable error:', e.message); }
+  if (request.method === 'GET') return withTable(env, () => listRecruits(request, env));
+  if (request.method === 'POST') return withTable(env, () => createRecruit(request, env));
+  if (request.method === 'PUT') return withTable(env, () => updateRecruit(request, env));
+  if (request.method === 'DELETE') return withTable(env, () => deleteRecruit(request, env));
   return new Response('Method not allowed', { status: 405 });
 }
 
