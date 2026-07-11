@@ -152,6 +152,13 @@ export default function AdminPanel() {
     }
   };
 
+  // 退出登录：清掉本地存储的暗号并回到登录态（服务端下次仍会校验）
+  const logout = () => {
+    try { localStorage.removeItem('gleams-admin'); } catch (e) {}
+    setCode('');
+    setAuthed(false);
+  };
+
   const fetchMessages = useCallback(async () => {
     setLoading(true);
     try {
@@ -406,6 +413,12 @@ export default function AdminPanel() {
 
   return (
     <div>
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={logout}
+          className="text-xs text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 px-2 py-1 rounded-full transition-colors"
+        >退出登录</button>
+      </div>
       <div className="flex gap-3 mb-6 justify-center flex-wrap">
         <button
           onClick={() => setTab('messages')}
