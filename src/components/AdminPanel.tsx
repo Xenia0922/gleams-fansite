@@ -80,7 +80,7 @@ export default function AdminPanel() {
   );
   const [checking, setChecking] = useState(false);
   const [recruits, setRecruits] = useState<Recruit[]>([]);
-  const [tab, setTab] = useState<'messages' | 'photos' | 'recruits' | 'members' | 'events' | 'tokuten' | 'site'>('messages');
+  const [tab, setTab] = useState<'members' | 'events' | 'photos' | 'messages' | 'tokuten' | 'site' | 'recruits'>('members');
   const [loading, setLoading] = useState(false);
 
   // 挂载时校验已存储的暗号：仅服务端 200 才放行，否则清空并停在登录态
@@ -356,24 +356,24 @@ export default function AdminPanel() {
         >退出登录</button>
       </div>
       <div className="flex gap-2 mb-6 justify-center flex-wrap">
-        <button onClick={() => setTab('messages')} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${tab === 'messages' ? 'btn-pink' : 'btn-outline'}`}>广场</button>
-        <button onClick={() => setTab('photos')} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${tab === 'photos' ? 'btn-pink' : 'btn-outline'}`}>画廊</button>
-        <button onClick={() => setTab('recruits')} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${tab === 'recruits' ? 'btn-pink' : 'btn-outline'}`}>广告</button>
         <button onClick={() => setTab('members')} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${tab === 'members' ? 'btn-pink' : 'btn-outline'}`}>成员</button>
         <button onClick={() => setTab('events')} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${tab === 'events' ? 'btn-pink' : 'btn-outline'}`}>日程</button>
+        <button onClick={() => setTab('photos')} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${tab === 'photos' ? 'btn-pink' : 'btn-outline'}`}>画廊</button>
+        <button onClick={() => setTab('messages')} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${tab === 'messages' ? 'btn-pink' : 'btn-outline'}`}>广场</button>
         <button onClick={() => setTab('tokuten')} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${tab === 'tokuten' ? 'btn-pink' : 'btn-outline'}`}>特典</button>
         <button onClick={() => setTab('site')} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${tab === 'site' ? 'btn-pink' : 'btn-outline'}`}>关于</button>
+        <button onClick={() => setTab('recruits')} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${tab === 'recruits' ? 'btn-pink' : 'btn-outline'}`}>广告</button>
       </div>
 
-      {tab === 'messages' && <AdminMessages code={code} />}
-      {tab === 'photos' && (
-        <div className="space-y-6">
-          <AdminGallery code={code} />
-          <AdminGalleryExtras code={code} />
-        </div>
-      )}
       {tab === 'members' && <AdminMembers code={code} />}
       {tab === 'events' && <AdminEvents code={code} />}
+      {tab === 'photos' && <AdminGalleryExtras code={code} />}
+      {tab === 'messages' && (
+        <div className="space-y-8">
+          <AdminMessages code={code} />
+          <AdminGallery code={code} />
+        </div>
+      )}
       {tab === 'tokuten' && <AdminTokuten code={code} />}
       {tab === 'site' && <AdminSite code={code} />}
       {tab === 'recruits' && (
