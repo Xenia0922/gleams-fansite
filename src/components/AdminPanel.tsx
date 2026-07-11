@@ -240,7 +240,8 @@ export default function AdminPanel() {
     const title = form.title.trim() || '主标题';
     const subtitle = form.subtitle.trim() ? form.subtitle.trim() : '';
     const body = form.body.trim() || '正文内容';
-    const cta = form.cta_text.trim() || '查看详情 →';
+    const ctaRaw = form.cta_text.trim() || '查看详情 →';
+    const cta = /[→›❯]/u.test(ctaRaw) ? ctaRaw : ctaRaw + ' →';
     const dl = fmtDeadline(form.deadline);
     const accent = 'var(--accent)';
     const cardStyle: CSSProperties = dark

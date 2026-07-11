@@ -191,7 +191,9 @@ const FALLBACK = {
       sub.style.display = r.subtitle ? '' : 'none';
       renderMeta();
       var cta = el.querySelector('[data-field="cta"]');
-      cta.textContent = r.cta_text || '查看详情 →';
+      var ctaText = r.cta_text || '查看详情 →';
+      if (!/[→›❯]/u.test(ctaText)) ctaText += ' →';
+      cta.textContent = ctaText;
       cta.setAttribute('href', r.cta_url || '#');
     }
 
