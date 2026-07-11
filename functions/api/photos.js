@@ -28,6 +28,10 @@ export async function onRequest(context) {
   return new Response('Method not allowed', { status: 405 });
 }
 
+function adminOk(request, env) {
+  return (request.headers.get('x-admin-code') || '') === env.ADMIN_CODE;
+}
+
 const THUMB_SUFFIX = '_thumb';
 
 function isThumbKey(key) {
@@ -44,12 +48,16 @@ async function uploadPhoto(request, env) {
     const file = formData.get('file');
     const thumb = formData.get('thumb'); // 可选：浏览器端生成的缩略图
     const rawMember = formData.get('member');
-    const member = ['hakusai', 'kumo', 'yuzi', 'other'].includes(rawMember) ? rawMember : 'other';
+    const isAdmin = adminOk(request, env);
+    // 后台可上传到任意分组；粉丝须用白名单分组
+    const member = isAdmin
+      ? (rawMember || 'other')
+      : (['hakusai', 'kumo', 'yuzi', 'other'].includes(rawMember) ? rawMember : 'other');
     const nickname = formData.get('nickname')?.slice(0, 20) || '匿名骑士';
     const code = formData.get('code')?.trim() || '';
 
     if (!file || !(file instanceof File)) return json({ error: '请选择图片' }, 400);
-    if (code !== env.SECRET_CODE) return json({ error: '暗号不对哦' }, 403);
+    if (!isAdmin && code !== env.SECRET_CODE) return json({ error: '暗号不对哦' }, 403);
     if (file.size > 15 * 1024 * 1024) return json({ error: '图片不能超过 15MB' }, 400);
 
     const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];

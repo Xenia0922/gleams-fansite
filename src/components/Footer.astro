@@ -1,5 +1,6 @@
 ---
 import site from '../data/site.json';
+import { SiteSocial } from './SiteBits';
 ---
 
 <footer class="relative mt-16 text-gray-700 dark:text-gray-300">
@@ -31,17 +32,7 @@ import site from '../data/site.json';
 
       <div>
         <h4 class="text-xs tracking-widest text-gray-400 dark:text-gray-500 uppercase mb-4">关注</h4>
-        <div class="space-y-2.5 inline-block text-left">
-          <a href={site.weibo} target="_blank" rel="noopener" class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-pink-500 dark:hover:text-pink-400 transition-colors">
-            <img src="/icon-weibo.png" alt="" class="w-4 h-4" /> 微博
-          </a>
-          <a href={site.xiaohongshu} target="_blank" rel="noopener" class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-pink-500 dark:hover:text-pink-400 transition-colors">
-            <img src="/icon-xhs.png" alt="" class="w-4 h-4" /> 小红书
-          </a>
-          <a href={site.douyin} target="_blank" rel="noopener" class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-pink-500 dark:hover:text-pink-400 transition-colors">
-            <img src="/icon-douyin.png" alt="" class="w-4 h-4" /> 抖音
-          </a>
-        </div>
+        <SiteSocial client:load variant="list" initial={{ weibo: site.weibo, xiaohongshu: site.xiaohongshu, douyin: site.douyin }} />
       </div>
 
       <div>

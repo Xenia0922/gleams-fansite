@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import ImageLightboxOverlay from './ImageLightboxOverlay';
 
-const allImages = [
+const initialImages = [
   { src: '/images/members/hakusai/hakusai_01.webp', member: 'hakusai' },
   { src: '/images/members/hakusai/hakusai_02.webp', member: 'hakusai' },
   { src: '/images/members/hakusai/hakusai_03.webp', member: 'hakusai' },
@@ -31,6 +31,12 @@ const allImages = [
   { src: '/images/members/yuzi/yuzi_09.webp', member: 'yuzi' },
 ];
 
+interface Photo {
+  src: string;
+  thumb: string;
+  member: string;
+}
+
 type Filter = 'all' | 'hakusai' | 'kumo' | 'yuzi';
 
 const filters: { key: Filter; label: string; emoji: string; color: string }[] = [
@@ -43,16 +49,42 @@ const filters: { key: Filter; label: string; emoji: string; color: string }[] = 
 export default function GalleryGrid() {
   const [filter, setFilter] = useState<Filter>('all');
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
+  const [photos, setPhotos] = useState<Photo[]>(initialImages.map(i => ({ ...i, thumb: i.src })));
 
-  const filtered = useMemo(() =>
-    filter === 'all' ? allImages : allImages.filter(img => img.member === filter),
-    [filter]
+  useEffect(() => {
+    let alive = true;
+    fetch('/api/photos')
+      .then(r => r.json())
+      .then(d => {
+        if (alive && Array.isArray(d) && d.length) {
+          setPhotos(
+            d.map((p: { url: string; thumbUrl?: string | null; member?: string }) => ({
+              src: p.url,
+              thumb: p.thumbUrl || p.url,
+              member: p.member || 'other',
+            }))
+          );
+        }
+      })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
+
+  const filtered = useMemo(
+    () => (filter === 'all' ? photos : photos.filter(p => p.member === filter)),
+    [filter, photos]
   );
-  const lightboxImages = useMemo(() => filtered.map(img => ({ src: img.src })), [filtered]);
+  const lightboxImages = useMemo(() => filtered.map(p => ({ src: p.src })), [filtered]);
 
   const close = useCallback(() => setLightboxIdx(null), []);
-  const prev = useCallback(() => setLightboxIdx(i => i !== null ? (i - 1 + filtered.length) % filtered.length : null), [filtered.length]);
-  const next = useCallback(() => setLightboxIdx(i => i !== null ? (i + 1) % filtered.length : null), [filtered.length]);
+  const prev = useCallback(
+    () => setLightboxIdx(i => (i !== null ? (i - 1 + filtered.length) % filtered.length : null)),
+    [filtered.length]
+  );
+  const next = useCallback(
+    () => setLightboxIdx(i => (i !== null ? (i + 1) % filtered.length : null)),
+    [filtered.length]
+  );
 
   useEffect(() => {
     if (lightboxIdx === null) return;
@@ -74,9 +106,7 @@ export default function GalleryGrid() {
             key={f.key}
             onClick={() => { setFilter(f.key); setLightboxIdx(null); }}
             className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-              filter === f.key
-                ? 'text-white shadow-md'
-                : 'text-gray-500 bg-gray-100 hover:bg-gray-200'
+              filter === f.key ? 'text-white shadow-md' : 'text-gray-500 bg-gray-100 hover:bg-gray-200'
             }`}
             style={filter === f.key ? { backgroundColor: f.color } : {}}
           >
@@ -95,7 +125,7 @@ export default function GalleryGrid() {
             onClick={() => setLightboxIdx(i)}
           >
             <img
-              src={item.src}
+              src={item.thumb}
               alt=""
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
               loading="lazy"
@@ -104,9 +134,7 @@ export default function GalleryGrid() {
         ))}
       </div>
 
-      {filtered.length === 0 && (
-        <div className="text-center py-16 text-gray-400">暂无照片</div>
-      )}
+      {filtered.length === 0 && <div className="text-center py-16 text-gray-400">暂无照片</div>}
 
       {/* 灯箱 */}
       {lightboxIdx !== null && (

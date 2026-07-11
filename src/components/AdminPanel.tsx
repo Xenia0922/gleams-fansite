@@ -1,4 +1,10 @@
 import { useState, useEffect, useCallback, useRef, type CSSProperties } from 'react';
+import AdminMembers from './admin/AdminMembers';
+import AdminEvents from './admin/AdminEvents';
+import AdminTokuten from './admin/AdminTokuten';
+import AdminSite from './admin/AdminSite';
+import AdminMessages from './admin/AdminMessages';
+import AdminGallery from './admin/AdminGallery';
 
 // 登录失败次数限制：30 分钟内最多 5 次，超出锁定至窗口结束
 const ATT_KEY = 'gleams-admin-attempts';
@@ -32,21 +38,6 @@ function lockReleaseText() {
   const hh = String(t.getHours()).padStart(2, '0');
   const mm = String(t.getMinutes()).padStart(2, '0');
   return hh + ':' + mm;
-}
-
-interface Photo {
-  key: string;
-  url: string;
-  uploaded: string;
-  thumbUrl?: string | null;
-}
-
-interface Message {
-  id: string;
-  name: string;
-  message: string;
-  member: string | null;
-  created_at: string;
 }
 
 interface Recruit {
@@ -87,10 +78,8 @@ export default function AdminPanel() {
     getAttempts().count >= ATT_MAX ? `尝试次数过多，请于 ${lockReleaseText()} 后再试` : ''
   );
   const [checking, setChecking] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [photos, setPhotos] = useState<Photo[]>([]);
   const [recruits, setRecruits] = useState<Recruit[]>([]);
-  const [tab, setTab] = useState<'messages' | 'photos' | 'recruits'>('messages');
+  const [tab, setTab] = useState<'messages' | 'photos' | 'recruits' | 'members' | 'events' | 'tokuten' | 'site'>('messages');
   const [loading, setLoading] = useState(false);
 
   // 挂载时校验已存储的暗号：仅服务端 200 才放行，否则清空并停在登录态
@@ -159,26 +148,6 @@ export default function AdminPanel() {
     setAuthed(false);
   };
 
-  const fetchMessages = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetch('/api/messages');
-      const data = await res.json();
-      if (Array.isArray(data)) setMessages(data);
-    } catch {}
-    setLoading(false);
-  }, []);
-
-  const fetchPhotos = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetch('/api/photos');
-      const data = await res.json();
-      if (Array.isArray(data)) setPhotos(data);
-    } catch {}
-    setLoading(false);
-  }, []);
-
   const fetchRecruits = useCallback(async () => {
     setLoading(true);
     try {
@@ -192,42 +161,8 @@ export default function AdminPanel() {
 
   useEffect(() => {
     if (!authed) return;
-    if (tab === 'messages') fetchMessages();
-    else if (tab === 'photos') fetchPhotos();
-    else fetchRecruits();
-  }, [authed, tab, fetchMessages, fetchPhotos, fetchRecruits]);
-
-  const delMessage = async (m: Message) => {
-    if (!confirm(`删除「${m.name}」的留言？`)) return;
-    try {
-      const res = await fetch('/api/messages', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json', 'x-admin-code': code },
-        body: JSON.stringify({ id: m.id }),
-      });
-      const data = await res.json();
-      if (data.ok) fetchMessages();
-      else alert(data.error || '删除失败');
-    } catch {
-      alert('网络错误，删除失败');
-    }
-  };
-
-  const delPhoto = async (p: Photo) => {
-    if (!confirm('删除这张照片？')) return;
-    try {
-      const res = await fetch('/api/photos', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json', 'x-admin-code': code },
-        body: JSON.stringify({ key: p.key }),
-      });
-      const data = await res.json();
-      if (data.ok) fetchPhotos();
-      else alert(data.error || '删除失败');
-    } catch {
-      alert('网络错误，删除失败');
-    }
-  };
+    if (tab === 'recruits') fetchRecruits();
+  }, [authed, tab, fetchRecruits]);
 
   // ---------- 广告管理 ----------
   const EMPTY_FORM: RecruitForm = {
@@ -419,74 +354,26 @@ export default function AdminPanel() {
           className="text-xs text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 px-2 py-1 rounded-full transition-colors"
         >退出登录</button>
       </div>
-      <div className="flex gap-3 mb-6 justify-center flex-wrap">
-        <button
-          onClick={() => setTab('messages')}
-          className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
-            tab === 'messages' ? 'btn-pink' : 'btn-outline'
-          }`}
-        >
-          留言管理
-        </button>
-        <button
-          onClick={() => setTab('photos')}
-          className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
-            tab === 'photos' ? 'btn-pink' : 'btn-outline'
-          }`}
-        >
-          照片管理
-        </button>
-        <button
-          onClick={() => setTab('recruits')}
-          className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
-            tab === 'recruits' ? 'btn-pink' : 'btn-outline'
-          }`}
-        >
-          广告
-        </button>
+      <div className="flex gap-2 mb-6 justify-center flex-wrap">
+        <button onClick={() => setTab('messages')} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${tab === 'messages' ? 'btn-pink' : 'btn-outline'}`}>广场</button>
+        <button onClick={() => setTab('photos')} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${tab === 'photos' ? 'btn-pink' : 'btn-outline'}`}>画廊</button>
+        <button onClick={() => setTab('recruits')} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${tab === 'recruits' ? 'btn-pink' : 'btn-outline'}`}>广告</button>
+        <button onClick={() => setTab('members')} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${tab === 'members' ? 'btn-pink' : 'btn-outline'}`}>成员</button>
+        <button onClick={() => setTab('events')} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${tab === 'events' ? 'btn-pink' : 'btn-outline'}`}>日程</button>
+        <button onClick={() => setTab('tokuten')} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${tab === 'tokuten' ? 'btn-pink' : 'btn-outline'}`}>特典</button>
+        <button onClick={() => setTab('site')} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${tab === 'site' ? 'btn-pink' : 'btn-outline'}`}>关于</button>
       </div>
 
-      {loading ? (
-        <p className="text-center text-gray-400 py-8">加载中...</p>
-      ) : tab === 'messages' ? (
-        <div className="space-y-3">
-          {messages.map(m => (
-            <div key={m.id} className="frost-card p-4 flex items-start gap-3">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm font-bold text-gray-800 dark:text-gray-200">{m.name}</span>
-                  <span className="text-xs text-gray-400">
-                    {new Date(m.created_at + 'Z').toLocaleString('zh-CN')}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-600 dark:text-gray-300 break-words">{m.message}</p>
-              </div>
-              <button
-                onClick={() => delMessage(m)}
-                className="flex-shrink-0 text-xs text-red-400 hover:text-red-600 px-2 py-1 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-              >
-                删除
-              </button>
-            </div>
-          ))}
-          {messages.length === 0 && <p className="text-center text-gray-400 py-8">暂无留言</p>}
-        </div>
-      ) : tab === 'photos' ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {photos.map(p => (
-            <div key={p.key} className="frost-card overflow-hidden group relative">
-              <img src={p.thumbUrl || p.url} alt="" className="w-full aspect-[4/5] object-cover" loading="lazy" />
-              <button
-                onClick={() => delPhoto(p)}
-                className="absolute top-2 right-2 text-xs bg-red-500/80 hover:bg-red-600 text-white px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                删除
-              </button>
-            </div>
-          ))}
-          {photos.length === 0 && <p className="text-center text-gray-400 py-8 col-span-full">暂无照片</p>}
-        </div>
-      ) : (
+      {tab === 'messages' && <AdminMessages code={code} />}
+      {tab === 'photos' && <AdminGallery code={code} />}
+      {tab === 'members' && <AdminMembers code={code} />}
+      {tab === 'events' && <AdminEvents code={code} />}
+      {tab === 'tokuten' && <AdminTokuten code={code} />}
+      {tab === 'site' && <AdminSite code={code} />}
+      {tab === 'recruits' && (
+        loading ? (
+          <p className="text-center text-gray-400 py-8">加载中...</p>
+        ) : (
         <div className="max-w-2xl mx-auto space-y-4">
           {/* 列表 */}
           <div className="space-y-3">
@@ -633,7 +520,7 @@ export default function AdminPanel() {
             </div>
           </div>
         </div>
-      )}
+      ))}
     </div>
   );
 }

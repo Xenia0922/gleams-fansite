@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import site from '../data/site.json';
+import TokutenContent from '../components/TokutenContent';
 ---
 
 <BaseLayout title="特典">
@@ -11,32 +12,22 @@ import site from '../data/site.json';
       <p class="text-gray-400 mt-3">以下内容来自 Gleams_Official 微博公示</p>
     </div>
 
-    <!-- 特典详情图 -->
-    <div class="card overflow-hidden mb-8">
-      <img src="/images/tokuten/tokuten_detail_0.webp" alt="物贩详情/集章细则" class="w-full" loading="lazy" />
-    </div>
-    <div class="card overflow-hidden mb-8">
-      <img src="/images/tokuten/tokuten_detail_1.webp" alt="特典会规则" class="w-full" loading="lazy" />
-    </div>
-    <div class="card overflow-hidden mb-8">
-      <img src="/images/tokuten/tokuten_detail_2.webp" alt="电切规则" class="w-full" loading="lazy" />
-    </div>
+    <TokutenContent
+      client:load
+      initial={{
+        tokuten_rules: site.tokutenRules,
+        tokuten_images: [
+          '/images/tokuten/tokuten_detail_0.webp',
+          '/images/tokuten/tokuten_detail_1.webp',
+          '/images/tokuten/tokuten_detail_2.webp',
+        ],
+        weibo: site.weibo,
+        weiboName: site.weiboName,
+      }}
+    />
 
-    <!-- 文字规则 -->
-    <div class="card p-8 mb-8">
-      <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">✦ 文字规则</h2>
-      <ol class="space-y-3">
-        {site.tokutenRules.map((rule: string, i: number) => (
-          <li class="flex gap-3">
-            <span class="flex-shrink-0 w-6 h-6 rounded-full bg-pink-100 text-pink-500 text-sm font-bold flex items-center justify-center">{i + 1}</span>
-            <span class="text-gray-700 dark:text-gray-300 pt-0.5">{rule}</span>
-          </li>
-        ))}
-      </ol>
-    </div>
-
-    <!-- 过往物贩示例 -->
-    <div class="mb-8">
+    <!-- 过往物贩参考 -->
+    <div class="mb-8 mt-8">
       <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">✦ 过往物贩参考</h2>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div class="card overflow-hidden">

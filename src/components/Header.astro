@@ -1,5 +1,6 @@
 ---
 import site from '../data/site.json';
+import { SiteSocial } from './SiteBits';
 
 const currentPath = Astro.url?.pathname || '';
 
@@ -41,15 +42,7 @@ const navLinks = [
 
         <!-- SNS Icons + Dark Mode -->
         <div class="hidden md:flex items-center gap-3">
-          <a href={site.weibo} target="_blank" rel="noopener" class="opacity-50 hover:opacity-100 hover:scale-110 transition-all duration-200" title="微博">
-            <img src="/icon-weibo.png" alt="微博" class="w-4 h-4" />
-          </a>
-          <a href={site.xiaohongshu} target="_blank" rel="noopener" class="opacity-50 hover:opacity-100 hover:scale-110 transition-all duration-200" title="小红书">
-            <img src="/icon-xhs.png" alt="小红书" class="w-4 h-4" />
-          </a>
-          <a href={site.douyin} target="_blank" rel="noopener" class="opacity-50 hover:opacity-100 hover:scale-110 transition-all duration-200" title="抖音">
-            <img src="/icon-douyin.png" alt="抖音" class="w-4 h-4" />
-          </a>
+          <SiteSocial client:load variant="icons" initial={{ weibo: site.weibo, xiaohongshu: site.xiaohongshu, douyin: site.douyin }} />
           <span class="text-gray-300 dark:text-gray-600">|</span>
           <button id="dark-toggle" class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors z-10 relative" aria-label="暗黑模式" title="暗黑模式">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
