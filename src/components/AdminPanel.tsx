@@ -5,6 +5,7 @@ import AdminTokuten from './admin/AdminTokuten';
 import AdminSite from './admin/AdminSite';
 import AdminMessages from './admin/AdminMessages';
 import AdminGallery from './admin/AdminGallery';
+import AdminGalleryExtras from './admin/AdminGalleryExtras';
 
 // 登录失败次数限制：30 分钟内最多 5 次，超出锁定至窗口结束
 const ATT_KEY = 'gleams-admin-attempts';
@@ -365,7 +366,12 @@ export default function AdminPanel() {
       </div>
 
       {tab === 'messages' && <AdminMessages code={code} />}
-      {tab === 'photos' && <AdminGallery code={code} />}
+      {tab === 'photos' && (
+        <div className="space-y-6">
+          <AdminGallery code={code} />
+          <AdminGalleryExtras code={code} />
+        </div>
+      )}
       {tab === 'members' && <AdminMembers code={code} />}
       {tab === 'events' && <AdminEvents code={code} />}
       {tab === 'tokuten' && <AdminTokuten code={code} />}

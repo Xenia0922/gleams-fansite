@@ -74,7 +74,8 @@ export default function AdminGallery({ code }: { code: string }) {
   return (
     <div className="max-w-2xl mx-auto space-y-4">
       <div className="frost-card p-4">
-        <h3 className="text-sm font-bold text-gray-800 dark:text-gray-100 mb-2">后台上传照片</h3>
+        <h3 className="text-sm font-bold text-gray-800 dark:text-gray-100 mb-1">广场返图</h3>
+        <p className="text-xs text-gray-400 mb-3">粉丝在广场上传的应援返图（与下方「画廊页独立照片」不是同一处）。</p>
         <div className="flex items-center gap-3 flex-wrap">
           <input type="file" accept="image/*" onChange={e => setFile(e.target.files?.[0] || null)} className="text-xs" />
           <select value={member} onChange={e => setMember(e.target.value)} className="text-sm px-3 py-2 rounded-xl bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10">
