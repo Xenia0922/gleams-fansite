@@ -18,6 +18,7 @@ interface Message {
 interface Recruit {
   id: number;
   title: string;
+  subtitle: string | null;
   body: string;
   cta_text: string;
   cta_url: string;
@@ -30,6 +31,7 @@ interface Recruit {
 interface RecruitForm {
   id: number | null;
   title: string;
+  subtitle: string;
   body: string;
   cta_text: string;
   cta_url: string;
@@ -134,14 +136,14 @@ export default function AdminPanel() {
 
   // ---------- 招募广告管理 ----------
   const EMPTY_FORM: RecruitForm = {
-    id: null, title: '', body: '', cta_text: '查看详情 →',
+    id: null, title: '', subtitle: '', body: '', cta_text: '查看详情 →',
     cta_url: '', deadline: '', enabled: true, sort_order: 0,
   };
   const [form, setForm] = useState<RecruitForm>(EMPTY_FORM);
 
   const editRecruit = (r: Recruit) => {
     setForm({
-      id: r.id, title: r.title, body: r.body, cta_text: r.cta_text,
+      id: r.id, title: r.title, subtitle: r.subtitle || '', body: r.body, cta_text: r.cta_text,
       cta_url: r.cta_url, deadline: r.deadline || '',
       enabled: !!r.enabled, sort_order: r.sort_order,
     });
@@ -158,6 +160,7 @@ export default function AdminPanel() {
     }
     const payload = {
       title: form.title.trim(),
+      subtitle: form.subtitle.trim(),
       body: form.body.trim(),
       cta_text: form.cta_text.trim() || '查看详情 →',
       cta_url: form.cta_url.trim(),
@@ -290,7 +293,7 @@ export default function AdminPanel() {
                 <div className="flex items-start gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <span className="text-sm font-bold text-gray-800 dark:text-gray-200">{r.title}</span>
+                      <span className="text-sm font-bold text-[var(--accent)]">{r.title}</span>
                       {r.enabled ? (
                         <span className="chip text-[10px] !py-0">投放中</span>
                       ) : (
@@ -299,7 +302,13 @@ export default function AdminPanel() {
                       {r.deadline && <span className="text-xs text-gray-400">截止 {r.deadline}</span>}
                       <span className="text-xs text-gray-300 dark:text-gray-600">#{r.sort_order}</span>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-300 break-words">{r.body}</p>
+                    {r.subtitle && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400 break-words">{r.subtitle}</p>
+                    )}
+                    <p className="text-sm text-gray-600 dark:text-gray-300 break-words">
+                      {r.deadline && <span className="text-[var(--accent)] font-semibold">报名截止 {r.deadline.slice(5).replace('-', '.')} · </span>}
+                      {r.body}
+                    </p>
                     <p className="text-xs text-gray-400 mt-0.5 truncate">{r.cta_url}</p>
                   </div>
                   <div className="flex-shrink-0 flex flex-col gap-1">
@@ -332,11 +341,15 @@ export default function AdminPanel() {
             <div className="space-y-3">
               <input
                 value={form.title} onChange={e => setForm({ ...form, title: e.target.value })}
-                placeholder="标题（如：Gleams 研修生招募）" className={INPUT_CLS}
+                placeholder="标题（如：研修生招募）" className={INPUT_CLS}
+              />
+              <input
+                value={form.subtitle} onChange={e => setForm({ ...form, subtitle: e.target.value })}
+                placeholder="副标题（如：公主风王道系地下偶像团体）" className={INPUT_CLS}
               />
               <textarea
                 value={form.body} onChange={e => setForm({ ...form, body: e.target.value })}
-                placeholder="正文（如：报名截止 8.10 · 微博转发关注抽 52 元偶活基金）"
+                placeholder="正文（如：微博转发关注抽 52 元偶活基金）"
                 rows={2} className={`${INPUT_CLS} resize-none`}
               />
               <input

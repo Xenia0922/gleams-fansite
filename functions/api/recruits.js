@@ -12,6 +12,7 @@
 const DDL = `CREATE TABLE IF NOT EXISTS recruits (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   title TEXT NOT NULL,
+  subtitle TEXT,
   body TEXT NOT NULL,
   cta_text TEXT NOT NULL DEFAULT '查看详情 →',
   cta_url TEXT NOT NULL,
@@ -24,6 +25,31 @@ const DDL = `CREATE TABLE IF NOT EXISTS recruits (
 export async function onRequest(context) {
   const { request, env } = context;
   try { await env.DB.exec(DDL); } catch (e) { /* 表已存在，忽略 */ }
+  // 旧表补列（CREATE TABLE 不会自动加字段）
+  try { await env.DB.exec('ALTER TABLE recruits ADD COLUMN subtitle TEXT'); } catch (e) { /* 已存在则忽略 */ }
+  // 空表时写入默认招募，部署后即可展示，无需手动录入
+  try {
+    const { results } = await env.DB.prepare('SELECT COUNT(*) AS c FROM recruits').all();
+    if (results[0] && results[0].c === 0) {
+      await env.DB
+        .prepare(
+          `INSERT INTO recruits (title, subtitle, body, cta_text, cta_url, deadline, enabled, sort_order, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        )
+        .bind(
+          '研修生招募',
+          '公主风王道系地下偶像团体',
+          '微博转发关注抽 52 元偶活基金',
+          '查看详情 →',
+          'https://weibo.com/7972735157/R7KNSzPdt',
+          '2026-08-10',
+          1,
+          0,
+          new Date().toISOString()
+        )
+        .run();
+    }
+  } catch (e) { /* 种子失败不阻断 */ }
 
   if (request.method === 'GET') return listRecruits(request, env);
   if (request.method === 'POST') return createRecruit(request, env);
@@ -51,7 +77,7 @@ async function listRecruits(request, env) {
   // 公开：有效且未过期（按北京时间粗筛，前端再做精确判定）
   const { results } = await env.DB
     .prepare(
-      `SELECT id, title, body, cta_text, cta_url, deadline
+      `SELECT id, title, subtitle, body, cta_text, cta_url, deadline
        FROM recruits
        WHERE enabled = 1 AND (deadline IS NULL OR deadline >= date('now', '+8 hours'))
        ORDER BY sort_order ASC, id DESC LIMIT 10`
@@ -65,6 +91,7 @@ async function createRecruit(request, env) {
   try {
     const b = await request.json();
     const title = String(b.title || '').trim().slice(0, 60);
+    const subtitle = b.subtitle ? String(b.subtitle).trim().slice(0, 60) : '';
     const body = String(b.body || '').trim().slice(0, 200);
     const cta_text = String(b.cta_text || '查看详情 →').trim().slice(0, 40);
     const cta_url = String(b.cta_url || '').trim().slice(0, 500);
@@ -77,10 +104,10 @@ async function createRecruit(request, env) {
 
     const info = await env.DB
       .prepare(
-        `INSERT INTO recruits (title, body, cta_text, cta_url, deadline, enabled, sort_order, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO recruits (title, subtitle, body, cta_text, cta_url, deadline, enabled, sort_order, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
       )
-      .bind(title, body, cta_text, cta_url, deadline, enabled, sort_order, new Date().toISOString())
+      .bind(title, subtitle, body, cta_text, cta_url, deadline, enabled, sort_order, new Date().toISOString())
       .run();
 
     return json({ ok: true, id: info.meta ? info.meta.last_row_id : null });
@@ -99,6 +126,7 @@ async function updateRecruit(request, env) {
     const sets = [];
     const binds = [];
     if (b.title !== undefined) { sets.push('title = ?'); binds.push(String(b.title).trim().slice(0, 60)); }
+    if (b.subtitle !== undefined) { sets.push('subtitle = ?'); binds.push(String(b.subtitle).trim().slice(0, 60)); }
     if (b.body !== undefined) { sets.push('body = ?'); binds.push(String(b.body).trim().slice(0, 200)); }
     if (b.cta_text !== undefined) { sets.push('cta_text = ?'); binds.push(String(b.cta_text).trim().slice(0, 40)); }
     if (b.cta_url !== undefined) {
