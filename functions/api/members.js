@@ -128,8 +128,8 @@ async function createMember(request, env) {
         id, name, String(b.nameJP || '').trim().slice(0, 30), String(b.color || '#e83e8c').slice(0, 20),
         String(b.emoji || '⭐').slice(0, 8), String(b.birthday || '').slice(0, 10), String(b.constellation || '').slice(0, 10),
         b.status === 'graduated' ? 'graduated' : 'active', String(b.image || '').slice(0, 500),
-        JSON.stringify(gallery), String(b.weibo || '').slice(0, 200), String(b.weiboName || '').slice(0, 60),
-        String(b.weiboDesc || '').slice(0, 120), String(b.intro || '').slice(0, 600),
+        JSON.stringify(gallery), String(b.weibo || '').slice(0, 200), String((b.weibo_name ?? b.weiboName) || '').slice(0, 60),
+        String((b.weibo_desc ?? b.weiboDesc) || '').slice(0, 120), String(b.intro || '').slice(0, 600),
         Number.isFinite(+b.sort_order) ? +b.sort_order : 99, new Date().toISOString()
       )
       .run();

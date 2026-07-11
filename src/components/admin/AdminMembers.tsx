@@ -64,7 +64,7 @@ export default function AdminMembers({ code }: { code: string }) {
       ...form,
       name: form.name.trim(),
       gallery: Array.isArray(form.gallery) ? form.gallery : [],
-      sort_order: Number.isFinite(+form.sort_order) ? +form.sort_order : 99,
+      sort_order: form.sort_order != null && Number.isFinite(+form.sort_order) ? +form.sort_order : 99,
     };
     try {
       const isNew = !editing || editing.id === 'new';
