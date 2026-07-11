@@ -1,51 +1,14 @@
-import { useState, useEffect, useCallback, useMemo, Fragment } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import ImageLightboxOverlay from './ImageLightboxOverlay';
 import ImageUpload from './admin/ImageUpload';
 
-// 构建期骨架：首屏先显示成员本地图，挂载后由 /api/gallery 拉取 D1 实时数据覆盖。
-const initialImages = [
-  { src: '/images/members/hakusai/hakusai_01.webp', member: 'hakusai' },
-  { src: '/images/members/hakusai/hakusai_02.webp', member: 'hakusai' },
-  { src: '/images/members/hakusai/hakusai_03.webp', member: 'hakusai' },
-  { src: '/images/members/hakusai/hakusai_04.webp', member: 'hakusai' },
-  { src: '/images/members/hakusai/hakusai_05.webp', member: 'hakusai' },
-  { src: '/images/members/hakusai/hakusai_06.webp', member: 'hakusai' },
-  { src: '/images/members/hakusai/hakusai_07.webp', member: 'hakusai' },
-  { src: '/images/members/hakusai/hakusai_08.webp', member: 'hakusai' },
-  { src: '/images/members/hakusai/hakusai_09.webp', member: 'hakusai' },
-  { src: '/images/members/kumo/kumo_01.webp', member: 'kumo' },
-  { src: '/images/members/kumo/kumo_02.webp', member: 'kumo' },
-  { src: '/images/members/kumo/kumo_03.webp', member: 'kumo' },
-  { src: '/images/members/kumo/kumo_04.webp', member: 'kumo' },
-  { src: '/images/members/kumo/kumo_05.webp', member: 'kumo' },
-  { src: '/images/members/kumo/kumo_06.webp', member: 'kumo' },
-  { src: '/images/members/kumo/kumo_07.webp', member: 'kumo' },
-  { src: '/images/members/kumo/kumo_08.webp', member: 'kumo' },
-  { src: '/images/members/kumo/kumo_09.webp', member: 'kumo' },
-  { src: '/images/members/yuzi/yuzi_main.webp', member: 'yuzi' },
-  { src: '/images/members/yuzi/yuzi_02.webp', member: 'yuzi' },
-  { src: '/images/members/yuzi/yuzi_03.webp', member: 'yuzi' },
-  { src: '/images/members/yuzi/yuzi_04.webp', member: 'yuzi' },
-  { src: '/images/members/yuzi/yuzi_05.webp', member: 'yuzi' },
-  { src: '/images/members/yuzi/yuzi_06.webp', member: 'yuzi' },
-  { src: '/images/members/yuzi/yuzi_07.webp', member: 'yuzi' },
-  { src: '/images/members/yuzi/yuzi_08.webp', member: 'yuzi' },
-  { src: '/images/members/yuzi/yuzi_09.webp', member: 'yuzi' },
-];
-
-interface MemberGroup {
-  id: string;
-  name: string;
-  emoji: string;
-  color: string;
-  gallery: string[];
-}
-interface Extra {
+// 画廊页已彻底独立：只读取 /api/gallery 返回的 gallery_photos（首次从成员简介九宫格复制的快照），
+// 不再实时聚合 members.gallery，增删互不影响。
+interface Photo {
   id: string;
   url: string;
-  caption: string;
+  member: string;
 }
-type Cell = { src: string; member: string; id?: string };
 
 const META: Record<string, { name: string; emoji: string; color: string }> = {
   hakusai: { name: '白菜', emoji: '💛', color: '#FFD700' },
@@ -53,90 +16,72 @@ const META: Record<string, { name: string; emoji: string; color: string }> = {
   yuzi: { name: '柚子', emoji: '💚', color: '#48D1A0' },
 };
 
-const initialMembers: MemberGroup[] = (() => {
-  const map = new Map<string, MemberGroup>();
-  for (const im of initialImages) {
-    if (!map.has(im.member)) {
-      map.set(im.member, { id: im.member, name: im.member, emoji: '⭐', color: '#e83e8c', gallery: [] });
-    }
-    map.get(im.member)!.gallery.push(im.src);
-  }
-  for (const m of map.values()) {
-    const x = META[m.id];
-    if (x) {
-      m.name = x.name;
-      m.emoji = x.emoji;
-      m.color = x.color;
-    }
-  }
-  return [...map.values()];
-})();
-
 export default function GalleryGrid() {
   const [filter, setFilter] = useState('all');
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
-  const [members, setMembers] = useState<MemberGroup[]>(initialMembers);
-  const [extras, setExtras] = useState<Extra[]>([]);
+  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminCode, setAdminCode] = useState('');
   const [draft, setDraft] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
 
-  // 拉取实时数据：聚合成员 9 宫格 + 后台独立照片；若本浏览器已登录后台则显示增删控件。
+  // 拉取独立的画廊照片；若本浏览器已登录后台则显示增删控件。
   const reload = useCallback(async () => {
     const code =
       adminCode || (typeof localStorage !== 'undefined' ? localStorage.getItem('gleams-admin') || '' : '');
     try {
       const res = await fetch('/api/gallery', code ? { headers: { 'x-admin-code': code } } : undefined);
       const data = await res.json();
-      if (Array.isArray(data.members) && data.members.length) setMembers(data.members);
-      if (Array.isArray(data.extras)) setExtras(data.extras);
+      if (Array.isArray(data.photos)) setPhotos(data.photos);
       if (data.isAdmin) {
         setIsAdmin(true);
         setAdminCode(code);
       }
     } catch {
-      /* 离线时保留骨架 */
+      /* 离线时保留当前 */
     }
+    setLoading(false);
   }, [adminCode]);
 
   useEffect(() => {
     reload();
   }, [reload]);
 
-  const filters = useMemo(
-    () => [
-      { key: 'all', label: '全部', emoji: '⭐', color: '#e83e8c' },
-      ...members.map((m) => ({ key: m.id, label: m.name, emoji: m.emoji, color: m.color })),
-    ],
-    [members]
-  );
+  const memberIds = useMemo(() => Object.keys(META), []);
 
-  const memberPhotos = useMemo(
-    () => members.flatMap((m) => (m.gallery || []).map((src) => ({ src, member: m.id }))),
-    [members]
+  // 按成员分组（保持 META 顺序），便于浏览与筛选
+  const groups = useMemo(() => {
+    const map = new Map<string, Photo[]>();
+    for (const p of photos) {
+      const key = META[p.member] ? p.member : '__other__';
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(p);
+    }
+    const ordered: { id: string; name: string; emoji: string; color: string; items: Photo[] }[] = [];
+    for (const id of memberIds) {
+      if (map.has(id)) ordered.push({ id, name: META[id].name, emoji: META[id].emoji, color: META[id].color, items: map.get(id)! });
+    }
+    if (map.has('__other__')) ordered.push({ id: '__other__', name: '其他', emoji: '🐙', color: '#e83e8c', items: map.get('__other__')! });
+    return ordered;
+  }, [photos, memberIds]);
+
+  const flat = useMemo(() => groups.flatMap((g) => g.items), [groups]);
+  const visibleFlat = useMemo(
+    () => (filter === 'all' ? flat : flat.filter((p) => p.member === filter)),
+    [filter, flat]
   );
-  const extraPhotos = useMemo(
-    () => extras.map((e) => ({ src: e.url, member: '__extra__', id: e.id })),
-    [extras]
-  );
-  const displayList = useMemo<Cell[]>(() => {
-    const m = filter === 'all' ? memberPhotos : memberPhotos.filter((p) => p.member === filter);
-    const e = filter === 'all' ? extraPhotos : [];
-    return [...m, ...e];
-  }, [filter, memberPhotos, extraPhotos]);
-  const firstExtraIdx = displayList.findIndex((p) => p.member === '__extra__');
-  const lightboxImages = useMemo(() => displayList.map((p) => ({ src: p.src })), [displayList]);
+  const lightboxImages = useMemo(() => visibleFlat.map((p) => ({ src: p.url })), [visibleFlat]);
 
   const close = useCallback(() => setLightboxIdx(null), []);
   const prev = useCallback(
-    () => setLightboxIdx((i) => (i !== null ? (i - 1 + displayList.length) % displayList.length : null)),
-    [displayList.length]
+    () => setLightboxIdx((i) => (i !== null ? (i - 1 + visibleFlat.length) % visibleFlat.length : null)),
+    [visibleFlat.length]
   );
   const next = useCallback(
-    () => setLightboxIdx((i) => (i !== null ? (i + 1) % displayList.length : null)),
-    [displayList.length]
+    () => setLightboxIdx((i) => (i !== null ? (i + 1) % visibleFlat.length : null)),
+    [visibleFlat.length]
   );
 
   useEffect(() => {
@@ -150,7 +95,7 @@ export default function GalleryGrid() {
     return () => window.removeEventListener('keydown', handler);
   }, [lightboxIdx, close, prev, next]);
 
-  const addExtra = async (url: string) => {
+  const addPhoto = async (url: string) => {
     if (!url || !isAdmin) return;
     setBusy(true);
     setErr('');
@@ -172,9 +117,9 @@ export default function GalleryGrid() {
     }
   };
 
-  const delExtra = async (id: string) => {
+  const delPhoto = async (id: string) => {
     if (!isAdmin) return;
-    if (!confirm('从画廊页删除这张照片？')) return;
+    if (!confirm('从画廊删除这张照片？')) return;
     try {
       const res = await fetch('/api/gallery?id=' + encodeURIComponent(id), {
         method: 'DELETE',
@@ -187,6 +132,16 @@ export default function GalleryGrid() {
       alert('删除失败');
     }
   };
+
+  const filters = useMemo(
+    () => [
+      { key: 'all', label: '全部', emoji: '⭐', color: '#e83e8c' },
+      ...groups.map((g) => ({ key: g.id, label: g.name, emoji: g.emoji, color: g.color })),
+    ],
+    [groups]
+  );
+
+  const idxOf = (id: string) => visibleFlat.findIndex((p) => p.id === id);
 
   return (
     <>
@@ -210,7 +165,7 @@ export default function GalleryGrid() {
         ))}
       </div>
 
-      {/* 后台：添加画廊页照片（仅已登录后台的浏览器显示） */}
+      {/* 后台：添加画廊照片（仅已登录后台的浏览器显示） */}
       {isAdmin && (
         <div className="max-w-md mx-auto mb-8">
           <ImageUpload
@@ -218,56 +173,71 @@ export default function GalleryGrid() {
             section="gallery"
             value={draft}
             onChange={(u) => {
-              if (u) addExtra(u);
+              if (u) addPhoto(u);
               setDraft('');
             }}
-            label="添加画廊页照片"
+            label="添加画廊照片"
           />
           {busy && <p className="text-xs text-gray-400 mt-1 text-center">上传中…</p>}
           {err && <p className="text-xs text-red-500 mt-1 text-center">{err}</p>}
           <p className="text-[11px] text-gray-400 mt-2 text-center">
-            这些照片只显示在画廊页，删除也不会动到成员简介九宫格。
+            画廊照片已独立保存，增删都不影响成员简介九宫格。
           </p>
         </div>
       )}
 
-      {/* 图片网格 */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-        {displayList.map((item, i) => (
-          <Fragment key={item.member === '__extra__' ? `ex-${item.id}` : `${item.member}-${i}`}>
-            {item.member === '__extra__' && i === firstExtraIdx && (
-              <div className="col-span-full flex items-center gap-3 mt-2 mb-1">
-                <span className="text-sm font-bold text-gray-400">✨ 画廊页照片</span>
-                <span className="text-xs text-gray-400">（后台管理 · 不影响成员简介九宫格）</span>
+      {/* 图片网格（按成员分组） */}
+      {loading ? (
+        <p className="text-center text-gray-400 py-16">加载中…</p>
+      ) : (
+        <div className="space-y-8">
+          {groups
+            .filter((g) => filter === 'all' || g.id === filter)
+            .map((g) => (
+              <div key={g.id}>
+                {filter === 'all' && (
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-sm font-bold" style={{ color: g.color }}>
+                      {g.emoji} {g.name}
+                    </span>
+                    <span className="text-xs text-gray-400">{g.items.length} 张</span>
+                  </div>
+                )}
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {g.items.map((p) => {
+                    const i = idxOf(p.id);
+                    return (
+                      <div
+                        key={p.id}
+                        className="relative aspect-[4/5] rounded-3xl overflow-hidden glass cursor-pointer group"
+                        onClick={() => i >= 0 && setLightboxIdx(i)}
+                      >
+                        <img
+                          src={p.url}
+                          alt=""
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          loading="lazy"
+                        />
+                        {isAdmin && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              delPhoto(p.id);
+                            }}
+                            className="absolute top-2 right-2 text-xs bg-red-500/80 hover:bg-red-600 text-white px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            删除
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            )}
-            <div
-              className="relative aspect-[4/5] rounded-3xl overflow-hidden glass cursor-pointer group"
-              onClick={() => setLightboxIdx(i)}
-            >
-              <img
-                src={item.src}
-                alt=""
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                loading="lazy"
-              />
-              {isAdmin && item.member === '__extra__' && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    delExtra(item.id as string);
-                  }}
-                  className="absolute top-2 right-2 text-xs bg-red-500/80 hover:bg-red-600 text-white px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  删除
-                </button>
-              )}
-            </div>
-          </Fragment>
-        ))}
-      </div>
-
-      {displayList.length === 0 && <div className="text-center py-16 text-gray-400">暂无照片</div>}
+            ))}
+          {photos.length === 0 && <div className="text-center py-16 text-gray-400">暂无照片，去后台添加吧</div>}
+        </div>
+      )}
 
       {lightboxIdx !== null && (
         <ImageLightboxOverlay
