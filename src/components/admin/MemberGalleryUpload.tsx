@@ -21,7 +21,8 @@ export default function MemberGalleryUpload({ code, section, value, onChange, la
 
   // 始终持有最新数组，所有写操作都基于它累加，避免异步上传/并发操作互相覆盖（表现为「添加一张却丢一张」）
   const valueRef = useRef<string[]>(value);
-  valueRef.current = value;
+  // 用 useEffect 同步（而非渲染期直接赋值），避免在渲染中途被旧 prop 覆盖，最稳妥
+  useEffect(() => { valueRef.current = value; }, [value]);
 
   // 单一入口：基于最新值计算新数组并回传，确保 添加/删除/排序 之间不会互相覆盖
   const commit = (updater: (prev: string[]) => string[]) => {
@@ -69,7 +70,8 @@ export default function MemberGalleryUpload({ code, section, value, onChange, la
     return () => document.removeEventListener('paste', onDocPaste);
   }, []);
 
-  const remove = (i: number) => commit(prev => prev.filter((_, idx) => idx !== i));
+  // 删除按 URL 而非下标：无论列表顺序、并发上传如何变化，都精确删掉点的那张，绝不误删
+  const remove = (url: string) => commit(prev => prev.filter(u => u !== url));
 
   const onPick = (e: React.ChangeEvent<HTMLInputElement>) => {
     add(e.target.files?.[0]);
@@ -109,9 +111,10 @@ export default function MemberGalleryUpload({ code, section, value, onChange, la
             <img src={url} alt="" className="w-full h-full object-cover" />
             <button
               type="button"
-              onClick={() => remove(i)}
+              onClick={e => { e.stopPropagation(); e.preventDefault(); remove(url); }}
+              onMouseDown={e => e.stopPropagation()}
               aria-label="删除图片"
-              className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/50 text-white text-xs leading-none flex items-center justify-center opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+              className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/50 text-white text-xs leading-none flex items-center justify-center opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity z-10"
             >×</button>
           </div>
         ))}
