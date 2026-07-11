@@ -102,17 +102,6 @@ export default function AdminPanel() {
     else fetchRecruits();
   }, [authed, tab, fetchMessages, fetchPhotos, fetchRecruits]);
 
-  // 新建广告时，排序号自动填入「当前最大 + 1」，让用户直接看到将排到第几位
-  const nextSortOrder = () => {
-    if (recruits.length === 0) return 1;
-    return Math.max(...recruits.map(r => Number(r.sort_order) || 0)) + 1;
-  };
-  useEffect(() => {
-    if (tab === 'recruits' && !form.id && form.sort_order === 0 && !loading) {
-      setForm(f => ({ ...f, sort_order: nextSortOrder() }));
-    }
-  }, [tab, form.id, form.sort_order, loading, recruits]);
-
   const delMessage = async (m: Message) => {
     if (!confirm(`删除「${m.name}」的留言？`)) return;
     try {
@@ -285,6 +274,17 @@ export default function AdminPanel() {
       </div>
     );
   };
+
+  // 新建广告时，排序号自动填入「当前最大 + 1」，让用户直接看到将排到第几位
+  const nextSortOrder = () => {
+    if (recruits.length === 0) return 1;
+    return Math.max(...recruits.map(r => Number(r.sort_order) || 0)) + 1;
+  };
+  useEffect(() => {
+    if (tab === 'recruits' && !form.id && form.sort_order === 0 && !loading) {
+      setForm(f => ({ ...f, sort_order: nextSortOrder() }));
+    }
+  }, [tab, form.id, form.sort_order, loading, recruits]);
 
   if (!authed) {
     return (
