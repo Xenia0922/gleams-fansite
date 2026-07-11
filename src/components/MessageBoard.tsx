@@ -58,6 +58,7 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState('');
   const [filter, setFilter] = useState<string | null>(null);
+  const [eventFilter, setEventFilter] = useState<string | null>(null);
 
   const fetchMessages = useCallback(async () => {
     try {
@@ -89,10 +90,16 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
     window.addEventListener('gleams-code-set', onSet);
     window.addEventListener('gleams-code-clear', onClear);
     window.addEventListener('fan-member-filter', onFilter);
+    const onEventFilter = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      setEventFilter(detail === '' || detail == null ? null : detail);
+    };
+    window.addEventListener('fan-event-filter', onEventFilter);
     return () => {
       window.removeEventListener('gleams-code-set', onSet);
       window.removeEventListener('gleams-code-clear', onClear);
       window.removeEventListener('fan-member-filter', onFilter);
+      window.removeEventListener('fan-event-filter', onEventFilter);
     };
   }, []);
 
@@ -146,7 +153,8 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
 
   const NAMED = ['hakusai', 'kumo', 'yuzi'];
   const visibleMessages = messages.filter(m =>
-    !filter || (filter === 'other' ? !NAMED.includes(m.member ?? '') : m.member === filter)
+    (!filter || (filter === 'other' ? !NAMED.includes(m.member ?? '') : m.member === filter)) &&
+    (!eventFilter || m.event === eventFilter)
   );
 
   const messageListEl = (
@@ -177,14 +185,14 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
         </div>
       ))}
       {visibleMessages.length === 0 && (
-        <p className="text-center text-gray-400 py-8">该成员还没有留言 ✨</p>
+        <p className="text-center text-gray-400 py-8">{(filter || eventFilter) ? '该筛选下还没有留言 ✨' : '该成员还没有留言 ✨'}</p>
       )}
     </div>
   );
 
   if (readonly) {
     if (loading) return <p className="text-center text-gray-400 py-8">加载中...</p>;
-    if (messages.length === 0) return <p className="text-center text-gray-400 py-8">还没有留言 ✨</p>;
+    if (visibleMessages.length === 0) return <p className="text-center text-gray-400 py-8">{(filter || eventFilter) ? '该筛选下还没有留言 ✨' : '还没有留言 ✨'}</p>;
     return messageListEl;
   }
 

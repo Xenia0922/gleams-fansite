@@ -30,11 +30,13 @@ export default function FanGallery() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState<string | null>(null);
+  const [eventFilter, setEventFilter] = useState<string | null>(null);
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
   const hasCached = useRef(false);
   const NAMED = ['hakusai', 'kumo', 'yuzi'];
   const visiblePhotos = photos.filter(p =>
-    !filter || (filter === 'other' ? !NAMED.includes(p.member ?? '') : p.member === filter)
+    (!filter || (filter === 'other' ? !NAMED.includes(p.member ?? '') : p.member === filter)) &&
+    (!eventFilter || p.event === eventFilter)
   );
   const lightboxImages = useMemo(() => visiblePhotos.map(p => ({ src: p.url })), [visiblePhotos]);
 
@@ -68,6 +70,15 @@ export default function FanGallery() {
     return () => window.removeEventListener('fan-member-filter', onFilter);
   }, []);
 
+  useEffect(() => {
+    const onFilter = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      setEventFilter(detail === '' || detail == null ? null : detail);
+    };
+    window.addEventListener('fan-event-filter', onFilter);
+    return () => window.removeEventListener('fan-event-filter', onFilter);
+  }, []);
+
   const close = useCallback(() => setLightboxIdx(null), []);
   const prev = useCallback(() => setLightboxIdx(i => i !== null ? (i - 1 + visiblePhotos.length) % visiblePhotos.length : null), [visiblePhotos.length]);
   const next = useCallback(() => setLightboxIdx(i => i !== null ? (i + 1) % visiblePhotos.length : null), [visiblePhotos.length]);
@@ -93,7 +104,7 @@ export default function FanGallery() {
   if (loading) return <p className="text-center text-gray-400 py-8">加载中...</p>;
   if (error) return <div className="text-center py-8"><p className="text-gray-400 text-sm mb-2">{error}</p><button onClick={fetchPhotos} className="btn-outline text-xs !px-4 !py-1.5">重试</button></div>;
   if (photos.length === 0) return <p className="text-center text-gray-400 py-8">还没有返图，切换"发布"来上传第一张吧 ✨</p>;
-  if (visiblePhotos.length === 0) return <p className="text-center text-gray-400 py-8">该成员还没有返图 ✨</p>;
+  if (visiblePhotos.length === 0) return <p className="text-center text-gray-400 py-8">{(filter || eventFilter) ? '该筛选下还没有返图 ✨' : '还没有返图 ✨'}</p>;
 
   return (
     <>

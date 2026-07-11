@@ -29,6 +29,12 @@ import FanGallery from '../components/FanGallery';
         <button class="fan-filter-btn" data-member="yuzi" style="--c: #1E9E6A">💚 柚子</button>
         <button class="fan-filter-btn" data-member="other" style="--c: #C2417A">🐙 多人·其他</button>
       </div>
+      <!-- 场次筛选 -->
+      <div class="flex justify-center mb-10">
+        <select id="fan-event-filter" class="fan-filter-select" aria-label="按场次筛选">
+          <option value="">🎫 全部场次</option>
+        </select>
+      </div>
       <div class="mb-12" data-reveal>
         <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">💬 应援留言板</h2>
         <MessageBoard client:load readonly />
@@ -97,6 +103,28 @@ import FanGallery from '../components/FanGallery';
       window.dispatchEvent(new CustomEvent('fan-member-filter', { detail: btn.dataset.member }));
     });
   });
+
+  // 场次筛选：拉取日程填充下拉，选择后广播给两个孤岛
+  const evSel = document.getElementById('fan-event-filter');
+  if (evSel) {
+    const sel = evSel as HTMLSelectElement;
+    fetch('/api/events')
+      .then(r => r.json())
+      .then((list: any[]) => {
+        if (!Array.isArray(list)) return;
+        list.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+        for (const e of list) {
+          const opt = document.createElement('option');
+          opt.value = e.id;
+          opt.textContent = `🎫 ${e.date} ${e.title}`;
+          sel.appendChild(opt);
+        }
+      })
+      .catch(() => {});
+    sel.addEventListener('change', () => {
+      window.dispatchEvent(new CustomEvent('fan-event-filter', { detail: sel.value }));
+    });
+  }
 </script>
 
 <style>
@@ -115,4 +143,19 @@ import FanGallery from '../components/FanGallery';
   }
   .dark .fan-filter-btn { background: rgba(255, 255, 255, 0.05); color: #a9a4bd; border-color: rgba(255, 255, 255, 0.08); }
   .dark .fan-filter-btn:hover { color: var(--c); }
+
+  .fan-filter-select {
+    font-size: 0.8125rem; font-weight: 600;
+    padding: 0.45rem 1rem; border-radius: 9999px; max-width: 100%;
+    background: rgba(255, 255, 255, 0.55); color: var(--text-soft);
+    border: 1px solid rgba(20, 14, 40, 0.06);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    transition: all 0.2s var(--ease); cursor: pointer;
+    -webkit-appearance: none; appearance: none; padding-right: 2.2rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%23999' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 0.9rem center;
+  }
+  .fan-filter-select:hover { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 35%, transparent); }
+  .dark .fan-filter-select { background-color: rgba(255, 255, 255, 0.05); color: #a9a4bd; border-color: rgba(255, 255, 255, 0.08); }
+  .dark .fan-filter-select:hover { color: var(--accent); }
 </style>
