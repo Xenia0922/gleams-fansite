@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 interface Props {
   code: string;
@@ -19,17 +19,16 @@ export default function MemberGalleryUpload({ code, section, value, onChange, la
   const [err, setErr] = useState('');
   const [dragIdx, setDragIdx] = useState<number | null>(null);
 
-  // 渲染期把最新 value 直接挂到 ref（React 官方推荐的「最新值」写法，比 useEffect 异步同步更及时、无时序缝隙）。
-  // 所有写操作都基于它累加，彻底杜绝「旧 prop / 异步上传相交导致添加丢图、删错图」。
-  const valueRef = useRef<string[]>(value);
-  valueRef.current = value;
+  // 始终持有最新值，供异步上传回调安全累加，避免闭包拿到旧数组导致覆盖/丢图。
+  const latest = useRef<string[]>(value);
+  useEffect(() => { latest.current = value; }, [value]);
 
-  // 单一入口：基于最新值计算新数组并回传。添加 / 删除 / 排序全部走这里，互不覆盖。
-  const commit = (updater: (prev: string[]) => string[]) => {
-    onChange(updater(valueRef.current));
-  };
+  // 统一出口：基于最新值计算新数组并回传。添加 / 删除 / 排序全部走这里，互不覆盖。
+  const update = useCallback((updater: (prev: string[]) => string[]) => {
+    onChange(updater(latest.current));
+  }, [onChange]);
 
-  const add = async (file?: File | null) => {
+  const addFile = useCallback(async (file?: File | null) => {
     if (!file) return;
     if (!ACCEPT.includes(file.type)) { setErr('仅支持 JPG / PNG / WEBP / GIF'); return; }
     if (file.size > MAX) { setErr('图片过大，请控制在 15MB 以内'); return; }
@@ -41,18 +40,20 @@ export default function MemberGalleryUpload({ code, section, value, onChange, la
       fd.append('section', section);
       const res = await fetch('/api/upload', { method: 'POST', headers: { 'x-admin-code': code }, body: fd });
       const data = await res.json();
-      if (data.ok) commit(prev => [...prev, data.url]);
-      else setErr(data.error || '上传失败');
+      if (data.ok) {
+        // 严格追加：绝不动已有元素；重复 URL 直接跳过（防止手滑重复传同一张）。
+        update(prev => (prev.includes(data.url) ? prev : [...prev, data.url]));
+      } else setErr(data.error || '上传失败');
     } catch {
       setErr('上传失败，请重试');
     } finally {
       setBusy(false);
     }
-  };
+  }, [code, section, update]);
 
-  // 文档级粘贴捕获（焦点不在输入框时）。用 ref 持有最新 add，避免反复绑定 / 解绑。
-  const addRef = useRef<(f?: File | null) => void>(() => {});
-  addRef.current = add;
+  // 文档级粘贴捕获（焦点不在输入框时）。用 ref 持有最新 addFile，避免反复绑定 / 解绑。
+  const addFileRef = useRef(addFile);
+  addFileRef.current = addFile;
   useEffect(() => {
     const onDocPaste = (e: ClipboardEvent) => {
       const t = e.target as HTMLElement | null;
@@ -60,7 +61,7 @@ export default function MemberGalleryUpload({ code, section, value, onChange, la
       const item = Array.from(e.clipboardData?.items ?? []).find(i => i.type.startsWith('image/'));
       if (item) {
         e.preventDefault();
-        addRef.current(item.getAsFile());
+        addFileRef.current(item.getAsFile());
       }
     };
     document.addEventListener('paste', onDocPaste);
@@ -68,22 +69,33 @@ export default function MemberGalleryUpload({ code, section, value, onChange, la
   }, []);
 
   // 删除按 URL 而非下标：无论列表顺序、并发上传如何变化，都精确删掉点的那张，绝不误删。
-  const remove = (url: string) => commit(prev => prev.filter(u => u !== url));
+  const remove = useCallback((url: string) => update(prev => prev.filter(u => u !== url)), [update]);
 
   const onPick = (e: React.ChangeEvent<HTMLInputElement>) => {
-    add(e.target.files?.[0]);
-    e.target.value = '';
+    addFile(e.target.files?.[0]);
+    e.target.value = ''; // 允许再次选择同一文件
   };
 
-  const onDrop = (e: React.DragEvent) => {
+  const onDropAdd = (e: React.DragEvent) => {
     e.preventDefault();
     setDrag(false);
-    add(e.dataTransfer.files?.[0]);
+    if (busy) return;
+    addFile(e.dataTransfer.files?.[0]);
+  };
+
+  // 缩略图上松手：如果拖进来的是「文件」→ 当作添加；否则是缩略图互拖 → 调整顺序。
+  const onThumbDrop = (e: React.DragEvent, i: number) => {
+    if (e.dataTransfer.types.includes('Files')) {
+      e.preventDefault();
+      if (!busy) addFile(e.dataTransfer.files?.[0]);
+      return;
+    }
+    handleReorder(i);
   };
 
   const handleReorder = (i: number) => {
     if (dragIdx === null || dragIdx === i) return;
-    commit(prev => {
+    update(prev => {
       const next = [...prev];
       const [moved] = next.splice(dragIdx, 1);
       next.splice(i, 0, moved);
@@ -101,7 +113,7 @@ export default function MemberGalleryUpload({ code, section, value, onChange, la
             draggable
             onDragStart={() => setDragIdx(i)}
             onDragOver={e => e.preventDefault()}
-            onDrop={() => handleReorder(i)}
+            onDrop={e => onThumbDrop(e, i)}
             onDragEnd={() => setDragIdx(null)}
             className="relative group aspect-square rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-white/10 cursor-grab active:cursor-grabbing"
           >
@@ -120,7 +132,7 @@ export default function MemberGalleryUpload({ code, section, value, onChange, la
           onClick={() => !busy && inputRef.current?.click()}
           onDragOver={e => { e.preventDefault(); setDrag(true); }}
           onDragLeave={() => setDrag(false)}
-          onDrop={onDrop}
+          onDrop={onDropAdd}
           role="button"
           tabIndex={0}
           onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!busy) inputRef.current?.click(); } }}
