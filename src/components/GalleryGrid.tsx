@@ -38,12 +38,26 @@ export default function GalleryGrid() {
       const photosData = await photosRes.json();
       const siteData = await siteRes.json();
 
-      if (Array.isArray(galleryData.photos)) setPhotos(galleryData.photos);
+      if (Array.isArray(galleryData.photos)) {
+        // 排除已同步到 gallery 的精选照片（它们在底部骑士团精选区展示）
+        const raw = siteData.featured_square || [];
+        const featuredGalleryIds = new Set<string>();
+        if (Array.isArray(raw)) {
+          for (const e of raw) {
+            if (typeof e !== 'string' && e.galleryId) featuredGalleryIds.add(e.galleryId);
+          }
+        }
+        if (featuredGalleryIds.size > 0) {
+          setPhotos(galleryData.photos.filter((p: Photo) => !featuredGalleryIds.has(p.id)));
+        } else {
+          setPhotos(galleryData.photos);
+        }
+      }
 
       // 广场返图精选：兼容旧格式 string[] 和新格式 { key, galleryId }[]
-      const raw = siteData.featured_square || [];
-      const featuredKeys: string[] = Array.isArray(raw)
-        ? raw.map((e: string | { key: string }) => (typeof e === 'string' ? e : e.key))
+      const raw2 = siteData.featured_square || [];
+      const featuredKeys: string[] = Array.isArray(raw2)
+        ? raw2.map((e: string | { key: string }) => (typeof e === 'string' ? e : e.key))
         : [];
       if (Array.isArray(photosData) && featuredKeys.length > 0) {
         const keySet = new Set(featuredKeys);
