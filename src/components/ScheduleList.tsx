@@ -28,9 +28,9 @@ const MEMBER_MAP: Record<string, { name: string; emoji: string }> = {
  */
 export default function ScheduleList({ initial }: { initial?: ScheduleEvent[] }) {
   const ssr = typeof window !== 'undefined' ? (window as any).__SSR_DATA__ : null;
-  const initialEvents = initial && initial.length ? initial : ssr?.events || [];
-  const [events, setEvents] = useState<ScheduleEvent[]>(initialEvents);
-  const [loading, setLoading] = useState(!(initial && initial.length) && !(ssr?.events && ssr.events.length));
+  // 骨架优先：初始空 + loading，useEffect 按 SSR > 种子 > fetch 填充（消除写死种子先出的闪动）
+  const [events, setEvents] = useState<ScheduleEvent[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (ssr?.events && ssr.events.length) {
@@ -39,8 +39,9 @@ export default function ScheduleList({ initial }: { initial?: ScheduleEvent[] })
       return;
     }
     if (initial && initial.length) {
+      setEvents(initial);
       setLoading(false);
-      return; // 构建期数据已够用，无需 fetch
+      return;
     }
     // 兜底：无 SSR 也无 initial（极少见），回退一次 fetch
     let alive = true;

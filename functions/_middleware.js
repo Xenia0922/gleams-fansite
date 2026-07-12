@@ -84,7 +84,7 @@ async function fetchPageData(path, env) {
     try {
       const { results } = await env.DB
         .prepare(
-          "SELECT id,name,nameJP,color,emoji,birthday,constellation,status,image,gallery,weibo,weiboName,weiboDesc,intro,sort_order FROM members WHERE status!='graduated' ORDER BY sort_order ASC, id ASC"
+          "SELECT id,name,nameJP,color,emoji,birthday,constellation,status,image,gallery,weibo,weiboName,weiboDesc,intro,sort_order FROM members ORDER BY sort_order ASC, id ASC"
         )
         .all();
       data.members = (results || []).map((r) => {

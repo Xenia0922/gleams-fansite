@@ -63,15 +63,23 @@ export default function EventCardGrid({
   fallbackImg = '/images/events/live-2026-01-31.webp',
 }: EventCardGridProps) {
   const ssr = typeof window !== 'undefined' ? (window as any).__SSR_DATA__ : null;
-  const [events, setEvents] = useState<EventRow[]>(ssr?.events || initial || []);
-  const [loading, setLoading] = useState(false);
+  // 骨架优先：初始态永远空 + loading，避免「写死种子先出 → 后台真实数据覆盖」的闪动。
+  // 真实数据在 useEffect 中按优先级填充：SSR 注入 > 构建期种子 > 一次 fetch。
+  const [events, setEvents] = useState<EventRow[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 有 SSR 实时数据（middleware 注入）或构建期种子，无需再请求
-    if (ssr?.events) return;
-    if (initial && initial.length > 0) return;
+    if (ssr?.events && ssr.events.length) {
+      setEvents(ssr.events);
+      setLoading(false);
+      return;
+    }
+    if (initial && initial.length > 0) {
+      setEvents(initial);
+      setLoading(false);
+      return;
+    }
     let alive = true;
-    setLoading(true);
     fetch('/api/events')
       .then((r) => r.json())
       .then((d) => { if (alive && Array.isArray(d) && d.length) setEvents(d); })

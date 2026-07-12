@@ -25,13 +25,15 @@ export default function GalleryGrid() {
   const [filter, setFilter] = useState('all');
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
   const ssr = typeof window !== 'undefined' ? (window as any).__SSR_DATA__ : null;
-  const [photos, setPhotos] = useState<Photo[]>(ssr?.galleryPhotos || []);
-  const [featuredFan, setFeaturedFan] = useState<FanPhoto[]>(ssr?.featuredFan || []);
-  const [loading, setLoading] = useState(!ssr?.galleryPhotos);
+  // 骨架优先：初始空 + loading，reload 中按 SSR > fetch 填充（消除 hydration 不匹配）
+  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [featuredFan, setFeaturedFan] = useState<FanPhoto[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const reload = useCallback(async () => {
     if (ssr?.galleryPhotos) {
-      // SSR 已注入画廊图；精选区若也已注入则直接采用，免二次 fetch（无布局跳动）
+      setPhotos(ssr.galleryPhotos); // SSR 已注入画廊图
+      // 精选区若也已注入则直接采用，免二次 fetch（无布局跳动）
       if (ssr?.featuredFan && ssr.featuredFan.length) {
         setFeaturedFan(ssr.featuredFan);
         setLoading(false);

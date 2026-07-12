@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { type EventRow } from './EventCardGrid';
+import Skeleton from './Skeleton';
 
 function firstUpcoming(list: EventRow[]): EventRow | null {
   const up = list
@@ -22,17 +23,23 @@ function fm(n: number) { return String(n).padStart(2, '0'); }
 
 export default function UpcomingCountdown({ initial = [] }: { initial?: EventRow[] }) {
   const ssr = typeof window !== 'undefined' ? (window as any).__SSR_DATA__ : null;
-  const [event, setEvent] = useState<EventRow | null>(() =>
-    ssr?.events ? firstUpcoming(ssr.events) : firstUpcoming(initial)
-  );
+  // 骨架优先：初始空 + loading，useEffect 按 SSR > 种子 > fetch 填充
+  const [event, setEvent] = useState<EventRow | null>(null);
   const [cd, setCd] = useState<ReturnType<typeof calcCountdown>>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (ssr?.events) return; // 已有 SSR 实时数据
-    if (initial && initial.length > 0) return; // 有构建期种子，无需请求
+    if (ssr?.events && ssr.events.length) {
+      setEvent(firstUpcoming(ssr.events));
+      setLoading(false);
+      return;
+    }
+    if (initial && initial.length > 0) {
+      setEvent(firstUpcoming(initial));
+      setLoading(false);
+      return;
+    }
     let alive = true;
-    setLoading(true);
     fetch('/api/events')
       .then((r) => r.json())
       .then((data) => {
@@ -58,10 +65,10 @@ export default function UpcomingCountdown({ initial = [] }: { initial?: EventRow
 
   if (loading) {
     return (
-      <div className="frost-card p-4 max-w-sm mx-auto animate-pulse" aria-hidden="true">
-        <div className="h-3 w-24 mx-auto rounded bg-gray-200 dark:bg-gray-700 mb-2" />
-        <div className="h-4 w-40 mx-auto rounded bg-gray-200 dark:bg-gray-700 mb-2" />
-        <div className="h-6 w-32 mx-auto rounded bg-gray-200 dark:bg-gray-700" />
+      <div className="frost-card p-4 text-center max-w-sm mx-auto" aria-hidden="true">
+        <Skeleton className="h-3 w-24 mx-auto rounded-full mb-2" />
+        <Skeleton className="h-4 w-40 mx-auto rounded-full mb-2" />
+        <Skeleton className="h-6 w-32 mx-auto rounded-full" />
       </div>
     );
   }

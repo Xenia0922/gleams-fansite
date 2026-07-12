@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import Skeleton from './Skeleton';
 
 interface Member {
   id: string;
@@ -14,16 +15,28 @@ interface Member {
 
 export default function MembersList({ initial }: { initial: Member[] }) {
   const ssr = typeof window !== 'undefined' ? (window as any).__SSR_DATA__ : null;
-  const [members, setMembers] = useState<Member[]>(ssr?.members || initial || []);
+  // 骨架优先：初始空 + loading，useEffect 按 SSR > 种子 > fetch 填充（含毕业成员）
+  const [members, setMembers] = useState<Member[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeColor, setActiveColor] = useState('');
 
   useEffect(() => {
-    if (ssr?.members) return;
+    if (ssr?.members && ssr.members.length) {
+      setMembers(ssr.members);
+      setLoading(false);
+      return;
+    }
+    if (initial && initial.length) {
+      setMembers(initial);
+      setLoading(false);
+      return;
+    }
     let alive = true;
     fetch('/api/members')
       .then(r => r.json())
       .then(d => { if (alive && Array.isArray(d) && d.length) setMembers(d); })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
   }, []);
 
@@ -64,6 +77,20 @@ export default function MembersList({ initial }: { initial: Member[] }) {
       </div>
     </a>
   );
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-3 gap-4 sm:gap-6 mb-16" aria-hidden="true">
+        {Array.from({ length: initial?.length || 6 }).map((_, i) => (
+          <div key={i} className="text-center">
+            <Skeleton className="aspect-[4/5] rounded-2xl mb-3" />
+            <Skeleton className="h-4 w-16 mx-auto rounded-full mb-2" />
+            <Skeleton className="h-3 w-12 mx-auto rounded-full" />
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   if (members.length === 0) return <p className="text-center text-gray-400 py-16">暂无成员</p>;
 
