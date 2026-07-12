@@ -180,6 +180,7 @@ export default function AdminEvents({ code }: { code: string }) {
             <div className="flex items-center gap-2">
               <span className="text-sm font-bold text-gray-800 dark:text-gray-100 truncate">{e.title}</span>
               {e.status === 'past' && <span className="text-[10px] bg-gray-200 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full">已结束</span>}
+              {e.status === 'upcoming' && <span className="text-[10px] bg-[var(--accent)]/15 text-[var(--accent)] px-2 py-0.5 rounded-full font-semibold">即将到来</span>}
             </div>
             <p className="text-xs text-gray-400 mt-0.5">{e.venue}</p>
           </div>

@@ -7,6 +7,7 @@ import schedule from '../data/schedule.json';
 import HomeMembers from '../components/HomeMembers';
 import HomeEvents from '../components/HomeEvents';
 import { SiteSocial, LiveLink, SiteMeta } from '../components/SiteBits';
+import UpcomingCountdown from '../components/UpcomingCountdown';
 
 const activeMembers = members.members.filter((m: any) => m.status !== 'graduated');
 const pastEvents = schedule.events.filter((e: any) => e.status === 'past').reverse().slice(0, 4);
@@ -29,6 +30,8 @@ const pastEvents = schedule.events.filter((e: any) => e.status === 'past').rever
       </div>
     </div>
   </section>
+
+  <UpcomingCountdown client:load />
 
   <section class="max-w-7xl mx-auto px-4 py-16 md:py-20">
     <div class="text-center mb-10" data-reveal>
