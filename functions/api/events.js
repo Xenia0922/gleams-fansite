@@ -24,16 +24,17 @@ const DDL = `CREATE TABLE IF NOT EXISTS events (
 );`;
 
 // 种子：来自 src/data/schedule.json 当前内容
+// image 来自旧 news 的 frontmatter 封面图（/images/events/live-*.webp），合并时一并迁回
 const SEED = [
-  { id: 'live-2026-01-25', date: '2026-01-25', time: '', title: 'Sunday Candy Vol.03（广州首演）', venue: '广州', performers: ['hakusai','kumo','yuzi','huangyuyu'], status: 'past' },
-  { id: 'live-2026-01-31', date: '2026-01-31', time: '12:40', title: '第一届 Comic Expo 国风动漫展（出道）', venue: '南宁北投明月荟（西乡塘区）', performers: ['hakusai','kumo','yuzi'], status: 'past' },
-  { id: 'live-2026-02-15', date: '2026-02-15', time: '', title: '桂平·ACG第七届动漫新年盛典', venue: '桂平', performers: ['hakusai','kumo','yuzi','huangyuyu'], status: 'past' },
-  { id: 'live-2026-02-23', date: '2026-02-23', time: '', title: 'Akatsuki Idol Party Vol.24 ～アイドル新年会～', venue: '南宁·候朋现场 HOPELIVE（中山路万象汇）', performers: ['hakusai','kumo','yuzi'], status: 'past' },
-  { id: 'live-2026-03-14', date: '2026-03-14', time: '12:25', title: 'SUMMERL∞P MINI FES — 白情与公主有个约会', venue: '南宁·PinkNoises Live（会展动漫城）', performers: ['hakusai','kumo','yuzi'], status: 'past' },
-  { id: 'live-2026-03-28', date: '2026-03-28', time: '13:30', title: 'Akatsuki Idol Party Vol.25', venue: '南宁·PinkNoises Live（会展动漫城）', performers: ['hakusai','kumo','yuzi'], status: 'past' },
-  { id: 'live-2026-04-26', date: '2026-04-26', time: '', title: 'Puppy Club First Anniversary', venue: '南宁·民歌湖广场福馆 Full house', performers: ['hakusai','kumo','yuzi'], status: 'past' },
-  { id: 'live-2026-05-16', date: '2026-05-16', time: '14:00', title: '五碳糖 FES3.0 ～初夏の宴～', venue: '南宁·PinkNoises Live（会展动漫城）', performers: ['hakusai','kumo','yuzi'], status: 'past' },
-  { id: 'live-2026-07-04', date: '2026-07-04', time: '', title: 'Nez Fes Vol.1 -初晴の約束 真夏の約束-（白菜生日SP）', venue: '南宁·PinkNoises Live（会展动漫城）', performers: ['hakusai','kumo','yuzi'], status: 'past' },
+  { id: 'live-2026-01-25', date: '2026-01-25', time: '', title: 'Sunday Candy Vol.03（广州首演）', venue: '广州', performers: ['hakusai','kumo','yuzi','huangyuyu'], status: 'past', image: '/images/events/live-2026-01-25.webp' },
+  { id: 'live-2026-01-31', date: '2026-01-31', time: '12:40', title: '第一届 Comic Expo 国风动漫展（出道）', venue: '南宁北投明月荟（西乡塘区）', performers: ['hakusai','kumo','yuzi'], status: 'past', image: '/images/events/live-2026-01-31.webp' },
+  { id: 'live-2026-02-15', date: '2026-02-15', time: '', title: '桂平·ACG第七届动漫新年盛典', venue: '桂平', performers: ['hakusai','kumo','yuzi','huangyuyu'], status: 'past', image: '/images/events/live-2026-02-15.webp' },
+  { id: 'live-2026-02-23', date: '2026-02-23', time: '', title: 'Akatsuki Idol Party Vol.24 ～アイドル新年会～', venue: '南宁·候朋现场 HOPELIVE（中山路万象汇）', performers: ['hakusai','kumo','yuzi'], status: 'past', image: '/images/events/live-2026-02-23.webp' },
+  { id: 'live-2026-03-14', date: '2026-03-14', time: '12:25', title: 'SUMMERL∞P MINI FES — 白情与公主有个约会', venue: '南宁·PinkNoises Live（会展动漫城）', performers: ['hakusai','kumo','yuzi'], status: 'past', image: '/images/events/live-2026-03-14.webp' },
+  { id: 'live-2026-03-28', date: '2026-03-28', time: '13:30', title: 'Akatsuki Idol Party Vol.25', venue: '南宁·PinkNoises Live（会展动漫城）', performers: ['hakusai','kumo','yuzi'], status: 'past', image: '/images/events/live-2026-03-28.webp' },
+  { id: 'live-2026-04-26', date: '2026-04-26', time: '', title: 'Puppy Club First Anniversary', venue: '南宁·民歌湖广场福馆 Full house', performers: ['hakusai','kumo','yuzi'], status: 'past', image: '/images/events/live-2026-04-26.webp' },
+  { id: 'live-2026-05-16', date: '2026-05-16', time: '14:00', title: '五碳糖 FES3.0 ～初夏の宴～', venue: '南宁·PinkNoises Live（会展动漫城）', performers: ['hakusai','kumo','yuzi'], status: 'past', image: '/images/events/live-2026-05-16.webp' },
+  { id: 'live-2026-07-04', date: '2026-07-04', time: '', title: 'Nez Fes Vol.1 -初晴の約束 真夏の約束-（白菜生日SP）', venue: '南宁·PinkNoises Live（会展动漫城）', performers: ['hakusai','kumo','yuzi'], status: 'past', image: '/images/events/live-2026-07-04.webp' },
 ];
 
 // 旧 news/*.md 正文迁移：key = 事件 id，value = Markdown 正文
@@ -159,7 +160,19 @@ async function ensureTable(env) {
           .run();
       }
     } else {
-      // 已存在数据的表：仅当存在 body 为空的行时才回填旧 news 正文（避免无谓写、不覆盖后台编辑）
+      // 已存在数据的表：回填旧 news 的 image 与 body（仅当对应字段为空，不覆盖后台已编辑内容）
+      // image 回填：来自旧 news 封面图（/images/events/live-*.webp）
+      const { results: emptyImg } = await env.DB.prepare("SELECT COUNT(*) AS c FROM events WHERE image IS NULL OR image = ''").all();
+      if (emptyImg[0] && emptyImg[0].c > 0) {
+        for (const e of SEED) {
+          if (!e.image) continue;
+          await env.DB
+            .prepare('UPDATE events SET image = ? WHERE id = ? AND (image IS NULL OR image = \'\')')
+            .bind(e.image, e.id)
+            .run();
+        }
+      }
+      // body 回填：仅当 body 为空
       const { results: emptyRows } = await env.DB.prepare("SELECT COUNT(*) AS c FROM events WHERE body IS NULL OR body = ''").all();
       if (emptyRows[0] && emptyRows[0].c > 0) {
         for (const [id, body] of Object.entries(SEED_BODIES)) {
