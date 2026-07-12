@@ -9,8 +9,8 @@ export default function NotFoundHandler() {
   const [id, setId] = useState<string | null | false>(null);
 
   useEffect(() => {
-    const m = location.pathname.match(/^\/schedule\/(live-[\w-]+)/);
-    setId(m ? m[1] : false);
+    const m = location.pathname.match(/^\/schedule\/([\w-]+)/);
+    setId(m && m[1] !== 'index' ? m[1] : false);
   }, []);
 
   // SSR：不渲染任何内容（等待客户端判定）

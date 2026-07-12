@@ -12,6 +12,7 @@
  */
 import { ensureEvents } from './_seed.js';
 import { listPhotosData } from './api/photos.js';
+import { marked } from 'marked';
 
 const EVENT_DDL = `CREATE TABLE IF NOT EXISTS events (id TEXT PRIMARY KEY, date TEXT, time TEXT, title TEXT, venue TEXT, performers TEXT, status TEXT, image TEXT, body TEXT, created_at TEXT)`;
 const MEMBER_DDL = `CREATE TABLE IF NOT EXISTS members (id TEXT PRIMARY KEY, name TEXT, nameJP TEXT, color TEXT, emoji TEXT, birthday TEXT, constellation TEXT, status TEXT, image TEXT, gallery TEXT, weibo TEXT, weiboName TEXT, weiboDesc TEXT, intro TEXT, sort_order INTEGER DEFAULT 0)`;
@@ -122,9 +123,9 @@ async function fetchPageData(path, env) {
     } catch {}
   }
 
-  // 日程详情页：注入单条完整 event（含 body），EventDetail 直接渲染，无需 fetch
-  const m = path.match(/^\/schedule\/(live-[\w-]+)$/);
-  if (m) {
+  // 日程详情页：注入单条完整 event（含 body + bodyHtml），EventDetail 直接渲染，无需 fetch、无需客户端异步加载 marked
+  const m = path.match(/^\/schedule\/([\w-]+)$/);
+  if (m && m[1] !== 'index') {
     try {
       const { results } = await env.DB.prepare('SELECT * FROM events WHERE id = ?').bind(m[1]).all();
       if (results && results.length) {
@@ -133,6 +134,16 @@ async function fetchPageData(path, env) {
           row.performers = JSON.parse(row.performers || '[]');
         } catch {
           row.performers = [];
+        }
+        // 服务端预渲染 body 为 HTML，客户端 Get 到即可直接使用，无需异步加载 marked
+        if (row.body) {
+          try {
+            row.bodyHtml = marked.parse(row.body, { async: false });
+          } catch {
+            row.bodyHtml = '';
+          }
+        } else {
+          row.bodyHtml = '';
         }
         data.event = row;
       }
