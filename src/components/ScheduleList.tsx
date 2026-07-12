@@ -40,6 +40,7 @@ export default function ScheduleList() {
   const memberMap = useMemo(() => new Map(members.map(m => [m.id, m])), [members]);
 
   const grouped = useMemo(() => {
+    if (!events) return {};
     const g: Record<string, EventRow[]> = {};
     [...events]
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
