@@ -123,14 +123,26 @@ export async function onRequest(context) {
   if (request.method === 'GET') {
     try {
       await seedIfEmpty(env);
-      const { results } = await env.DB.prepare(
-        'SELECT id,url,member,featured FROM gallery_photos ORDER BY sort ASC, created_at ASC'
-      ).all();
+      // 优先查询含 featured 列；若列尚未创建（旧表），降级为无精选字段查询
+      let results;
+      try {
+        const { results: r } = await env.DB.prepare(
+          'SELECT id,url,member,featured FROM gallery_photos ORDER BY sort ASC, created_at ASC'
+        ).all();
+        results = r;
+      } catch (colErr) {
+        // featured 列尚不存在，降级查询
+        console.warn('[gallery] featured column not found, falling back:', colErr.message);
+        const { results: r } = await env.DB.prepare(
+          'SELECT id,url,member FROM gallery_photos ORDER BY sort ASC, created_at ASC'
+        ).all();
+        results = r;
+      }
       const all = (results || []).map((r) => ({
         id: r.id,
         url: r.url,
         member: r.member || '__extra__',
-        featured: r.featured || 0,
+        featured: r.featured != null ? r.featured : 0,
       }));
       return json({
         photos: all,
@@ -173,8 +185,19 @@ export async function onRequest(context) {
       const id = String(b.id || '').trim();
       if (!id) return json({ error: '缺少 id' }, 400);
       const featured = b.featured === 1 || b.featured === true ? 1 : 0;
-      await env.DB.prepare('UPDATE gallery_photos SET featured = ? WHERE id = ?')
-        .bind(featured, id).run();
+      // 尝试更新 featured；若列不存在则重试 ALTER TABLE 后再试
+      try {
+        await env.DB.prepare('UPDATE gallery_photos SET featured = ? WHERE id = ?')
+          .bind(featured, id).run();
+      } catch (colErr) {
+        if (/no such column: featured/i.test(colErr.message || '')) {
+          await env.DB.prepare('ALTER TABLE gallery_photos ADD COLUMN featured INTEGER NOT NULL DEFAULT 0').run();
+          await env.DB.prepare('UPDATE gallery_photos SET featured = ? WHERE id = ?')
+            .bind(featured, id).run();
+        } else {
+          throw colErr;
+        }
+      }
       return json({ ok: true, id, featured });
     } catch (e) {
       return json({ error: e.message }, 500);
