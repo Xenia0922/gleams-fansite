@@ -49,7 +49,7 @@ function EventSkeleton({ count = 4 }: { count?: number }) {
 function EventEmpty({ filter }: { filter: 'past' | 'upcoming' }) {
   return (
     <div className="text-center py-10">
-      <p className="text-sm text-[var(--text-soft)]">{filter === 'upcoming' ? '暂无即将到来的公演，敬请期待 ✦' : '暂无过往行程'}</p>
+      <p className="text-sm text-[var(--text-soft)]">{filter === 'upcoming' ? '暂无即将到来的演出，敬请期待 ✦' : '暂无过往行程'}</p>
     </div>
   );
 }

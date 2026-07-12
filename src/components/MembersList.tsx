@@ -40,8 +40,8 @@ export default function MembersList({ initial }: { initial: Member[] }) {
   const active = members.filter(m => m.status !== 'graduated');
   const graduated = members.filter(m => m.status === 'graduated');
 
-  const Card = ({ m }: { m: Member }) => (
-    <a href={`/members/detail?id=${m.id}`} className="group block text-center">
+  const Card = ({ m, index = 0 }: { m: Member; index?: number }) => (
+    <a href={`/members/detail?id=${m.id}`} data-reveal className="group block text-center" style={{ ['--reveal-delay' as any]: `${index * 70}ms` }}>
       <div className="aspect-[4/5] rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800 mb-3 shadow-sm group-hover:shadow-md transition-shadow">
         {m.image ? (
           <img src={m.image} alt={m.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
@@ -69,16 +69,16 @@ export default function MembersList({ initial }: { initial: Member[] }) {
 
   return (
     <>
-      <p className="text-xs font-bold text-pink-500 tracking-widest text-center mb-5">正在活动</p>
+      <p className="text-xs font-bold text-pink-500 tracking-widest text-center mb-5" data-reveal>正在活动</p>
       <div className="grid grid-cols-3 gap-4 sm:gap-6 mb-16">
-        {active.map(m => <Card key={m.id} m={m} />)}
+        {active.map((m, i) => <Card key={m.id} m={m} index={i} />)}
       </div>
 
       {graduated.length > 0 && (
         <div className="border-t border-gray-100 dark:border-gray-800 pt-10">
-          <p className="text-xs font-bold text-gray-400 tracking-widest text-center mb-5">已毕业</p>
+          <p className="text-xs font-bold text-gray-400 tracking-widest text-center mb-5" data-reveal>已毕业</p>
           <div className="grid grid-cols-3 gap-4 sm:gap-6">
-            {graduated.map(m => <Card key={m.id} m={m} />)}
+            {graduated.map((m, i) => <Card key={m.id} m={m} index={i + 100} />)}
           </div>
         </div>
       )}
