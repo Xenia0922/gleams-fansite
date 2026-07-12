@@ -18,15 +18,9 @@ interface Member {
   color?: string;
 }
 
-export default function ScheduleList({
-  initial,
-  initialMembers,
-}: {
-  initial: EventRow[];
-  initialMembers: Member[];
-}) {
-  const [events, setEvents] = useState<EventRow[]>(initial || []);
-  const [members, setMembers] = useState<Member[]>(initialMembers || []);
+export default function ScheduleList() {
+  const [events, setEvents] = useState<EventRow[] | null>(null);
+  const [members, setMembers] = useState<Member[]>([]);
 
   useEffect(() => {
     let alive = true;
@@ -36,10 +30,10 @@ export default function ScheduleList({
     ])
       .then(([ev, mb]) => {
         if (!alive) return;
-        if (Array.isArray(ev)) setEvents(ev);
+        setEvents(Array.isArray(ev) ? ev : []);
         if (Array.isArray(mb)) setMembers(mb);
       })
-      .catch(() => {});
+      .catch(() => { if (alive) setEvents([]); });
     return () => { alive = false; };
   }, []);
 
@@ -57,6 +51,7 @@ export default function ScheduleList({
     return g;
   }, [events]);
 
+  if (events === null) return <p className="text-center text-gray-300 dark:text-gray-600 py-16">加载中…</p>;
   if (events.length === 0) return <p className="text-center text-gray-400 py-16">暂无日程</p>;
 
   return (

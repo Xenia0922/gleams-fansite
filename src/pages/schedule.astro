@@ -1,7 +1,5 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import scheduleData from '../data/schedule.json';
-import membersData from '../data/members.json';
 import ScheduleList from '../components/ScheduleList';
 ---
 
@@ -12,6 +10,6 @@ import ScheduleList from '../components/ScheduleList';
       <h1 class="section-title">日程</h1>
     </div>
 
-    <ScheduleList client:load initial={scheduleData.events} initialMembers={membersData.members} />
+    <ScheduleList client:load />
   </section>
 </BaseLayout>
