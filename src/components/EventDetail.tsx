@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import StaticImageLightbox from './StaticImageLightbox';
+import Skeleton from './Skeleton';
 
 interface EventDetailProps {
   id: string;
@@ -69,7 +70,23 @@ export default function EventDetail({ id, event: eventProp }: EventDetailProps) 
   }, [id]);
 
   if (!ev) {
-    if (loading) return <p className="text-center text-gray-400 py-16">加载中…</p>;
+    if (loading) return (
+      <div className="max-w-3xl mx-auto px-4 py-12 md:py-16" aria-hidden="true">
+        <Skeleton className="h-4 w-24 rounded-full mb-6" />
+        <div className="flex flex-wrap gap-2 mb-6">
+          <Skeleton className="h-8 w-20 rounded-full" />
+          <Skeleton className="h-8 w-16 rounded-full" />
+        </div>
+        <Skeleton className="h-8 w-2/3 rounded-full mb-6" />
+        <Skeleton className="w-full aspect-[16/9] rounded-2xl mb-6" />
+        <div className="space-y-3">
+          <Skeleton className="h-3 rounded-full w-full" />
+          <Skeleton className="h-3 rounded-full w-full" />
+          <Skeleton className="h-3 rounded-full w-4/5" />
+          <Skeleton className="h-3 rounded-full w-3/4" />
+        </div>
+      </div>
+    );
     return <p className="text-center text-gray-400 py-16">未找到该日程</p>;
   }
 

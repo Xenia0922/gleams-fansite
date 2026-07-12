@@ -339,6 +339,32 @@ body::after {
   .rise { animation: none; opacity: 1; transform: none; filter: none; }
 }
 
+/* ===== 统一骨架屏（加载占位） ===== */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--accent) 8%, rgba(140, 132, 170, 0.14));
+  border-radius: var(--radius-sm);
+}
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+@keyframes skeleton-shimmer { 100% { transform: translateX(100%); } }
+.dark .skeleton {
+  background: color-mix(in srgb, var(--accent) 12%, rgba(255, 255, 255, 0.06));
+}
+.dark .skeleton::after {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after { animation: none; }
+}
+
 /* ===== 移动端滚动优化 ===== */
 @media (max-width: 767px) {
   * { -webkit-tap-highlight-color: transparent; }

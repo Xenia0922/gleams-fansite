@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { getEventImage } from '../utils/eventImages';
+import Skeleton from './Skeleton';
 
 export interface EventRow {
   id: string;
@@ -34,11 +35,11 @@ function EventSkeleton({ count = 4 }: { count?: number }) {
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6" aria-hidden="true">
       {Array.from({ length: count }).map((_, i) => (
         <div key={i} className="card overflow-hidden">
-          <div className="aspect-[16/9] bg-gray-100 dark:bg-gray-800 animate-pulse" />
+          <Skeleton className="aspect-[16/9] rounded-none" />
           <div className="p-4 space-y-2">
-            <div className="h-3 w-16 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
-            <div className="h-4 w-3/4 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
-            <div className="h-3 w-1/2 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
+            <Skeleton className="h-3 w-16 rounded-full" />
+            <Skeleton className="h-4 w-3/4 rounded-full" />
+            <Skeleton className="h-3 w-1/2 rounded-full" />
           </div>
         </div>
       ))}
@@ -98,11 +99,17 @@ export default function EventCardGrid({
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-      {filtered.map((evt) => {
+      {filtered.map((evt, i) => {
         const d = new Date(evt.date);
         const img = evt.image || getEventImage(evt.id, fallbackImg);
         return (
-          <a key={evt.id} href={'/schedule/' + evt.id} className="card group">
+          <a
+            key={evt.id}
+            href={'/schedule/' + evt.id}
+            data-reveal
+            style={{ ['--reveal-delay' as any]: `${i * 70}ms` }}
+            className="card group"
+          >
             <div className="aspect-[16/9] overflow-hidden bg-gray-100 dark:bg-gray-800">
               <img
                 src={img}

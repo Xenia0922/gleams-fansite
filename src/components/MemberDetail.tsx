@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import ImageLightboxOverlay from './ImageLightboxOverlay';
+import Skeleton from './Skeleton';
 
 interface Member {
   id: string;
@@ -75,7 +76,19 @@ export default function MemberDetail({ slug, initial }: { slug?: string; initial
     return () => window.removeEventListener('keydown', h);
   }, [lightboxIdx, close, prev, next]);
 
-  if (loading) return <p className="text-center text-gray-400 py-16">加载中…</p>;
+  if (loading) return (
+    <div className="flex flex-col md:flex-row gap-6 md:gap-10 items-center md:items-start" aria-hidden="true">
+      <Skeleton className="md:w-80 max-w-56 md:max-w-none aspect-[4/5] rounded-3xl" />
+      <div className="flex-1 space-y-5 w-full">
+        <Skeleton className="h-8 w-40 rounded-full" />
+        <div className="flex flex-wrap gap-2">
+          <Skeleton className="h-8 w-20 rounded-full" />
+          <Skeleton className="h-8 w-20 rounded-full" />
+        </div>
+        <Skeleton className="h-20 w-full rounded-2xl" />
+      </div>
+    </div>
+  );
   if (!member) return <p className="text-center text-gray-400 py-16">未找到该成员</p>;
 
   const [month, day] = (member.birthday || '--').split('-');

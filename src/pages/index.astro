@@ -53,7 +53,7 @@ const initialEvents = scheduleData.events as any[];
       <p class="section-title-en">✦</p>
       <h2 class="section-title">成员</h2>
     </div>
-    <div data-reveal>
+    <div>
       <HomeMembers client:visible initial={initialMembers} />
     </div>
   </section>
@@ -64,7 +64,7 @@ const initialEvents = scheduleData.events as any[];
         <p class="section-title-en">✦</p>
         <h2 class="section-title">即将到来</h2>
       </div>
-      <div data-reveal>
+      <div>
         <UpcomingEvents client:visible initial={initialEvents} />
       </div>
     </div>
@@ -76,7 +76,7 @@ const initialEvents = scheduleData.events as any[];
         <p class="section-title-en">✦</p>
         <h2 class="section-title">过往行程</h2>
       </div>
-      <div data-reveal>
+      <div>
         <HomeEvents client:visible initial={initialEvents} />
       </div>
       <div class="text-center mt-8">

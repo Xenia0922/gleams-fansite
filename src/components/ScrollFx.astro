@@ -4,29 +4,48 @@
   window.scrollTo(0, 0);
 
   const targets = document.querySelectorAll('[data-reveal]');
+  const reveal = (el) => el.classList.add('visible');
 
   // 滚动入场动画（无 JS 时由 .js 门控保证内容可见，无需此处兜底）
   if (!('IntersectionObserver' in window)) {
     // 极旧浏览器：直接全部显示，避免永久隐藏
-    targets.forEach(el => el.classList.add('visible'));
+    targets.forEach(reveal);
   } else {
     const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
+      entries.forEach((entry) => {
         if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
+          reveal(entry.target);
           observer.unobserve(entry.target);
         }
       });
     }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
 
-    targets.forEach(el => observer.observe(el));
+    targets.forEach((el) => observer.observe(el));
+
+    // 动态插入的 [data-reveal]（如 React fetch 后渲染的卡片）也参与入场，
+    // 避免「静态有动画、动态卡隐藏」的不一致；视口内者立即显示以防闪烁
+    const mo = new MutationObserver((muts) => {
+      muts.forEach((m) => m.addedNodes.forEach((node) => {
+        if (node.nodeType !== 1) return;
+        const el = node;
+        const els = el.matches && el.matches('[data-reveal]')
+          ? [el]
+          : (el.querySelectorAll ? el.querySelectorAll('[data-reveal]') : []);
+        Array.prototype.forEach.call(els, (n) => {
+          const r = n.getBoundingClientRect();
+          if (r.top < window.innerHeight && r.bottom > 0) reveal(n);
+          else observer.observe(n);
+        });
+      }));
+    });
+    mo.observe(document.body, { childList: true, subtree: true });
 
     // 安全兜底：若 observer 因故未触发（罕见），1.5s 后强制显示在视口内者
     setTimeout(() => {
-      targets.forEach(el => {
+      targets.forEach((el) => {
         const r = el.getBoundingClientRect();
         if (r.top < window.innerHeight && !el.classList.contains('visible')) {
-          el.classList.add('visible');
+          reveal(el);
         }
       });
     }, 1500);

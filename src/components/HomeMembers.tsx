@@ -41,10 +41,12 @@ export default function HomeMembers({ initial }: { initial: Member[] }) {
 
   return (
     <div className="grid grid-cols-3 gap-4 sm:gap-6">
-      {active.map(m => (
+      {active.map((m, i) => (
         <a
           key={m.id}
           href={`/members/detail?id=${m.id}`}
+          data-reveal
+          style={{ ['--reveal-delay' as any]: `${i * 70}ms` }}
           className="group block text-center transition-transform duration-300 group-hover:-translate-y-1"
         >
           <div className="aspect-[4/5] rounded-3xl overflow-hidden mb-3 glass shadow-md group-hover:shadow-lg transition-shadow">

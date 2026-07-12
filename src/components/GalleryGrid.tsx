@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import ImageLightboxOverlay from './ImageLightboxOverlay';
+import Skeleton from './Skeleton';
 
 interface Photo {
   id: string;
@@ -183,7 +184,11 @@ export default function GalleryGrid() {
 
       {/* 图片网格（按成员分组） */}
       {loading ? (
-        <p className="text-center text-gray-400 py-16">加载中...</p>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3" aria-hidden="true">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} className="aspect-[4/5] rounded-3xl" />
+          ))}
+        </div>
       ) : (
         <div className="space-y-8">
           {groups
@@ -210,8 +215,9 @@ export default function GalleryGrid() {
                         <img
                           src={p.url}
                           alt=""
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 lazy-blur"
                           loading="lazy"
+                          decoding="async"
                         />
                       </div>
                     );
@@ -240,8 +246,9 @@ export default function GalleryGrid() {
                 <img
                   src={p.thumbUrl || p.url}
                   alt=""
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 lazy-blur"
                   loading="lazy"
+                  decoding="async"
                 />
               </div>
             ))}

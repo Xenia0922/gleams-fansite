@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { getEventImage } from '../utils/eventImages';
+import Skeleton from './Skeleton';
 
 interface ScheduleEvent {
   id: string;
@@ -69,7 +70,7 @@ export default function ScheduleList({ initial }: { initial?: ScheduleEvent[] })
     return Array.from(map.entries());
   }, [events]);
 
-  const card = (evt: ScheduleEvent) => {
+  const card = (evt: ScheduleEvent, i: number) => {
     const d = new Date(evt.date);
     const img = evt.image || getEventImage(evt.id);
     const isPast = evt.status === 'past';
@@ -83,6 +84,8 @@ export default function ScheduleList({ initial }: { initial?: ScheduleEvent[] })
       <a
         key={evt.id}
         href={'/schedule/' + evt.id}
+        data-reveal
+        style={{ ['--reveal-delay' as any]: `${i * 70}ms` }}
         className={`card group flex flex-col ${isPast ? 'opacity-90 hover:opacity-100' : ''}`}
       >
         <div className="aspect-[16/9] overflow-hidden bg-gray-100 dark:bg-gray-800">
@@ -131,13 +134,24 @@ export default function ScheduleList({ initial }: { initial?: ScheduleEvent[] })
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-12 md:py-16">
-      <div className="text-center mb-10">
+      <div className="text-center mb-10" data-reveal>
         <p className="text-pink-500">✦</p>
         <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-gray-100 mt-1">日程</h1>
       </div>
 
       {loading ? (
-        <p className="text-center text-gray-400 py-16">加载中…</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6" aria-hidden="true">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="card overflow-hidden">
+              <Skeleton className="aspect-[16/9] rounded-none" />
+              <div className="p-4 space-y-2">
+                <Skeleton className="h-3 w-16 rounded-full" />
+                <Skeleton className="h-4 w-3/4 rounded-full" />
+                <Skeleton className="h-3 w-1/2 rounded-full" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : events.length === 0 ? (
         <p className="text-center text-gray-400 py-16">暂无日程</p>
       ) : (
@@ -146,7 +160,7 @@ export default function ScheduleList({ initial }: { initial?: ScheduleEvent[] })
             <div key={month} className="mb-10">
               <h2 className="text-sm font-bold text-pink-500 tracking-widest mb-4">{month}</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                {evts.map(card)}
+                {evts.map((evt, i) => card(evt, i))}
               </div>
             </div>
           ))}
