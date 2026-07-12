@@ -122,13 +122,13 @@ export default function AdminGallery({ code }: { code: string }) {
               <button
                 onClick={(e) => { e.stopPropagation(); toggleFeatured(p); }}
                 title={featuredKeys.has(p.key) ? '取消精选' : '设为精选'}
-                className={`absolute top-2 right-10 text-xs px-2 py-1 rounded-full transition-all ${
+                className={`absolute top-2 left-2 text-xs px-2 py-1 rounded-full transition-all ${
                   featuredKeys.has(p.key)
                     ? 'bg-[var(--accent)] text-white'
-                    : 'bg-white/60 dark:bg-white/10 text-gray-400 hover:text-[var(--accent)]'
+                    : 'bg-white/60 dark:bg-white/10 text-gray-400 opacity-0 group-hover:opacity-100'
                 }`}
               >
-                {featuredKeys.has(p.key) ? '★ 精选' : '☆'}
+                {featuredKeys.has(p.key) ? '★' : '☆'}
               </button>
               <button onClick={() => del(p)} className="absolute top-2 right-2 text-xs bg-red-500/80 hover:bg-red-600 text-white px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
                 删除
