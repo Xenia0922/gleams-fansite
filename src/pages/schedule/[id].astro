@@ -23,6 +23,6 @@ export async function getStaticPaths() {
 const { id, event } = Astro.props;
 ---
 
-<BaseLayout title={`${event.title} | Gleams`}>
+<BaseLayout title={event.title}>
   <EventDetail client:load id={id} event={event} />
 </BaseLayout>

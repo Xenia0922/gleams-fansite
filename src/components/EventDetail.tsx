@@ -38,6 +38,13 @@ export default function EventDetail({ id, event: eventProp }: EventDetailProps) 
     };
   }, [id]);
 
+  // 存在数据时更新浏览器标题——覆盖 404 页继承的「404 | 页面未找到」
+  useEffect(() => {
+    if (ev && typeof document !== 'undefined') {
+      document.title = ev.title + ' | Gleams';
+    }
+  }, [ev]);
+
   if (!ev) {
     if (loading) return <p className="text-center text-gray-400 py-16">加载中…</p>;
     return <p className="text-center text-gray-400 py-16">未找到该日程</p>;
