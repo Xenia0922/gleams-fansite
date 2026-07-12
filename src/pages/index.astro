@@ -4,6 +4,7 @@ import HeroTitle from '../components/HeroTitle.astro';
 import site from '../data/site.json';
 import HomeMembers from '../components/HomeMembers';
 import HomeEvents from '../components/HomeEvents';
+import UpcomingEvents from '../components/UpcomingEvents';
 import { SiteSocial, LiveLink, SiteMeta } from '../components/SiteBits';
 import UpcomingCountdown from '../components/UpcomingCountdown';
 ---
@@ -35,6 +36,19 @@ import UpcomingCountdown from '../components/UpcomingCountdown';
       <h2 class="section-title">成员</h2>
     </div>
     <HomeMembers client:load initial={[]} />
+  </section>
+
+  <section class="py-16 md:py-20 border-t glass-divider">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="text-center mb-10" data-reveal>
+        <p class="section-title-en">✦</p>
+        <h2 class="section-title">即将到来</h2>
+      </div>
+      <UpcomingEvents client:load initial={[]} />
+      <div class="text-center mt-8">
+        <a href="/schedule" class="btn-outline text-xs sm:text-sm">查看完整日程 →</a>
+      </div>
+    </div>
   </section>
 
   <section class="py-16 md:py-20 border-t glass-divider">
