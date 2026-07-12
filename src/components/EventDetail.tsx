@@ -4,40 +4,75 @@ import StaticImageLightbox from './StaticImageLightbox';
 
 interface EventDetailProps {
   id: string;
+  /** 构建期由 [id].astro 注入（来自 schedule.json + eventBodies.ts），或运行时由 middleware 注入到 window.__SSR_DATA__.event。
+   *  存在时直接渲染，不发起任何 fetch，无布局跳动。 */
+  event?: any;
 }
 
-export default function EventDetail({ id }: EventDetailProps) {
-  const [ev, setEv] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
+export default function EventDetail({ id, event: eventProp }: EventDetailProps) {
+  // 优先：构建期 prop -> 运行时 SSR 注入，二者皆无才回退 fetch
+  const ssr = typeof window !== 'undefined' ? (window as any).__SSR_DATA__ : null;
+  const initialEvent = eventProp || (ssr && ssr.event) || null;
+
+  const [ev, setEv] = useState<any>(initialEvent);
+  const [loading, setLoading] = useState(!initialEvent);
 
   useEffect(() => {
+    if (initialEvent) return; // 已有同步数据，无需 fetch
     let alive = true;
     fetch('/api/events?id=' + encodeURIComponent(id))
-      .then(r => (r.ok ? r.json() : Promise.reject(new Error('not found'))))
-      .then(d => { if (alive) { setEv(d); setLoading(false); } })
-      .catch(() => { if (alive) { setNotFound(true); setLoading(false); } });
-    return () => { alive = false; };
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error('not found'))))
+      .then((d) => {
+        if (alive) {
+          setEv(d);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (alive) {
+          setLoading(false);
+        }
+      });
+    return () => {
+      alive = false;
+    };
   }, [id]);
 
-  if (loading) return <p className="text-center text-gray-400 py-16">加载中…</p>;
-  if (notFound || !ev) return <p className="text-center text-gray-400 py-16">未找到该日程</p>;
+  if (!ev) {
+    if (loading) return <p className="text-center text-gray-400 py-16">加载中…</p>;
+    return <p className="text-center text-gray-400 py-16">未找到该日程</p>;
+  }
 
   const d = new Date(ev.date);
-  const html = (typeof marked.parse === 'function'
-    ? marked.parse(ev.body || '', { async: false })
-    : marked(ev.body || '')) as string;
+  const html = (
+    typeof marked.parse === 'function'
+      ? marked.parse(ev.body || '', { async: false })
+      : marked(ev.body || '')
+  ) as string;
 
   return (
     <article className="max-w-3xl mx-auto px-4 py-12 md:py-16">
-      <a href="/schedule" className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200 mb-6">← 返回日程</a>
+      <a
+        href="/schedule"
+        className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200 mb-6"
+      >
+        ← 返回日程
+      </a>
 
       <div className="flex flex-wrap gap-2 mb-6 text-sm">
         <span className="bg-pink-50 dark:bg-gray-800 text-pink-600 dark:text-pink-300 px-3 py-1.5 rounded-full font-medium">
           {d.getMonth() + 1}月{d.getDate()}日
         </span>
-        {ev.time && <span className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded-full">{ev.time}</span>}
-        {ev.venue && <span className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded-full">{ev.venue}</span>}
+        {ev.time && (
+          <span className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded-full">
+            {ev.time}
+          </span>
+        )}
+        {ev.venue && (
+          <span className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded-full">
+            {ev.venue}
+          </span>
+        )}
       </div>
 
       <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-gray-100 mb-2">{ev.title}</h1>

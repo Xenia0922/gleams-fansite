@@ -129,11 +129,15 @@ async function servePhoto(env, key) {
   }
 }
 
-async function listPhotos(env) {
+/**
+ * 列出 R2 中已上传的照片（不含缩略图对象），返回纯数据数组。
+ * 同时被 GET /api/photos（包装成 JSON）与 _middleware.js（SSR 注入 featuredFan）复用。
+ */
+export async function listPhotosData(env) {
   try {
     const { objects } = await env.PHOTOS.list({ limit: 50, prefix: 'uploads/' });
     const thumbKeys = new Set(objects.filter(o => isThumbKey(o.key)).map(o => o.key));
-    const photos = objects
+    return objects
       .filter(o => !isThumbKey(o.key))
       .map(o => {
         const thumbKey = toThumbKey(o.key);
@@ -148,10 +152,14 @@ async function listPhotos(env) {
             : null,
         };
       });
-    return json(photos);
   } catch (e) {
-    return json({ error: e.message }, 500);
+    console.error('[photos] list failed:', e.message);
+    return [];
   }
+}
+
+async function listPhotos(env) {
+  return json(await listPhotosData(env));
 }
 
 async function deletePhoto(request, env) {

@@ -25,12 +25,18 @@ export default function GalleryGrid() {
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
   const ssr = typeof window !== 'undefined' ? (window as any).__SSR_DATA__ : null;
   const [photos, setPhotos] = useState<Photo[]>(ssr?.galleryPhotos || []);
-  const [featuredFan, setFeaturedFan] = useState<FanPhoto[]>([]);
+  const [featuredFan, setFeaturedFan] = useState<FanPhoto[]>(ssr?.featuredFan || []);
   const [loading, setLoading] = useState(!ssr?.galleryPhotos);
 
   const reload = useCallback(async () => {
     if (ssr?.galleryPhotos) {
-      // SSR 数据已有 gallery photos，只补拉 fan photos 用于精选区
+      // SSR 已注入画廊图；精选区若也已注入则直接采用，免二次 fetch（无布局跳动）
+      if (ssr?.featuredFan && ssr.featuredFan.length) {
+        setFeaturedFan(ssr.featuredFan);
+        setLoading(false);
+        return;
+      }
+      // 兼容旧部署：SSR 仅有 galleryPhotos，未注入 featuredFan，回退补拉
       try {
         const photosRes = await fetch('/api/photos');
         const photosData = await photosRes.json();

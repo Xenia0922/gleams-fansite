@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { getEventImage } from '../utils/eventImages';
 
-interface EventRow {
+interface ScheduleEvent {
   id: string;
   date: string;
   time?: string;
@@ -11,97 +11,131 @@ interface EventRow {
   status?: string;
   image?: string;
 }
-interface Member {
-  id: string;
-  name: string;
-  emoji?: string;
-  color?: string;
-}
 
-export default function ScheduleList() {
-  const [events, setEvents] = useState<EventRow[] | null>(null);
-  const [members, setMembers] = useState<Member[]>([]);
+const MEMBER_MAP: Record<string, { name: string; emoji: string }> = {
+  hakusai: { name: '白菜', emoji: '💛' },
+  kumo: { name: '云团', emoji: '💙' },
+  yuzi: { name: '柚子', emoji: '💚' },
+  huangyuyu: { name: '黄鱼鱼', emoji: '🩷' },
+};
+
+/**
+ * 日程列表（/schedule）。优先顺序：
+ *   1. 构建期 initial（来自 schedule.json）—— 静态 HTML 直接含完整列表，无占位、无布局跳动；
+ *   2. 运行时 window.__SSR_DATA__.events（由 _middleware.js 注入，含后台最新编辑/新增）；
+ *   3. 以上皆无才回退一次 fetch（极少见：全新 D1 且中间件尚未播种）。
+ */
+export default function ScheduleList({ initial }: { initial?: ScheduleEvent[] }) {
+  const ssr = typeof window !== 'undefined' ? (window as any).__SSR_DATA__ : null;
+  const initialEvents = initial && initial.length ? initial : ssr?.events || [];
+  const [events, setEvents] = useState<ScheduleEvent[]>(initialEvents);
+  const [loading, setLoading] = useState(!(initial && initial.length) && !(ssr?.events && ssr.events.length));
 
   useEffect(() => {
+    if (ssr?.events && ssr.events.length) {
+      setEvents(ssr.events);
+      setLoading(false);
+      return;
+    }
+    if (initial && initial.length) {
+      setLoading(false);
+      return; // 构建期数据已够用，无需 fetch
+    }
+    // 兜底：无 SSR 也无 initial（极少见），回退一次 fetch
     let alive = true;
-    Promise.all([
-      fetch('/api/events').then(r => r.json()),
-      fetch('/api/members').then(r => r.json()),
-    ])
-      .then(([ev, mb]) => {
-        if (!alive) return;
-        setEvents(Array.isArray(ev) ? ev : []);
-        if (Array.isArray(mb)) setMembers(mb);
+    fetch('/api/events')
+      .then((r) => r.json())
+      .then((d) => {
+        if (alive && Array.isArray(d) && d.length) setEvents(d);
       })
-      .catch(() => { if (alive) setEvents([]); });
-    return () => { alive = false; };
+      .catch(() => {})
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
   }, []);
 
-  const memberMap = useMemo(() => new Map(members.map(m => [m.id, m])), [members]);
-
-  const grouped = useMemo(() => {
-    if (!events) return {};
-    const g: Record<string, EventRow[]> = {};
-    [...events]
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      .forEach(e => {
-        const d = new Date(e.date);
-        const key = d.getFullYear() + '年' + (d.getMonth() + 1) + '月';
-        (g[key] = g[key] || []).push(e);
-      });
-    return g;
-  }, [events]);
-
-  if (events === null) return <p className="text-center text-gray-300 dark:text-gray-600 py-16">加载中…</p>;
-  if (events.length === 0) return <p className="text-center text-gray-400 py-16">暂无日程</p>;
+  const sorted = useMemo(
+    () => [...events].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+    [events]
+  );
 
   return (
-    <>
-      {Object.entries(grouped).map(([month, evs]) => (
-        <div className="mb-10" key={month}>
-          <h2 className="text-sm font-bold text-pink-500 tracking-widest mb-4">{month}</h2>
-          <div className="space-y-2">
-            {evs.map(evt => {
-              const d = new Date(evt.date);
-              const isPast = evt.status === 'past';
-              const img = evt.image || getEventImage(evt.id);
-              return (
-                <a
-                  key={evt.id}
-                  href={'/schedule/' + evt.id}
-                  className={
-                    'flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-3xl transition-opacity group ' +
-                    (isPast ? 'opacity-65 hover:opacity-100 glass' : 'frost-card shadow-md')
-                  }
-                >
-                  <div className="flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-3xl overflow-hidden glass">
-                    <img src={img} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform" loading="lazy" />
-                  </div>
-                  <div className="flex-shrink-0 text-center min-w-[44px] sm:min-w-[50px]">
-                    <span className={'text-base sm:text-lg font-extrabold ' + (isPast ? 'text-gray-400' : 'text-pink-500')}>
+    <div className="max-w-5xl mx-auto px-4 py-12 md:py-16">
+      <div className="text-center mb-10">
+        <p className="text-pink-500">✦</p>
+        <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-gray-100 mt-1">日程</h1>
+      </div>
+
+      {loading ? (
+        <p className="text-center text-gray-400 py-16">加载中…</p>
+      ) : sorted.length === 0 ? (
+        <p className="text-center text-gray-400 py-16">暂无日程</p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          {sorted.map((evt) => {
+            const d = new Date(evt.date);
+            const img = evt.image || getEventImage(evt.id);
+            const isPast = evt.status === 'past';
+            const chips = (evt.performers || [])
+              .map((pid: string) => {
+                const m = MEMBER_MAP[pid];
+                return m ? `${m.emoji}${m.name}` : '';
+              })
+              .filter(Boolean);
+            return (
+              <a
+                key={evt.id}
+                href={'/schedule/' + evt.id}
+                className={`card group flex flex-col ${isPast ? 'opacity-90 hover:opacity-100' : ''}`}
+              >
+                <div className="aspect-[16/9] overflow-hidden bg-gray-100 dark:bg-gray-800">
+                  <img
+                    src={img}
+                    alt={evt.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="p-4 flex-1 flex flex-col">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="text-xs font-bold text-pink-500">
                       {d.getMonth() + 1}/{d.getDate()}
                     </span>
-                    {evt.time && <p className="text-[10px] text-gray-400 mt-0.5">{evt.time}</p>}
+                    <span className="text-xs text-gray-400">{d.getFullYear()}</span>
+                    {evt.time && <span className="text-xs text-gray-400">· {evt.time}</span>}
+                    {isPast ? (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 ml-auto">
+                        已结束
+                      </span>
+                    ) : (
+                      <span
+                        className="text-[10px] px-2 py-0.5 rounded-full ml-auto"
+                        style={{ background: 'var(--accent)', color: '#fff' }}
+                      >
+                        即将到来
+                      </span>
+                    )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className={'text-sm font-bold truncate ' + (isPast ? 'text-gray-600 dark:text-gray-400' : 'text-gray-900 dark:text-gray-100')}>{evt.title}</h3>
-                      {isPast && <span className="badge flex-shrink-0">已结束</span>}
+                  <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 line-clamp-2">{evt.title}</h3>
+                  <p className="text-xs text-gray-400 mt-1">{evt.venue}</p>
+                  {chips.length > 0 && (
+                    <div className="flex flex-wrap gap-x-2 gap-y-1 mt-2">
+                      {chips.map((c, i) => (
+                        <span key={i} className="text-[11px] text-gray-500 dark:text-gray-400">
+                          {c}
+                        </span>
+                      ))}
                     </div>
-                    <p className="text-xs text-gray-400 mt-1">{evt.venue}</p>
-                    <div className="flex flex-wrap gap-1 mt-1.5">
-                      {(evt.performers || []).map(pid => {
-                        const m = memberMap.get(pid);
-                        return m ? <span key={pid} className="chip">{m.emoji} {m.name}</span> : null;
-                      })}
-                    </div>
-                  </div>
-                </a>
-              );
-            })}
-          </div>
+                  )}
+                </div>
+              </a>
+            );
+          })}
         </div>
-      ))}
-    </>
+      )}
+    </div>
   );
 }
