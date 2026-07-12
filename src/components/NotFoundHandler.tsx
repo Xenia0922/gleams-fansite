@@ -6,7 +6,7 @@ export default function NotFoundHandler() {
   // 同步检查避免闪烁
   const [id] = useState(() => {
     if (typeof window === 'undefined') return null;
-    const m = location.pathname.match(/^\/schedule\/(live-[\\w-]+)/);
+    const m = location.pathname.match(/^\/schedule\/(live-[\w-]+)/);
     return m ? m[1] : null;
   });
 
