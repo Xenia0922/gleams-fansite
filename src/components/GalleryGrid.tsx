@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import ImageLightboxOverlay from './ImageLightboxOverlay';
 import Skeleton from './Skeleton';
+import SkeletonSwap from './SkeletonSwap';
 
 interface Photo {
   id: string;
@@ -185,14 +186,17 @@ export default function GalleryGrid() {
       </div>
 
       {/* 图片网格（按成员分组） */}
-      {loading ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3" aria-hidden="true">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <Skeleton key={i} className="aspect-[4/5] rounded-3xl" />
-          ))}
-        </div>
-      ) : (
-        <div className="space-y-8 content-enter">
+      <SkeletonSwap
+        loading={loading}
+        skeleton={
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3" aria-hidden="true">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <Skeleton key={i} className="aspect-[4/5] rounded-3xl" />
+            ))}
+          </div>
+        }
+      >
+        <div className="space-y-8">
           {groups
             .filter((g) => filter === 'all' || g.id === filter)
             .map((g) => (
@@ -229,7 +233,7 @@ export default function GalleryGrid() {
             ))}
           {photos.length === 0 && <div className="text-center py-16 text-gray-400">画廊还空着，敬请期待</div>}
         </div>
-      )}
+      </SkeletonSwap>
 
       {/* 骑士团精选 — 来自广场返图 */}
       {!loading && visibleFeaturedFan.length > 0 && (

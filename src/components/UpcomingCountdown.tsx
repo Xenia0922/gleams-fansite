@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { type EventRow } from './EventCardGrid';
 import Skeleton from './Skeleton';
+import SkeletonSwap from './SkeletonSwap';
 
 function firstUpcoming(list: EventRow[]): EventRow | null {
   const up = list
@@ -27,31 +28,36 @@ export default function UpcomingCountdown({ initial = [] }: { initial?: EventRow
   const [event, setEvent] = useState<EventRow | null>(null);
   const [cd, setCd] = useState<ReturnType<typeof calcCountdown>>(null);
   const [loading, setLoading] = useState(true);
+  const [empty, setEmpty] = useState(false);
+
+  const apply = (list: EventRow[]) => {
+    const up = firstUpcoming(list);
+    if (up) setEvent(up);
+    else { setEmpty(true); setLoading(false); }
+  };
 
   useEffect(() => {
     if (ssr?.events && ssr.events.length) {
-      setEvent(firstUpcoming(ssr.events));
-      setLoading(false);
+      apply(ssr.events);
       return;
     }
     if (initial && initial.length > 0) {
-      setEvent(firstUpcoming(initial));
-      setLoading(false);
+      apply(initial);
       return;
     }
     let alive = true;
     fetch('/api/events')
       .then((r) => r.json())
       .then((data) => {
-        if (!alive || !Array.isArray(data)) return;
-        const up = firstUpcoming(data);
-        if (up) setEvent(up);
+        if (!alive) return;
+        if (Array.isArray(data) && data.length) apply(data);
+        else { setEmpty(true); setLoading(false); }
       })
-      .catch(() => {})
-      .finally(() => { if (alive) setLoading(false); });
+      .catch(() => { if (alive) { setEmpty(true); setLoading(false); } });
     return () => { alive = false; };
   }, []);
 
+  // 倒计时 tick：event 就绪后计算 cd 并关闭骨架（确保骨架与内容交叉淡入，无空档）
   useEffect(() => {
     if (!event) return;
     const tick = () => {
@@ -60,39 +66,44 @@ export default function UpcomingCountdown({ initial = [] }: { initial?: EventRow
     };
     tick();
     const t = setInterval(tick, 1000);
+    setLoading(false);
     return () => clearInterval(t);
   }, [event]);
 
-  if (loading) {
-    return (
-      <div className="frost-card p-4 text-center max-w-sm mx-auto" aria-hidden="true">
-        <Skeleton className="h-3 w-24 mx-auto rounded-full mb-2" />
-        <Skeleton className="h-4 w-40 mx-auto rounded-full mb-2" />
-        <Skeleton className="h-6 w-32 mx-auto rounded-full" />
-      </div>
-    );
-  }
+  if (!loading && empty) return (
+    <p className="text-center text-gray-400 text-sm py-4 content-enter">暂无即将到来的演出</p>
+  );
 
-  if (!event || !cd) return null;
-
-  const text = cd.days > 0
+  const text = cd && cd.days > 0
     ? cd.days + ' 天 ' + fm(cd.hours) + ':' + fm(cd.minutes) + ':' + fm(cd.seconds)
-    : fm(cd.hours) + ':' + fm(cd.minutes) + ':' + fm(cd.seconds);
-
-  const dd = new Date(event.date);
+    : (cd ? fm(cd.hours) + ':' + fm(cd.minutes) + ':' + fm(cd.seconds) : '');
+  const dd = event ? new Date(event.date) : null;
   const w = ['日', '一', '二', '三', '四', '五', '六'];
-  const ds = String(dd.getMonth() + 1).padStart(2, '0') + '-' + String(dd.getDate()).padStart(2, '0') + ' 周' + w[dd.getDay()];
+  const ds = dd ? String(dd.getMonth() + 1).padStart(2, '0') + '-' + String(dd.getDate()).padStart(2, '0') + ' 周' + w[dd.getDay()] : '';
 
   return (
-    <div className="frost-card p-4 text-center max-w-sm mx-auto content-enter">
-      <div className="flex items-center justify-center gap-2 mb-1">
-        <span className="text-xs font-bold text-[var(--accent)] uppercase tracking-wider">Next Live</span>
-        <span className="text-xs text-gray-400">·</span>
-        <span className="text-xs text-gray-400">{ds}</span>
-      </div>
-      <p className="text-sm font-bold text-gray-800 dark:text-gray-100 mb-1">{event.title}</p>
-      {event.venue && <p className="text-[11px] text-gray-400 mb-1.5">{event.venue}</p>}
-      <p className="text-xl font-black text-[var(--accent)] tabular-nums font-mono">{text}</p>
-    </div>
+    <SkeletonSwap
+      loading={loading}
+      skeleton={
+        <div className="frost-card p-4 text-center max-w-sm mx-auto" aria-hidden="true">
+          <Skeleton className="h-3 w-24 mx-auto rounded-full mb-2" />
+          <Skeleton className="h-4 w-40 mx-auto rounded-full mb-2" />
+          <Skeleton className="h-6 w-32 mx-auto rounded-full" />
+        </div>
+      }
+    >
+      {event && cd && (
+        <div className="frost-card p-4 text-center max-w-sm mx-auto">
+          <div className="flex items-center justify-center gap-2 mb-1">
+            <span className="text-xs font-bold text-[var(--accent)] uppercase tracking-wider">Next Live</span>
+            <span className="text-xs text-gray-400">·</span>
+            <span className="text-xs text-gray-400">{ds}</span>
+          </div>
+          <p className="text-sm font-bold text-gray-800 dark:text-gray-100 mb-1">{event.title}</p>
+          {event.venue && <p className="text-[11px] text-gray-400 mb-1.5">{event.venue}</p>}
+          <p className="text-xl font-black text-[var(--accent)] tabular-nums font-mono">{text}</p>
+        </div>
+      )}
+    </SkeletonSwap>
   );
 }

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useEvents } from './useEvents';
 import { MEMBER_META, tint } from '../utils/members';
 import Skeleton from './Skeleton';
+import SkeletonSwap from './SkeletonSwap';
 
 const MEMBERS = [
   { id: 'hakusai', emoji: '💛', name: '白菜' },
@@ -149,7 +150,7 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
   );
 
   const messageListEl = (
-    <div className="space-y-3 content-enter">
+    <div className="space-y-3">
       {visibleMessages.map(msg => (
         <div key={msg.id} className="frost-card p-4">
           <div className="flex items-center gap-2 mb-1.5">
@@ -182,22 +183,28 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
   );
 
   if (readonly) {
-    if (loading) return (
-      <div className="space-y-3" aria-hidden="true">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="frost-card p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Skeleton className="h-4 w-20 rounded-full" />
-              <Skeleton className="h-3 w-14 rounded-full ml-auto" />
-            </div>
-            <Skeleton className="h-3 rounded-full w-full mb-1.5" />
-            <Skeleton className="h-3 rounded-full w-2/3" />
+    if (!loading && visibleMessages.length === 0) return <p className="text-center text-gray-400 py-8">{(filter || eventFilter) ? '该筛选下还没有留言 ✨' : '还没有留言 ✨'}</p>;
+    return (
+      <SkeletonSwap
+        loading={loading}
+        skeleton={
+          <div className="space-y-3" aria-hidden="true">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="frost-card p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Skeleton className="h-4 w-20 rounded-full" />
+                  <Skeleton className="h-3 w-14 rounded-full ml-auto" />
+                </div>
+                <Skeleton className="h-3 rounded-full w-full mb-1.5" />
+                <Skeleton className="h-3 rounded-full w-2/3" />
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        }
+      >
+        {messageListEl}
+      </SkeletonSwap>
     );
-    if (visibleMessages.length === 0) return <p className="text-center text-gray-400 py-8">{(filter || eventFilter) ? '该筛选下还没有留言 ✨' : '还没有留言 ✨'}</p>;
-    return messageListEl;
   }
 
   if (!verified) {

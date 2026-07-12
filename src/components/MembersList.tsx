@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Skeleton from './Skeleton';
+import SkeletonSwap from './SkeletonSwap';
 
 interface Member {
   id: string;
@@ -78,38 +79,39 @@ export default function MembersList({ initial }: { initial: Member[] }) {
     </a>
   );
 
-  if (loading) {
-    return (
-      <div className="grid grid-cols-3 gap-4 sm:gap-6 mb-16" aria-hidden="true">
-        {Array.from({ length: initial?.length || 6 }).map((_, i) => (
-          <div key={i} className="text-center">
-            <Skeleton className="aspect-[4/5] rounded-2xl mb-3" />
-            <Skeleton className="h-4 w-16 mx-auto rounded-full mb-2" />
-            <Skeleton className="h-3 w-12 mx-auto rounded-full mb-2" />
-            <Skeleton className="h-3 w-20 mx-auto rounded-full" />
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  if (members.length === 0) return <p className="text-center text-gray-400 py-16">暂无成员</p>;
+  if (!loading && members.length === 0) return <p className="text-center text-gray-400 py-16 content-enter">暂无成员</p>;
 
   return (
-    <div className="content-enter">
-      <p className="text-xs font-bold text-pink-500 tracking-widest text-center mb-5">正在活动</p>
-      <div className="grid grid-cols-3 gap-4 sm:gap-6 mb-16">
-        {active.map((m, i) => <Card key={m.id} m={m} index={i} />)}
-      </div>
-
-      {graduated.length > 0 && (
-        <div className="border-t border-gray-100 dark:border-gray-800 pt-10">
-          <p className="text-xs font-bold text-gray-400 tracking-widest text-center mb-5">已毕业</p>
-          <div className="grid grid-cols-3 gap-4 sm:gap-6">
-            {graduated.map((m, i) => <Card key={m.id} m={m} index={i + active.length} />)}
-          </div>
+    <SkeletonSwap
+      loading={loading}
+      skeleton={
+        <div className="grid grid-cols-3 gap-4 sm:gap-6 mb-16" aria-hidden="true">
+          {Array.from({ length: initial?.length || 6 }).map((_, i) => (
+            <div key={i} className="text-center">
+              <Skeleton className="aspect-[4/5] rounded-2xl mb-3" />
+              <Skeleton className="h-4 w-16 mx-auto rounded-full mb-2" />
+              <Skeleton className="h-3 w-12 mx-auto rounded-full mb-2" />
+              <Skeleton className="h-3 w-20 mx-auto rounded-full" />
+            </div>
+          ))}
         </div>
-      )}
-    </div>
+      }
+    >
+      <div>
+        <p className="text-xs font-bold text-pink-500 tracking-widest text-center mb-5">正在活动</p>
+        <div className="grid grid-cols-3 gap-4 sm:gap-6 mb-16">
+          {active.map((m, i) => <Card key={m.id} m={m} index={i} />)}
+        </div>
+
+        {graduated.length > 0 && (
+          <div className="border-t border-gray-100 dark:border-gray-800 pt-10">
+            <p className="text-xs font-bold text-gray-400 tracking-widest text-center mb-5">已毕业</p>
+            <div className="grid grid-cols-3 gap-4 sm:gap-6">
+              {graduated.map((m, i) => <Card key={m.id} m={m} index={i + active.length} />)}
+            </div>
+          </div>
+        )}
+      </div>
+    </SkeletonSwap>
   );
 }

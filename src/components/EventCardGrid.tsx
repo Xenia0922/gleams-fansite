@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { getEventImage } from '../utils/eventImages';
 import Skeleton from './Skeleton';
+import SkeletonSwap from './SkeletonSwap';
 
 export interface EventRow {
   id: string;
@@ -102,11 +103,11 @@ export default function EventCardGrid({
     return list;
   }, [events, filter, sortDir, limit]);
 
-  if (loading) return <EventSkeleton count={limit} />;
-  if (filtered.length === 0) return <EventEmpty filter={filter} />;
+  if (!loading && filtered.length === 0) return <EventEmpty filter={filter} />;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 content-enter">
+    <SkeletonSwap loading={loading} skeleton={<EventSkeleton count={limit} />}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
       {filtered.map((evt, i) => {
         const d = new Date(evt.date);
         const img = evt.image || getEventImage(evt.id, fallbackImg);
@@ -135,6 +136,7 @@ export default function EventCardGrid({
           </a>
         );
       })}
-    </div>
+      </div>
+    </SkeletonSwap>
   );
 }

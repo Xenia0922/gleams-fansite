@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Skeleton from './Skeleton';
+import SkeletonSwap from './SkeletonSwap';
 
 interface Member {
   id: string;
@@ -52,23 +53,23 @@ export default function HomeMembers({ initial }: { initial: Member[] }) {
 
   const active = members.filter(m => m.status !== 'graduated');
 
-  if (loading) {
-    return (
-      <div className="grid grid-cols-3 gap-4 sm:gap-6" aria-hidden="true">
-        {Array.from({ length: initial?.length || 3 }).map((_, i) => (
-          <div key={i} className="text-center">
-            <Skeleton className="aspect-[4/5] rounded-3xl mb-3" />
-            <Skeleton className="h-4 w-16 mx-auto rounded-full mb-2" />
-            <Skeleton className="h-3 w-12 mx-auto rounded-full mb-2" />
-            <Skeleton className="h-3 w-20 mx-auto rounded-full" />
-          </div>
-        ))}
-      </div>
-    );
-  }
-
   return (
-    <div className="grid grid-cols-3 gap-4 sm:gap-6 content-enter">
+    <SkeletonSwap
+      loading={loading}
+      skeleton={
+        <div className="grid grid-cols-3 gap-4 sm:gap-6" aria-hidden="true">
+          {Array.from({ length: initial?.length || 3 }).map((_, i) => (
+            <div key={i} className="text-center">
+              <Skeleton className="aspect-[4/5] rounded-3xl mb-3" />
+              <Skeleton className="h-4 w-16 mx-auto rounded-full mb-2" />
+              <Skeleton className="h-3 w-12 mx-auto rounded-full mb-2" />
+              <Skeleton className="h-3 w-20 mx-auto rounded-full" />
+            </div>
+          ))}
+        </div>
+      }
+    >
+      <div className="grid grid-cols-3 gap-4 sm:gap-6">
       {active.map((m, i) => (
         <a
           key={m.id}
@@ -97,6 +98,7 @@ export default function HomeMembers({ initial }: { initial: Member[] }) {
           </div>
         </a>
       ))}
-    </div>
+      </div>
+    </SkeletonSwap>
   );
 }

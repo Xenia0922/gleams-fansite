@@ -3,6 +3,7 @@ import ImageLightboxOverlay from './ImageLightboxOverlay';
 import { useEvents } from './useEvents';
 import { MEMBER_META, tint } from '../utils/members';
 import Skeleton from './Skeleton';
+import SkeletonSwap from './SkeletonSwap';
 
 interface Photo {
   key: string;
@@ -90,49 +91,53 @@ export default function FanGallery() {
     img.src = fallback;
   }, []);
 
-  if (loading) return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-3" aria-hidden="true">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <Skeleton key={i} className="aspect-[4/5] rounded-3xl" />
-      ))}
-    </div>
-  );
-  if (error) return <div className="text-center py-8"><p className="text-gray-400 text-sm mb-2">{error}</p><button onClick={fetchPhotos} className="btn-outline text-xs !px-4 !py-1.5">重试</button></div>;
-  if (photos.length === 0) return <p className="text-center text-gray-400 py-8">还没有返图，切换"发布"来上传第一张吧 ✨</p>;
-  if (visiblePhotos.length === 0) return <p className="text-center text-gray-400 py-8">{(filter || eventFilter) ? '该筛选下还没有返图 ✨' : '还没有返图 ✨'}</p>;
+  if (!loading && error) return <div className="text-center py-8"><p className="text-gray-400 text-sm mb-2">{error}</p><button onClick={fetchPhotos} className="btn-outline text-xs !px-4 !py-1.5">重试</button></div>;
+  if (!loading && photos.length === 0) return <p className="text-center text-gray-400 py-8">还没有返图，切换"发布"来上传第一张吧 ✨</p>;
+  if (!loading && visiblePhotos.length === 0) return <p className="text-center text-gray-400 py-8">{(filter || eventFilter) ? '该筛选下还没有返图 ✨' : '还没有返图 ✨'}</p>;
 
   return (
-    <>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 content-enter">
-        {visiblePhotos.map((p, i) => (
-          <div key={p.key} className="frost-card overflow-hidden cursor-pointer group relative" onClick={() => setLightboxIdx(i)}>
-            <img src={p.thumbUrl || p.url} alt="" className="w-full aspect-[4/5] object-cover group-hover:scale-105 transition-transform duration-500 lazy-blur" loading="lazy" decoding="async" onError={(e) => handleImgError(e, p.url)} />
-            {p.member && MEMBER_META[p.member] && (
-              <span
-                className="absolute bottom-2 left-2 inline-flex items-center gap-1 text-[12px] font-semibold px-2 py-0.5 rounded-full backdrop-blur"
-                style={{ color: MEMBER_META[p.member].color, backgroundColor: 'rgba(255,255,255,0.72)' }}
-              >
-                {MEMBER_META[p.member].emoji} {MEMBER_META[p.member].name}
-              </span>
-            )}
-            {p.event && map[p.event] && (
-              <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full backdrop-blur bg-white/75 text-gray-600">
-                🎫 {map[p.event].date}
-              </span>
-            )}
-          </div>
-        ))}
-      </div>
+    <SkeletonSwap
+      loading={loading}
+      skeleton={
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3" aria-hidden="true">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="aspect-[4/5] rounded-3xl" />
+          ))}
+        </div>
+      }
+    >
+      <>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {visiblePhotos.map((p, i) => (
+            <div key={p.key} className="frost-card overflow-hidden cursor-pointer group relative" onClick={() => setLightboxIdx(i)}>
+              <img src={p.thumbUrl || p.url} alt="" className="w-full aspect-[4/5] object-cover group-hover:scale-105 transition-transform duration-500 lazy-blur" loading="lazy" decoding="async" onError={(e) => handleImgError(e, p.url)} />
+              {p.member && MEMBER_META[p.member] && (
+                <span
+                  className="absolute bottom-2 left-2 inline-flex items-center gap-1 text-[12px] font-semibold px-2 py-0.5 rounded-full backdrop-blur"
+                  style={{ color: MEMBER_META[p.member].color, backgroundColor: 'rgba(255,255,255,0.72)' }}
+                >
+                  {MEMBER_META[p.member].emoji} {MEMBER_META[p.member].name}
+                </span>
+              )}
+              {p.event && map[p.event] && (
+                <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full backdrop-blur bg-white/75 text-gray-600">
+                  🎫 {map[p.event].date}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
 
-      {lightboxIdx !== null && (
-        <ImageLightboxOverlay
-          images={lightboxImages}
-          currentIndex={lightboxIdx}
-          onClose={close}
-          onPrev={prev}
-          onNext={next}
-        />
-      )}
-    </>
+        {lightboxIdx !== null && (
+          <ImageLightboxOverlay
+            images={lightboxImages}
+            currentIndex={lightboxIdx}
+            onClose={close}
+            onPrev={prev}
+            onNext={next}
+          />
+        )}
+      </>
+    </SkeletonSwap>
   );
 }
