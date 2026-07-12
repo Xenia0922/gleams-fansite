@@ -14,12 +14,11 @@ const MEMBER_OPTS = [
   { id: 'hakusai', label: '💛 白菜' },
   { id: 'kumo', label: '💙 云团' },
   { id: 'yuzi', label: '💚 柚子' },
-  { id: 'huangyuyu', label: '🩷 黄鱼鱼' },
   { id: 'other', label: '⭐ 其他' },
 ];
 
 export default function AdminGallery({ code }: { code: string }) {
-  const { events } = useEvents();
+  const { events, loading: evLoading } = useEvents();
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [featuredKeys, setFeaturedKeys] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -104,8 +103,8 @@ export default function AdminGallery({ code }: { code: string }) {
           <select value={member} onChange={e => setMember(e.target.value)} className="text-sm px-3 py-2 rounded-xl bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10">
             {MEMBER_OPTS.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
           </select>
-          <select value={event} onChange={e => setEvent(e.target.value)} className="text-sm px-3 py-2 rounded-xl bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10">
-            <option value="">🎫 关联场次（选填）</option>
+          <select value={event} onChange={e => setEvent(e.target.value)} disabled={evLoading} className="text-sm px-3 py-2 rounded-xl bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 disabled:opacity-50">
+            <option value="">{evLoading ? '加载中...' : '🎫 关联场次（选填）'}</option>
             {events.map(ev => <option key={ev.id} value={ev.id}>{ev.date} {ev.title}</option>)}
           </select>
           <button onClick={upload} disabled={!file || busy} className="btn-pink text-xs !px-4 !py-1.5 disabled:opacity-50">

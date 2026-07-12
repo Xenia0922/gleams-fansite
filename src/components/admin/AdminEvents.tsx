@@ -17,7 +17,6 @@ const MEMBER_OPTS = [
   { id: 'hakusai', label: '💛 白菜' },
   { id: 'kumo', label: '💙 云团' },
   { id: 'yuzi', label: '💚 柚子' },
-  { id: 'huangyuyu', label: '🩷 黄鱼鱼' },
   { id: 'other', label: '⭐ 其他' },
 ];
 
@@ -46,7 +45,8 @@ export default function AdminEvents({ code }: { code: string }) {
 
   const startNew = () => {
     setErr('');
-    setForm({ status: 'upcoming', performers: [], date: new Date().toISOString().slice(0, 10) });
+    const today = new Date().toISOString().slice(0, 10);
+    setForm({ status: 'upcoming', performers: [], date: today, id: 'live-' + today });
     setEditing({ id: 'new' } as EventRow);
   };
   const startEdit = (e: EventRow) => {
@@ -105,7 +105,14 @@ export default function AdminEvents({ code }: { code: string }) {
           </label>
           <label className="block">
             <span className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">日期</span>
-            <input type="date" value={form.date || ''} onChange={e => set('date', e.target.value)} className={INPUT} />
+            <input type="date" value={form.date || ''} onChange={e => {
+              const d = e.target.value;
+              set('date', d);
+              // 新日程或 ID 以 live- 开头：自动同步为 live-YYYY-MM-DD
+              if (editing?.id === 'new' || (form.id && /^live-/.test(form.id))) {
+                set('id', 'live-' + d);
+              }
+            }} className={INPUT} />
           </label>
           <label className="block">
             <span className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">时间</span>

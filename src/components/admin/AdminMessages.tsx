@@ -6,7 +6,6 @@ const MEMBER_OPTS = [
   { id: 'hakusai', label: '💛 白菜' },
   { id: 'kumo', label: '💙 云团' },
   { id: 'yuzi', label: '💚 柚子' },
-  { id: 'huangyuyu', label: '🩷 黄鱼鱼' },
   { id: 'other', label: '⭐ 其他' },
 ];
 
@@ -23,7 +22,7 @@ const INPUT =
   'w-full px-3 py-2 rounded-xl text-sm bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 outline-none focus:border-[var(--accent)] transition-colors';
 
 export default function AdminMessages({ code }: { code: string }) {
-  const { events } = useEvents();
+  const { events, loading: evLoading } = useEvents();
   const [list, setList] = useState<Msg[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Msg | null>(null);
@@ -92,8 +91,8 @@ export default function AdminMessages({ code }: { code: string }) {
               {MEMBER_OPTS.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
             </select>
           </div>
-          <select value={form.event} onChange={e => setForm(f => ({ ...f, event: e.target.value }))} className={INPUT}>
-            <option value="">🎫 关联场次（选填）</option>
+          <select value={form.event} onChange={e => setForm(f => ({ ...f, event: e.target.value }))} disabled={evLoading} className={INPUT + ' disabled:opacity-50'}>
+            <option value="">{evLoading ? '加载中...' : '🎫 关联场次（选填）'}</option>
             {events.map(ev => <option key={ev.id} value={ev.id}>{ev.date} {ev.title}</option>)}
           </select>
           <textarea value={form.message} onChange={e => setForm(f => ({ ...f, message: e.target.value }))} rows={3} placeholder="留言内容" className={INPUT + ' resize-none'} />

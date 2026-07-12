@@ -29,7 +29,7 @@ function getCode(): string | null {
 interface Item { id: string; file: File; preview: string; }
 
 export default function FanUpload() {
-  const { events } = useEvents();
+  const { events, loading: evLoading } = useEvents();
   const [member, setMember] = useState('other');
   const [event, setEvent] = useState('');
   const [nickname, setNickname] = useState('');
@@ -165,8 +165,8 @@ export default function FanUpload() {
       </div>
 
       {/* 关联场次 */}
-      <select value={event} onChange={e => setEvent(e.target.value)} className={`${selCls} max-w-xs mx-auto block mb-4`}>
-        <option value="">🎫 关联场次（选填）</option>
+      <select value={event} onChange={e => setEvent(e.target.value)} disabled={evLoading} className={`${selCls} max-w-xs mx-auto block mb-4 disabled:opacity-50`}>
+        <option value="">{evLoading ? '加载中...' : '🎫 关联场次（选填）'}</option>
         {events.map(e => (
           <option key={e.id} value={e.id}>{e.date} {e.title}</option>
         ))}
