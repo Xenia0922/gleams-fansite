@@ -17,6 +17,7 @@ const ALLOWED = [
   'about_worldview', 'about_intro',
   'weidian', 'staff_qq',
   'tokuten_rules', 'tokuten_images',
+  'featured_square',
   'weibo', 'weibo_name', 'weibo_desc',
   'xiaohongshu', 'douyin',
 ];
@@ -56,7 +57,7 @@ async function ensureTable(env) {
   } catch (e) { console.error('[site] seed failed:', e.message); }
 }
 
-const JSON_KEYS = new Set(['tokuten_rules', 'tokuten_images']);
+const JSON_KEYS = new Set(['tokuten_rules', 'tokuten_images', 'featured_square']);
 
 async function loadConfig(env) {
   const { results } = await env.DB.prepare('SELECT key, value FROM site_config').all();

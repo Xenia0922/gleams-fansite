@@ -21,6 +21,7 @@ const MEMBER_OPTS = [
 export default function AdminGallery({ code }: { code: string }) {
   const { events } = useEvents();
   const [photos, setPhotos] = useState<Photo[]>([]);
+  const [featuredKeys, setFeaturedKeys] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [file, setFile] = useState<File | null>(null);
   const [member, setMember] = useState('other');
@@ -31,10 +32,16 @@ export default function AdminGallery({ code }: { code: string }) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/photos');
-      const data = await res.json();
-      if (Array.isArray(data)) setPhotos(data);
-      else if (data.error) setErr(data.error);
+      const [photoRes, siteRes] = await Promise.all([
+        fetch('/api/photos'),
+        fetch('/api/site'),
+      ]);
+      const photoData = await photoRes.json();
+      const siteData = await siteRes.json();
+      if (Array.isArray(photoData)) setPhotos(photoData);
+      else if (photoData.error) setErr(photoData.error);
+      const keys = siteData.featured_square;
+      if (Array.isArray(keys)) setFeaturedKeys(new Set(keys));
     } catch { setErr('加载失败'); }
     setLoading(false);
   }, []);
@@ -71,6 +78,22 @@ export default function AdminGallery({ code }: { code: string }) {
     } catch { alert('删除失败'); }
   };
 
+  const toggleFeatured = async (p: Photo) => {
+    const next = new Set(featuredKeys);
+    if (next.has(p.key)) { next.delete(p.key); } else { next.add(p.key); }
+    const arr = Array.from(next);
+    try {
+      const res = await fetch('/api/site', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'x-admin-code': code },
+        body: JSON.stringify({ featured_square: arr }),
+      });
+      const data = await res.json();
+      if (data.ok) setFeaturedKeys(next);
+      else alert(data.error || '操作失败');
+    } catch { alert('网络错误'); }
+  };
+
   return (
     <div className="max-w-2xl mx-auto space-y-4">
       <div className="frost-card p-4">
@@ -97,6 +120,17 @@ export default function AdminGallery({ code }: { code: string }) {
           {photos.map(p => (
             <div key={p.key} className="frost-card overflow-hidden group relative">
               <img src={p.thumbUrl || p.url} alt="" className="w-full aspect-[4/5] object-cover" loading="lazy" />
+              <button
+                onClick={(e) => { e.stopPropagation(); toggleFeatured(p); }}
+                title={featuredKeys.has(p.key) ? '取消精选' : '设为精选'}
+                className={`absolute top-2 right-10 text-xs px-2 py-1 rounded-full transition-all ${
+                  featuredKeys.has(p.key)
+                    ? 'bg-[var(--accent)] text-white'
+                    : 'bg-white/60 dark:bg-white/10 text-gray-400 hover:text-[var(--accent)]'
+                }`}
+              >
+                {featuredKeys.has(p.key) ? '★ 精选' : '☆'}
+              </button>
               <button onClick={() => del(p)} className="absolute top-2 right-2 text-xs bg-red-500/80 hover:bg-red-600 text-white px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
                 删除
               </button>
