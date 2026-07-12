@@ -28,10 +28,11 @@ const pastEvents = schedule.events.filter((e: any) => e.status === 'past').rever
         <a href="/schedule" class="btn-outline text-xs sm:text-sm !px-5 sm:!px-7 !py-2.5 sm:!py-3">公演日程</a>
         <LiveLink client:load field="weibo" label="微博" initial={site.weibo} className="btn-outline text-xs sm:text-sm !px-5 sm:!px-7 !py-2.5 sm:!py-3" />
       </div>
+      <div class="mt-6" style="min-height: 0;">
+        <UpcomingCountdown client:load />
+      </div>
     </div>
   </section>
-
-  <UpcomingCountdown client:load />
 
   <section class="max-w-7xl mx-auto px-4 py-16 md:py-20">
     <div class="text-center mb-10" data-reveal>
