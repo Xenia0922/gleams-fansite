@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { marked } from 'marked';
+import StaticImageLightbox from './StaticImageLightbox';
 
 interface EventDetailProps {
   id: string;
@@ -42,10 +43,11 @@ export default function EventDetail({ id }: EventDetailProps) {
       <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-gray-100 mb-2">{ev.title}</h1>
 
       {ev.image && (
-        <img
-          src={ev.image}
-          alt={ev.title}
-          className="w-full rounded-2xl overflow-hidden object-cover max-h-[500px] mb-8 bg-gray-100 dark:bg-gray-800"
+        <StaticImageLightbox
+          mode="single"
+          images={[{ src: ev.image, alt: ev.title }]}
+          itemClassName="block w-full mb-8 bg-transparent appearance-none"
+          imageClassName="w-full rounded-2xl object-cover max-h-[500px] bg-gray-100 dark:bg-gray-800 cursor-zoom-in hover:opacity-95 transition-opacity"
         />
       )}
 
