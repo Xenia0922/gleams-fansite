@@ -158,7 +158,7 @@ async function ensureTable(env) {
             `INSERT INTO events (id,date,time,title,venue,performers,status,image,body,created_at)
              VALUES (?,?,?,?,?,?,?,?,?,?)`
           )
-          .bind(e.id, e.date, e.time || '', e.title, e.venue || '', JSON.stringify(e.performers || []), e.status || 'past', '', SEED_BODIES[e.id] || '', new Date().toISOString())
+          .bind(e.id, e.date, e.time || '', e.title, e.venue || '', JSON.stringify(e.performers || []), e.status || 'past', e.image || '', SEED_BODIES[e.id] || '', new Date().toISOString())
           .run();
       }
     } else {
