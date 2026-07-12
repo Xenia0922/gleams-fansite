@@ -21,6 +21,7 @@ export default function AdminGallery({ code }: { code: string }) {
   const { events, loading: evLoading } = useEvents();
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [featuredKeys, setFeaturedKeys] = useState<Set<string>>(new Set());
+  const [featuredMap, setFeaturedMap] = useState<Map<string, string>>(new Map()); // key → galleryId
   const [loading, setLoading] = useState(true);
   const [file, setFile] = useState<File | null>(null);
   const [member, setMember] = useState('other');
@@ -39,8 +40,18 @@ export default function AdminGallery({ code }: { code: string }) {
       const siteData = await siteRes.json();
       if (Array.isArray(photoData)) setPhotos(photoData);
       else if (photoData.error) setErr(photoData.error);
-      const keys = siteData.featured_square;
-      if (Array.isArray(keys)) setFeaturedKeys(new Set(keys));
+      const entries = siteData.featured_square;
+      if (Array.isArray(entries)) {
+        const keys = new Set<string>();
+        const map = new Map<string, string>();
+        for (const e of entries) {
+          const k = typeof e === 'string' ? e : e.key;
+          if (k) keys.add(k);
+          if (e.galleryId) map.set(k, e.galleryId);
+        }
+        setFeaturedKeys(keys);
+        setFeaturedMap(map);
+      }
     } catch { setErr('加载失败'); }
     setLoading(false);
   }, []);
@@ -79,8 +90,38 @@ export default function AdminGallery({ code }: { code: string }) {
 
   const toggleFeatured = async (p: Photo) => {
     const next = new Set(featuredKeys);
-    if (next.has(p.key)) { next.delete(p.key); } else { next.add(p.key); }
-    const arr = Array.from(next);
+    const nextMap = new Map(featuredMap);
+
+    if (next.has(p.key)) {
+      // 取消精选：删除画廊同步 + 移除标记
+      const gid = nextMap.get(p.key);
+      if (gid) {
+        try {
+          await fetch('/api/gallery?id=' + encodeURIComponent(gid), {
+            method: 'DELETE',
+            headers: { 'x-admin-code': code },
+          });
+        } catch { /* ignore */ }
+      }
+      next.delete(p.key);
+      nextMap.delete(p.key);
+    } else {
+      // 设为精选：同步到画廊
+      try {
+        const res = await fetch('/api/gallery', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-admin-code': code },
+          body: JSON.stringify({ url: p.url, member: p.member || 'other' }),
+        });
+        const data = await res.json();
+        if (data.ok && data.id) {
+          nextMap.set(p.key, data.id);
+        }
+      } catch { /* ignore */ }
+      next.add(p.key);
+    }
+
+    const arr = Array.from(next).map(k => ({ key: k, galleryId: nextMap.get(k) || '' }));
     try {
       const res = await fetch('/api/site', {
         method: 'PUT',
@@ -88,8 +129,10 @@ export default function AdminGallery({ code }: { code: string }) {
         body: JSON.stringify({ featured_square: arr }),
       });
       const data = await res.json();
-      if (data.ok) setFeaturedKeys(next);
-      else alert(data.error || '操作失败');
+      if (data.ok) {
+        setFeaturedKeys(next);
+        setFeaturedMap(nextMap);
+      } else alert(data.error || '操作失败');
     } catch { alert('网络错误'); }
   };
 

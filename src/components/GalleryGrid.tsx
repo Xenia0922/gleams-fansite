@@ -40,8 +40,11 @@ export default function GalleryGrid() {
 
       if (Array.isArray(galleryData.photos)) setPhotos(galleryData.photos);
 
-      // 广场返图精选：从 site_config.featured_square 取 key 列表，匹配 R2 照片
-      const featuredKeys: string[] = siteData.featured_square || [];
+      // 广场返图精选：兼容旧格式 string[] 和新格式 { key, galleryId }[]
+      const raw = siteData.featured_square || [];
+      const featuredKeys: string[] = Array.isArray(raw)
+        ? raw.map((e: string | { key: string }) => (typeof e === 'string' ? e : e.key))
+        : [];
       if (Array.isArray(photosData) && featuredKeys.length > 0) {
         const keySet = new Set(featuredKeys);
         const matched = photosData.filter((p: FanPhoto) => keySet.has(p.key));
@@ -133,32 +136,6 @@ export default function GalleryGrid() {
         ))}
       </div>
 
-      {/* 骑士团精选 — 来自广场返图 */}
-      {!loading && featuredFan.length > 0 && (
-        <div className="mb-12">
-          <div className="flex items-center gap-3 mb-4">
-            <span className="text-sm font-bold text-[var(--accent)]">骑士团精选</span>
-            <span className="text-xs text-gray-400">{featuredFan.length} 张</span>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {featuredFan.map((p, i) => (
-              <div
-                key={p.key}
-                className="relative aspect-[4/5] rounded-3xl overflow-hidden glass cursor-pointer group ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-transparent"
-                onClick={() => setFanLightboxIdx(i)}
-              >
-                <img
-                  src={p.thumbUrl || p.url}
-                  alt=""
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                  loading="lazy"
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* 图片网格（按成员分组） */}
       {loading ? (
         <p className="text-center text-gray-400 py-16">加载中...</p>
@@ -198,6 +175,32 @@ export default function GalleryGrid() {
               </div>
             ))}
           {photos.length === 0 && <div className="text-center py-16 text-gray-400">画廊还空着，敬请期待</div>}
+        </div>
+      )}
+
+      {/* 骑士团精选 — 来自广场返图 */}
+      {!loading && featuredFan.length > 0 && (
+        <div className="mt-12">
+          <div className="flex items-center gap-3 mb-4">
+            <span className="text-sm font-bold text-[var(--accent)]">骑士团精选</span>
+            <span className="text-xs text-gray-400">{featuredFan.length} 张</span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {featuredFan.map((p, i) => (
+              <div
+                key={p.key}
+                className="relative aspect-[4/5] rounded-3xl overflow-hidden glass cursor-pointer group ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-transparent"
+                onClick={() => setFanLightboxIdx(i)}
+              >
+                <img
+                  src={p.thumbUrl || p.url}
+                  alt=""
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  loading="lazy"
+                />
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
