@@ -3,10 +3,14 @@
  * 用途：日程详情页 /schedule/:id 是构建期静态产物（仅覆盖构建种子里的活动）。
  * 后台 admin 新增的活动不在构建种子中 → 没有静态文件 → Cloudflare 返 404，
  * 用户点进去会「闪一下 404」。本函数在该路径静态页缺失时，按 D1 实时数据
- * 服务端渲染一个与站点完全一致的详情页（复用首页的外壳：CSS / 导航 / 页脚），
- * 返回 200，从而消除 404 闪现，且后台新增活动立即可见、无需重新构建。
+ * 服务端渲染一个与站点完全一致的详情页，返回 200，从而消除 404 闪现。
  *
- * 已存在的静态详情页：next() 返回 200 HTML，直接放行（middleware 照常注入数据）。
+ * 性能要点（避免慢）：
+ *   - 已存在的静态详情页：next() 返回 200 HTML，直接放行（middleware 照常注入数据），零额外开销。
+ *   - 静态页缺失时，next() 返回的「404 响应」本身已是带站点外壳(nav/footer/CSS)的主题化页面，
+ *     直接复用它做外壳，省去一次「请求首页」的额外往返 + 其触发的中间件多次 D1 查询。
+ *   - 仅做 1 次 D1 查询（取该活动）+ 轻量字符串手术，warm 路径极快。
+ *
  * 注意：本文件为 Cloudflare Pages Functions，必须纯 JS（不可用 TS 注解）。
  */
 import { marked } from 'marked';
@@ -75,12 +79,12 @@ export async function onRequest(context) {
   const m = path.match(/^\/schedule\/([A-Za-z0-9_-]+)$/);
   if (!m || m[1] === 'index') return next();
 
-  // 先尝试静态详情页（构建产物）
+  // 先尝试静态详情页（构建产物）。已存在的静态页直接放行，middleware 照常注入数据。
   const resp = await next();
   const ct = resp.headers.get('Content-Type') || '';
-  if (resp.status < 400 && ct.includes('text/html')) return resp; // 静态页存在，放行
+  if (resp.status < 400 && ct.includes('text/html')) return resp;
 
-  // 静态页缺失 → 按 D1 实时渲染
+  // 静态页缺失 → 按 D1 实时查询
   const id = m[1];
   let row = null;
   try {
@@ -89,17 +93,9 @@ export async function onRequest(context) {
   } catch (e) {}
   if (!row) return resp; // 确实不存在 → 维持 404
 
-  // 取首页外壳（含站点的 CSS / 导航 / 页脚），保证视觉一致
-  let shell = '';
-  try {
-    const homeResp = await fetch(new URL('/', request.url));
-    shell = await homeResp.text();
-  } catch (e) {}
-  if (!shell) return resp;
-
-  // 去掉首页自带的数据注入脚本，避免与 middleware 注入冲突
-  shell = shell.replace(/<script>\s*window\.__SSR_DATA__=[\s\S]*?<\/script>/g, '');
-
+  // 复用 next() 返回的 404 响应作为外壳：它已是带站点 nav/footer/CSS 的主题化页面，
+  // 仅替换其 <main> 内容为真实详情，免去一次「请求首页」的额外往返与其触发的中间件多次 D1 查询。
+  const shell = await resp.text();
   const mainOpen = shell.search(/<main[\s>]/i);
   const mainClose = shell.search(/<\/main>/i);
   if (mainOpen === -1 || mainClose === -1) return resp;
