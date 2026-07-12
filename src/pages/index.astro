@@ -2,15 +2,10 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import HeroTitle from '../components/HeroTitle.astro';
 import site from '../data/site.json';
-import members from '../data/members.json';
-import schedule from '../data/schedule.json';
 import HomeMembers from '../components/HomeMembers';
 import HomeEvents from '../components/HomeEvents';
 import { SiteSocial, LiveLink, SiteMeta } from '../components/SiteBits';
 import UpcomingCountdown from '../components/UpcomingCountdown';
-
-const activeMembers = members.members.filter((m: any) => m.status !== 'graduated');
-const pastEvents = schedule.events.filter((e: any) => e.status === 'past').reverse().slice(0, 4);
 ---
 
 <BaseLayout>
@@ -39,7 +34,7 @@ const pastEvents = schedule.events.filter((e: any) => e.status === 'past').rever
       <p class="section-title-en">✦</p>
       <h2 class="section-title">成员</h2>
     </div>
-    <HomeMembers client:load initial={activeMembers} />
+    <HomeMembers client:load initial={[]} />
   </section>
 
   <section class="py-16 md:py-20 border-t glass-divider">
@@ -48,7 +43,7 @@ const pastEvents = schedule.events.filter((e: any) => e.status === 'past').rever
         <p class="section-title-en">✦</p>
         <h2 class="section-title">过往行程</h2>
       </div>
-      <HomeEvents client:load initial={pastEvents} />
+      <HomeEvents client:load initial={[]} />
       <div class="text-center mt-8">
         <a href="/schedule" class="btn-outline text-xs sm:text-sm">查看完整日程 →</a>
       </div>

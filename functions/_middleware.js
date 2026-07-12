@@ -23,6 +23,21 @@ async function ensureTables(env) {
 async function fetchPageData(path, env) {
   const data = {};
 
+  // 所有页面都可能需要 site_config (SiteBits 组件)
+  try {
+    const { results } = await env.DB.prepare('SELECT key, value FROM site_config').all();
+    if (results && results.length) {
+      const cfg = {};
+      for (const r of results) {
+        try {
+          cfg[r.key] = ['tokuten_rules', 'tokuten_images', 'featured_square'].includes(r.key)
+            ? JSON.parse(r.value) : r.value;
+        } catch { cfg[r.key] = r.value; }
+      }
+      data.siteConfig = cfg;
+    }
+  } catch {}
+
   // 首页 / 成员页 / 日程页 / 画廊页 都需要 events
   if (path === '/' || path === '/members' || path === '/gallery' || path.startsWith('/schedule')) {
     try {

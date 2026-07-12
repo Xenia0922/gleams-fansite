@@ -11,6 +11,10 @@ interface Cfg {
 // 模块级缓存：同一页面的多个社交组件只拉一次 /api/site
 let cfgPromise: Promise<Cfg> | null = null;
 function getSite(): Promise<Cfg> {
+  // 优先用 middleware 注入的 SSR 数据
+  if (typeof window !== 'undefined' && (window as any).__SSR_DATA__?.siteConfig) {
+    return Promise.resolve((window as any).__SSR_DATA__.siteConfig as Cfg);
+  }
   if (!cfgPromise) {
     cfgPromise = fetch('/api/site').then(r => r.json()).catch(() => ({}) as Cfg);
   }
