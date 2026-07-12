@@ -7,12 +7,18 @@
  */
 
 /**
- * 返回 JSON Response
+ * 返回 JSON Response（含安全头）
  */
 export function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'DENY',
+      'Referrer-Policy': 'strict-origin-when-cross-origin',
+      'Access-Control-Allow-Origin': '*',
+    },
   });
 }
 

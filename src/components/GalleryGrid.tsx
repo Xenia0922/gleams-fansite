@@ -7,6 +7,7 @@ interface Photo {
   id: string;
   url: string;
   member: string;
+  featured?: number;
 }
 
 const META: Record<string, { name: string; emoji: string; color: string }> = {
@@ -15,10 +16,19 @@ const META: Record<string, { name: string; emoji: string; color: string }> = {
   yuzi: { name: '柚子', emoji: '💚', color: '#48D1A0' },
 };
 
+// 精选卡片渐变色（按成员）
+const FEATURED_ACCENT: Record<string, string> = {
+  hakusai: 'from-yellow-100/70 to-amber-50/40',
+  kumo: 'from-blue-100/70 to-sky-50/40',
+  yuzi: 'from-emerald-100/70 to-green-50/40',
+  __extra__: 'from-pink-100/70 to-rose-50/40',
+};
+
 export default function GalleryGrid() {
   const [filter, setFilter] = useState('all');
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
   const [photos, setPhotos] = useState<Photo[]>([]);
+  const [featured, setFeatured] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
 
   const reload = useCallback(async () => {
@@ -26,6 +36,7 @@ export default function GalleryGrid() {
       const res = await fetch('/api/gallery');
       const data = await res.json();
       if (Array.isArray(data.photos)) setPhotos(data.photos);
+      if (Array.isArray(data.featured)) setFeatured(data.featured);
     } catch {
       /* 离线时保留当前 */
     }
@@ -113,6 +124,45 @@ export default function GalleryGrid() {
           </button>
         ))}
       </div>
+
+      {/* 骑士团精选 */}
+      {!loading && featured.length > 0 && (
+        <div className="mb-12">
+          <div className="flex items-center gap-3 mb-4">
+            <span className="text-sm font-bold text-[var(--accent)]">✨ 骑士团精选</span>
+            <span className="text-xs text-gray-400">管理员甄选 · {featured.length} 张</span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {featured.map((p) => {
+              const m = META[p.member] || { name: '其他', emoji: '🐙', color: '#e83e8c' };
+              const i = idxOf(p.id);
+              return (
+                <div
+                  key={`feat-${p.id}`}
+                  className="relative aspect-[4/5] rounded-3xl overflow-hidden glass cursor-pointer group ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-transparent"
+                  onClick={() => i >= 0 && setLightboxIdx(i)}
+                >
+                  <img
+                    src={p.url}
+                    alt=""
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    loading="lazy"
+                  />
+                  <span
+                    className="absolute bottom-2 left-2 inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-full backdrop-blur bg-white/75"
+                    style={{ color: m.color }}
+                  >
+                    {m.emoji} {m.name}
+                  </span>
+                  <span className="absolute top-2 right-2 text-[10px] bg-[var(--accent)] text-white font-bold px-2 py-0.5 rounded-full">
+                    精选
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* 图片网格（按成员分组，纯展示） */}
       {loading ? (

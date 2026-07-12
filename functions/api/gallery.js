@@ -2,12 +2,14 @@
  * /api/gallery — 照片画廊页数据（已独立于成员简介九宫格）
  *
  *   GET    /api/gallery
- *           → { photos:[{id,url,member}], isAdmin }
+ *           → { photos:[{id,url,member,featured}], featured:[...], isAdmin }
  *             photos 来自独立的 gallery_photos 表（首次自动从成员简介九宫格
  *             复制一份快照 + 合并原 gallery_extras），之后与 members.gallery 完全解耦。
+ *             featured 为精选照片列表（featured=1），前台展示"骑士团精选"板块。
  *             isAdmin 仅当请求带正确 x-admin-code 时为 true（供前台决定是否显示增删控件）
  *
  *   POST   /api/gallery  （需 ADMIN_CODE） body { url,member } → 新增一张画廊照片
+ *   PUT    /api/gallery  （需 ADMIN_CODE） body { id, featured: 0|1 } → 切换精选状态
  *   PATCH  /api/gallery  （需 ADMIN_CODE） body { order:[id,...] } → 按数组顺序重排 sort
  *   DELETE /api/gallery?id=xxx （需 ADMIN_CODE） → 删除一张画廊照片
  *
@@ -22,6 +24,7 @@ CREATE TABLE IF NOT EXISTS gallery_photos (
   url TEXT NOT NULL,
   member TEXT,
   sort INTEGER NOT NULL DEFAULT 0,
+  featured INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS gallery_meta (
@@ -41,6 +44,10 @@ function parseGallery(v) {
 
 async function ensureTable(env) {
   await env.DB.prepare(DDL).run();
+  // 旧表补 featured 列（幂等）
+  try {
+    await env.DB.prepare('ALTER TABLE gallery_photos ADD COLUMN featured INTEGER NOT NULL DEFAULT 0').run();
+  } catch (e) { /* 列已存在则忽略 */ }
 }
 
 // 首次播种：把成员简介九宫格 + 原 gallery_extras 复制进独立的 gallery_photos，
@@ -117,20 +124,25 @@ export async function onRequest(context) {
     try {
       await seedIfEmpty(env);
       const { results } = await env.DB.prepare(
-        'SELECT id,url,member FROM gallery_photos ORDER BY sort ASC, created_at ASC'
+        'SELECT id,url,member,featured FROM gallery_photos ORDER BY sort ASC, created_at ASC'
       ).all();
-      const photos = (results || []).map((r) => ({
+      const all = (results || []).map((r) => ({
         id: r.id,
         url: r.url,
         member: r.member || '__extra__',
+        featured: r.featured || 0,
       }));
-      return json({ photos, isAdmin: adminOk(request, env) });
+      return json({
+        photos: all,
+        featured: all.filter((p) => p.featured === 1),
+        isAdmin: adminOk(request, env),
+      });
     } catch (e) {
-      return json({ photos: [], isAdmin: false, error: e.message }, 500);
+      return json({ photos: [], featured: [], isAdmin: false, error: e.message }, 500);
     }
   }
 
-  // ---- 以下均需管理员暗号 ----
+  // ---- 管理员：新增照片 ----
   if (request.method === 'POST') {
     if (!adminOk(request, env)) return json({ error: '无权限' }, 403);
     try {
@@ -153,6 +165,23 @@ export async function onRequest(context) {
     }
   }
 
+  // ---- 管理员：切换精选 ----
+  if (request.method === 'PUT') {
+    if (!adminOk(request, env)) return json({ error: '无权限' }, 403);
+    try {
+      const b = await request.json().catch(() => ({}));
+      const id = String(b.id || '').trim();
+      if (!id) return json({ error: '缺少 id' }, 400);
+      const featured = b.featured === 1 || b.featured === true ? 1 : 0;
+      await env.DB.prepare('UPDATE gallery_photos SET featured = ? WHERE id = ?')
+        .bind(featured, id).run();
+      return json({ ok: true, id, featured });
+    } catch (e) {
+      return json({ error: e.message }, 500);
+    }
+  }
+
+  // ---- 管理员：排序 ----
   if (request.method === 'PATCH') {
     if (!adminOk(request, env)) return json({ error: '无权限' }, 403);
     try {
@@ -182,6 +211,7 @@ export async function onRequest(context) {
     }
   }
 
+  // ---- 管理员：删除 ----
   if (request.method === 'DELETE') {
     if (!adminOk(request, env)) return json({ error: '无权限' }, 403);
     try {

@@ -6,6 +6,7 @@ interface Photo {
   id: string;
   url: string;
   member: string;
+  featured?: number;
 }
 
 // 与公网画廊一致的分组顺序：成员（白菜/云团/柚子）→ 不分类
@@ -42,7 +43,9 @@ export default function AdminGalleryEdit({ code }: { code: string }) {
     try {
       const res = await fetch('/api/gallery');
       const data = await res.json();
-      if (Array.isArray(data.photos)) setPhotos(data.photos);
+      if (Array.isArray(data.photos)) {
+        setPhotos(data.photos.map((p: Photo) => ({ ...p, featured: p.featured || 0 })));
+      }
       else if (data.error) setErr(data.error);
     } catch {
       setErr('加载失败');
@@ -88,6 +91,24 @@ export default function AdminGalleryEdit({ code }: { code: string }) {
       else alert(data.error || '删除失败');
     } catch {
       alert('删除失败');
+    }
+  };
+
+  const toggleFeatured = async (p: Photo) => {
+    const newVal = p.featured ? 0 : 1;
+    try {
+      const res = await fetch('/api/gallery', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'x-admin-code': code },
+        body: JSON.stringify({ id: p.id, featured: newVal }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        // 乐观更新本地状态
+        setPhotos((prev) => prev.map((x) => (x.id === p.id ? { ...x, featured: newVal } : x)));
+      } else alert(data.error || '操作失败');
+    } catch {
+      alert('网络错误');
     }
   };
 
@@ -230,6 +251,20 @@ export default function AdminGalleryEdit({ code }: { code: string }) {
                       <span className="absolute top-2 left-2 text-[10px] bg-black/45 text-white px-2 py-1 rounded-full">
                         {badgeOf(p.member).emoji}
                       </span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleFeatured(p);
+                        }}
+                        title={p.featured ? '取消精选' : '设为精选'}
+                        className={`absolute top-2 right-10 text-xs px-2 py-1 rounded-full transition-all ${
+                          p.featured
+                            ? 'bg-[var(--accent)] text-white'
+                            : 'bg-white/60 dark:bg-white/10 text-gray-400 hover:text-[var(--accent)]'
+                        }`}
+                      >
+                        {p.featured ? '★ 精选' : '☆'}
+                      </button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();

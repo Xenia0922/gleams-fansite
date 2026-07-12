@@ -120,6 +120,7 @@ async function servePhoto(env, key) {
     if (!obj) return new Response('Not found', { status: 404 });
     const headers = new Headers();
     obj.writeHttpMetadata(headers);
+    headers.set('X-Content-Type-Options', 'nosniff');
     headers.set('Cache-Control', 'public, max-age=31536000');
     headers.set('Access-Control-Allow-Origin', '*');
     return new Response(obj.body, { headers });
