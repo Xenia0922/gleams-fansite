@@ -2,10 +2,6 @@
 
 广西南宁地下偶像团体 Gleams 的非官方粉丝应援站 —— [gleams.vip](https://gleams.vip)
 
-## 关于 Gleams
-
-三位成员——白菜 Hakusai、云团 Kumo、柚子 Yuzi——活跃于南宁及两广地区的 Livehouse 和动漫展会。
-
 ---
 
 ## 站点功能
