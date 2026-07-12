@@ -69,7 +69,7 @@ export default function ImageLightboxOverlay({
     : { cursor: 'zoom-in' };
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] bg-black/95" onClick={onClose}>
+    <div className="fixed inset-0 z-[100] bg-black/95" onClick={onClose} role="dialog" aria-modal="true" aria-label="图片灯箱">
       <button
         onClick={e => {
           e.stopPropagation();

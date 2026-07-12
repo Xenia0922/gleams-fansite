@@ -14,9 +14,9 @@ import FanGallery from '../components/FanGallery';
     </div>
 
     <!-- 标签切换 -->
-    <div class="flex justify-center gap-3 mb-8" id="fan-tabs">
-      <button class="btn-pink text-sm !px-5 !py-2" data-tab="browse">💬 浏览</button>
-      <button class="btn-outline text-sm !px-5 !py-2" data-tab="post">✏️ 发布</button>
+    <div class="flex justify-center gap-3 mb-8" id="fan-tabs" role="tablist">
+      <button class="btn-pink text-sm !px-5 !py-2" data-tab="browse" role="tab" aria-selected="true">💬 浏览</button>
+      <button class="btn-outline text-sm !px-5 !py-2" data-tab="post" role="tab" aria-selected="false">✏️ 发布</button>
     </div>
 
     <!-- 浏览模式（默认） -->
@@ -72,8 +72,9 @@ import FanGallery from '../components/FanGallery';
   tabs.forEach(btn => {
     btn.addEventListener('click', () => {
       const tab = btn.dataset.tab;
-      tabs.forEach(b => { b.className = 'btn-outline text-sm !px-5 !py-2'; });
+      tabs.forEach(b => { b.className = 'btn-outline text-sm !px-5 !py-2'; b.setAttribute('aria-selected', 'false'); });
       btn.className = 'btn-pink text-sm !px-5 !py-2';
+      btn.setAttribute('aria-selected', 'true');
 
       if (tab === 'browse') {
         browse.classList.remove('hidden');

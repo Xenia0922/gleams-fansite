@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { marked } from 'marked';
 import StaticImageLightbox from './StaticImageLightbox';
 
 interface EventDetailProps {
   id: string;
-  /** 构建期由 [id].astro 注入（来自 schedule.json + eventBodies.ts），或运行时由 middleware 注入到 window.__SSR_DATA__.event。
-   *  存在时直接渲染，不发起任何 fetch，无布局跳动。 */
+  /** 构建期由 [id].astro 注入（含 bodyHtml——body 的预渲染 HTML），
+   *  或运行时由 middleware 注入 window.__SSR_DATA__.event（含 body，不含 bodyHtml）。
+   *  存在时直接渲染，不发起 fetch、无布局跳动；bodyHtml 缺失时才动态 import marked 兜底。 */
   event?: any;
 }
 
@@ -16,6 +16,36 @@ export default function EventDetail({ id, event: eventProp }: EventDetailProps) 
 
   const [ev, setEv] = useState<any>(initialEvent);
   const [loading, setLoading] = useState(!initialEvent);
+  const [bodyHtml, setBodyHtml] = useState<string>(initialEvent?.bodyHtml || '');
+
+  // 更新浏览器标题——覆盖 404 页继承的「404 | 页面未找到」
+  useEffect(() => {
+    if (ev && typeof document !== 'undefined') {
+      document.title = ev.title + ' | Gleams';
+    }
+  }, [ev]);
+
+  // body 转换：优先用构建期预渲染的 bodyHtml，缺失时才动态加载 marked（仅运行时新增日程触发）
+  useEffect(() => {
+    if (!ev) return;
+    if (ev.bodyHtml) {
+      setBodyHtml(ev.bodyHtml);
+      return;
+    }
+    if (!ev.body) {
+      setBodyHtml('');
+      return;
+    }
+    import('marked').then((mod) => {
+      const { marked: parser } = mod;
+      const html = (
+        typeof parser.parse === 'function'
+          ? parser.parse(ev.body, { async: false })
+          : parser(ev.body)
+      ) as string;
+      setBodyHtml(html);
+    });
+  }, [ev]);
 
   useEffect(() => {
     if (initialEvent) return; // 已有同步数据，无需 fetch
@@ -38,24 +68,12 @@ export default function EventDetail({ id, event: eventProp }: EventDetailProps) 
     };
   }, [id]);
 
-  // 存在数据时更新浏览器标题——覆盖 404 页继承的「404 | 页面未找到」
-  useEffect(() => {
-    if (ev && typeof document !== 'undefined') {
-      document.title = ev.title + ' | Gleams';
-    }
-  }, [ev]);
-
   if (!ev) {
     if (loading) return <p className="text-center text-gray-400 py-16">加载中…</p>;
     return <p className="text-center text-gray-400 py-16">未找到该日程</p>;
   }
 
   const d = new Date(ev.date);
-  const html = (
-    typeof marked.parse === 'function'
-      ? marked.parse(ev.body || '', { async: false })
-      : marked(ev.body || '')
-  ) as string;
 
   return (
     <article className="max-w-3xl mx-auto px-4 py-12 md:py-16">
@@ -93,7 +111,7 @@ export default function EventDetail({ id, event: eventProp }: EventDetailProps) 
         />
       )}
 
-      <div className="event-detail" dangerouslySetInnerHTML={{ __html: html }} />
+      <div className="event-detail" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
     </article>
   );
 }
