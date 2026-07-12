@@ -1,0 +1,17 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import scheduleData from '../../data/schedule.json';
+import EventDetail from '../../components/EventDetail';
+
+export async function getStaticPaths() {
+  return (scheduleData.events as any[]).map((e) => ({
+    params: { id: e.id },
+  }));
+}
+
+const { id } = Astro.params;
+---
+
+<BaseLayout title="日程详情">
+  <EventDetail client:load id={id} />
+</BaseLayout>

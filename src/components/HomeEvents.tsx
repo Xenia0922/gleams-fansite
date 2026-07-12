@@ -12,10 +12,8 @@ interface EventRow {
 
 export default function HomeEvents({
   initial,
-  reportMap,
 }: {
   initial: EventRow[];
-  reportMap: Record<string, string>;
 }) {
   const [events, setEvents] = useState<EventRow[]>(initial || []);
 
@@ -42,9 +40,8 @@ export default function HomeEvents({
       {past.map(evt => {
         const d = new Date(evt.date);
         const img = getEventImage(evt.id, '/images/events/live-2026-01-31.webp');
-        const slug = reportMap[evt.date] || evt.date;
         return (
-          <a key={evt.id} href={'/news/' + slug} className="card group">
+          <a key={evt.id} href={'/schedule/' + evt.id} className="card group">
             <div className="aspect-[16/9] overflow-hidden bg-gray-100 dark:bg-gray-800">
               <img src={img} alt={evt.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
             </div>

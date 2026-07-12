@@ -1,11 +1,13 @@
 /**
- * GET  /api/events        — 公开：全部日程（按日期降序），客户端自行分组
- * GET  /api/events?all=1 — 管理：同公开（当前无隐藏字段，保留接口一致），需 ADMIN_CODE
- * POST /api/events        — 新建，需 ADMIN_CODE（id 必填）
- * PUT  /api/events        — 修改，需 ADMIN_CODE
- * DELETE /api/events      — 删除，需 ADMIN_CODE
+ * GET  /api/events          — 公开：全部日程（按日期降序）
+ * GET  /api/events?id=xxx   — 公开：单条日程（含 body 日程详情）
+ * GET  /api/events?all=1    — 管理：同公开（保留接口一致），需 ADMIN_CODE
+ * POST /api/events          — 新建，需 ADMIN_CODE（id 必填）
+ * PUT  /api/events          — 修改，需 ADMIN_CODE
+ * DELETE /api/events        — 删除，需 ADMIN_CODE
  *
  * 表 events 由本接口首次请求时自动创建并播种（无需手动 migration）。
+ * body 字段存「日程详情」Markdown 正文。
  */
 
 const DDL = `CREATE TABLE IF NOT EXISTS events (
@@ -17,6 +19,7 @@ const DDL = `CREATE TABLE IF NOT EXISTS events (
   performers TEXT NOT NULL DEFAULT '[]',
   status TEXT NOT NULL DEFAULT 'upcoming',
   image TEXT,
+  body TEXT,
   created_at TEXT NOT NULL
 );`;
 
@@ -33,11 +36,115 @@ const SEED = [
   { id: 'live-2026-07-04', date: '2026-07-04', time: '', title: 'Nez Fes Vol.1 -初晴の約束 真夏の約束-（白菜生日SP）', venue: '南宁·PinkNoises Live（会展动漫城）', performers: ['hakusai','kumo','yuzi'], status: 'past' },
 ];
 
+// 旧 news/*.md 正文迁移：key = 事件 id，value = Markdown 正文
+// 仅回填到 body 为空的行，不会覆盖后台已编辑的内容。
+const SEED_BODIES = {
+  'live-2026-01-25': `## 01.25 Sunday Candy Vol.03 活动结算
+
+【Sunday Candy Vol.03】广州首演！
+
+**歌单：**
+00. SE - Gleams
+01. 《私、シンデレラ》- ワガママなラストノート
+02. 《可愛いって言われたい》- 高嶺のなでしこ
+MC
+03. 《Summer Darling》- 昼食彼女 Lunch Girls
+
+👑 成员：白菜、云团、柚子、黄鱼鱼`,
+  'live-2026-01-31': `## 01.31 第一届 Comic Expo 国风动漫展 活动结算
+
+【南宁·第一届 Comic Expo 国风动漫展】
+
+**歌单：**
+00. SE - Gleams
+01. 《可愛いって言われたい》- 高嶺のなでしこ
+02. 《心型病毒》- TSH48
+03. 《Summer Darling》- 昼食彼女 Lunch Girls
+
+👑 成员：白菜、云团、柚子`,
+  'live-2026-02-15': `## 02.15 桂平·ACG 第七届动漫新年盛典 活动结算
+
+年前最后一场封箱演出，每张特典卷获成员手写新年祝福贺卡。
+
+**歌单：**
+00. SE - Gleams
+01. 《下课铃声》- SNH48
+02. 《心型病毒》- TSH48
+03. 《Summer Darling》- 昼食彼女 Lunch Girls
+
+👑 成员：白菜、云团、柚子、黄鱼鱼`,
+  'live-2026-02-23': `## 02.23 Akatsuki Idol Party Vol.24 ~ アイドル新年会 ~ 活动结算
+
+2026年开箱演出！
+
+**歌单：**
+00. SE - Gleams
+01. 《ロマンティックガール》- ZUTTOMOTTO
+02. 《可愛いって言われたい》- 高嶺のなでしこ
+03. 《Summer Darling》- 昼食彼女 Lunch Girls
+
+👑 成员：💛💙💚`,
+  'live-2026-03-14': `## 03.14 SUMMERL∞P MINI FES 活动结算
+
+白色情人节特别公演「白情与公主有个约会」！
+
+**歌单：**
+00. SE - Gleams
+01. 《ロマンティックガール》- ZUTTOMOTTO
+02. 《可愛いって言われたい》- 高嶺のなでしこ
+03. 《Summer Darling》- 昼食彼女 Lunch Girls
+
+👑 成员：💛💙💚`,
+  'live-2026-03-28': `## 03.28 Akatsuki Idol Party Vol.25 活动结算
+
+JK 盛夏服新衣装披露！
+
+**歌单：**
+00. SE - Gleams
+01. 《ロマンティックガール》- ZUTTOMOTTO
+02. 《可愛いって言われたい》- 高嶺のなでしこ
+03. 《Summer Darling》- 昼食彼女 Lunch Girls
+04. 《下课铃声》- SNH48
+
+👑 成员：💛💙💚`,
+  'live-2026-04-26': `## 04.26 Puppy Club First Anniversary 活动结算
+
+西芭公式服1.0！
+
+**歌单：**
+00. SE - Gleams
+01. 《ロマンティックガール》- ZUTTOMOTTO
+02. 《可愛いって言われたい》- 高嶺のなでしこ
+03. 《Summer Darling》- 昼食彼女 Lunch Girls
+04. 《下课铃声》- SNH48
+
+👑 成员：💛💙💚`,
+  'live-2026-05-16': `## 05.16 五碳糖 FES3.0 ~初夏の宴~ 活动结算
+
+女仆装主题演出！
+
+**歌单：**
+00. SE - Gleams
+01. 《ロマンティックガール》- ZUTTOMOTTO
+02. 《可愛いって言われたい》- 高嶺のなでしこ
+03. 《下课铃声》- SNH48
+04. 《Kawaii Kaiwai》- Piki
+
+👑 成员：💛💙💚`,
+  'live-2026-07-04': `## 07.04 Nez Fes Vol.1 -初晴の約束 真夏の約束- 活动结算
+
+感谢大家在台风天也努力奔赴来为我们白菜 Hakusai 庆祝生日🎂，大家都辛苦了！
+
+新衣装「白雪云」首次披露，蓝白色赛高！
+
+👑 成员：💛💙💚`,
+};
+
 async function ensureTable(env) {
   await env.DB.prepare(DDL).run();
-  // 旧表补 image 列（部署前已存在 events 表时）
+  // 旧表补 body 列（部署前已存在 events 表时）
   try {
-    await env.DB.prepare('ALTER TABLE events ADD COLUMN image TEXT').run();
+    await env.DB.prepare('ALTER TABLE events ADD COLUMN body TEXT').run();
   } catch (e) { /* 列已存在则忽略 */ }
   try {
     const { results } = await env.DB.prepare('SELECT COUNT(*) AS c FROM events').all();
@@ -45,14 +152,25 @@ async function ensureTable(env) {
       for (const e of SEED) {
         await env.DB
           .prepare(
-            `INSERT INTO events (id,date,time,title,venue,performers,status,image,created_at)
-             VALUES (?,?,?,?,?,?,?,?,?)`
+            `INSERT INTO events (id,date,time,title,venue,performers,status,image,body,created_at)
+             VALUES (?,?,?,?,?,?,?,?,?,?)`
           )
-          .bind(e.id, e.date, e.time || '', e.title, e.venue || '', JSON.stringify(e.performers || []), e.status || 'past', String(e.image || ''), new Date().toISOString())
+          .bind(e.id, e.date, e.time || '', e.title, e.venue || '', JSON.stringify(e.performers || []), e.status || 'past', '', SEED_BODIES[e.id] || '', new Date().toISOString())
           .run();
       }
+    } else {
+      // 已存在数据的表：仅当存在 body 为空的行时才回填旧 news 正文（避免无谓写、不覆盖后台编辑）
+      const { results: emptyRows } = await env.DB.prepare("SELECT COUNT(*) AS c FROM events WHERE body IS NULL OR body = ''").all();
+      if (emptyRows[0] && emptyRows[0].c > 0) {
+        for (const [id, body] of Object.entries(SEED_BODIES)) {
+          await env.DB
+            .prepare('UPDATE events SET body = ? WHERE id = ? AND (body IS NULL OR body = \'\')')
+            .bind(body, id)
+            .run();
+        }
+      }
     }
-  } catch (e) { console.error('[events] seed failed:', e.message); }
+  } catch (e) { console.error('[events] seed/backfill failed:', e.message); }
 }
 
 async function withTable(env, fn) {
@@ -87,6 +205,15 @@ export async function onRequest(context) {
 async function listEvents(request, env) {
   const url = new URL(request.url);
   const all = url.searchParams.get('all') === '1';
+
+  // 单条查询（含 body 日程详情）
+  const id = url.searchParams.get('id');
+  if (id) {
+    const { results } = await env.DB.prepare('SELECT * FROM events WHERE id = ?').bind(id).all();
+    if (!results.length) return json({ error: '未找到该日程' }, 404);
+    return json(parseEvent(results[0]));
+  }
+
   if (all && !adminOk(request, env)) return json({ error: '无权限' }, 403);
   const { results } = await env.DB.prepare('SELECT * FROM events ORDER BY date DESC, id DESC').all();
   results.forEach(parseEvent);
@@ -104,11 +231,12 @@ async function createEvent(request, env) {
     const performers = Array.isArray(b.performers) ? b.performers : [];
     await env.DB
       .prepare(
-        `INSERT INTO events (id,date,time,title,venue,performers,status,image,created_at)
-         VALUES (?,?,?,?,?,?,?,?,?)`
+        `INSERT INTO events (id,date,time,title,venue,performers,status,image,body,created_at)
+         VALUES (?,?,?,?,?,?,?,?,?,?)`
       )
       .bind(id, String(b.date), String(b.time || '').slice(0, 10), title, String(b.venue || '').slice(0, 80),
-        JSON.stringify(performers), b.status === 'upcoming' || b.status === 'past' ? b.status : 'upcoming', String(b.image || '').slice(0, 255), new Date().toISOString())
+        JSON.stringify(performers), b.status === 'upcoming' || b.status === 'past' ? b.status : 'upcoming',
+        String(b.image || '').slice(0, 255), String(b.body || '').slice(0, 20000), new Date().toISOString())
       .run();
     return json({ ok: true, id });
   } catch (e) {
@@ -132,6 +260,7 @@ async function putEvent(request, env) {
     if (b.performers !== undefined) { sets.push('performers = ?'); binds.push(JSON.stringify(Array.isArray(b.performers) ? b.performers : [])); }
     if (b.status !== undefined) { sets.push('status = ?'); binds.push(b.status === 'upcoming' || b.status === 'past' ? b.status : 'upcoming'); }
     if (b.image !== undefined) { sets.push('image = ?'); binds.push(String(b.image || '').slice(0, 255)); }
+    if (b.body !== undefined) { sets.push('body = ?'); binds.push(String(b.body || '').slice(0, 20000)); }
     if (sets.length === 0) return json({ ok: true });
     binds.push(id);
     await env.DB.prepare(`UPDATE events SET ${sets.join(', ')} WHERE id = ?`).bind(...binds).run();

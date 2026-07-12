@@ -344,3 +344,45 @@ body::after {
   * { -webkit-tap-highlight-color: transparent; }
   input, textarea, button { font-size: 16px !important; }
 }
+
+/* ===== 日程详情正文排版（无 typography 插件，手写基础样式） ===== */
+.event-detail {
+  color: var(--text);
+  line-height: 1.85;
+  font-size: 0.95rem;
+}
+.event-detail > :first-child { margin-top: 0; }
+.event-detail h2 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-strong);
+  margin: 1.6rem 0 0.8rem;
+}
+.event-detail h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-strong);
+  margin: 1.3rem 0 0.6rem;
+}
+.event-detail p { margin: 0.75rem 0; }
+.event-detail strong { font-weight: 700; color: var(--text-strong); }
+.event-detail em { font-style: italic; }
+.event-detail ul,
+.event-detail ol { margin: 0.75rem 0; padding-left: 1.5rem; }
+.event-detail ul { list-style: disc; }
+.event-detail ol { list-style: decimal; }
+.event-detail li { margin: 0.3rem 0; }
+.event-detail a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+.event-detail img { border-radius: 1rem; margin: 1rem 0; max-width: 100%; }
+.event-detail blockquote {
+  border-left: 3px solid var(--accent-line);
+  padding-left: 1rem;
+  margin: 1rem 0;
+  color: var(--text-soft);
+}
+.event-detail code {
+  background: var(--accent-soft);
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.4rem;
+  font-size: 0.85em;
+}

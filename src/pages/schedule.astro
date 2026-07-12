@@ -2,16 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import scheduleData from '../data/schedule.json';
 import membersData from '../data/members.json';
-import { eventReportEntries } from '../utils/eventReports';
 import ScheduleList from '../components/ScheduleList';
-
-const reportMap: Record<string, string> = {};
-for (const { slug, report } of eventReportEntries) {
-  const d = report.frontmatter.date;
-  const dt = d instanceof Date ? d : new Date(d);
-  const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
-  reportMap[key] = slug;
-}
 ---
 
 <BaseLayout title="日程">
@@ -21,6 +12,6 @@ for (const { slug, report } of eventReportEntries) {
       <h1 class="section-title">日程</h1>
     </div>
 
-    <ScheduleList client:load initial={scheduleData.events} initialMembers={membersData.members} reportMap={reportMap} />
+    <ScheduleList client:load initial={scheduleData.events} initialMembers={membersData.members} />
   </section>
 </BaseLayout>

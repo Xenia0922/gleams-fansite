@@ -4,21 +4,12 @@ import HeroTitle from '../components/HeroTitle.astro';
 import site from '../data/site.json';
 import members from '../data/members.json';
 import schedule from '../data/schedule.json';
-import { eventReportEntries } from '../utils/eventReports';
 import HomeMembers from '../components/HomeMembers';
 import HomeEvents from '../components/HomeEvents';
 import { SiteSocial, LiveLink, SiteMeta } from '../components/SiteBits';
 
 const activeMembers = members.members.filter((m: any) => m.status !== 'graduated');
 const pastEvents = schedule.events.filter((e: any) => e.status === 'past').reverse().slice(0, 4);
-
-const reportMap: Record<string, string> = {};
-for (const { slug, report } of eventReportEntries) {
-  const d = report.frontmatter.date;
-  const dt = d instanceof Date ? d : new Date(d);
-  const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
-  reportMap[key] = slug;
-}
 ---
 
 <BaseLayout>
@@ -53,7 +44,7 @@ for (const { slug, report } of eventReportEntries) {
         <p class="section-title-en">✦</p>
         <h2 class="section-title">过往行程</h2>
       </div>
-      <HomeEvents client:load initial={pastEvents} reportMap={reportMap} />
+      <HomeEvents client:load initial={pastEvents} />
       <div class="text-center mt-8">
         <a href="/schedule" class="btn-outline text-xs sm:text-sm">查看完整日程 →</a>
       </div>

@@ -1,19 +1,4 @@
-import { defineCollection, z } from 'astro:content';
+import { defineCollection } from 'astro:content';
 
-const eventReportsCollection = defineCollection({
-  type: 'content',
-  schema: z.object({
-    title: z.string(),
-    titleCN: z.string().optional(),
-    date: z.date(),
-    author: z.string().optional(),
-    image: z.string().optional(),
-    excerpt: z.string().optional(),
-    tags: z.array(z.string()).optional().default([]),
-  }),
-});
-
-export const collections = {
-  // Keep the collection key as "news" because the existing content directory and public URLs use /news.
-  news: eventReportsCollection,
-};
+// 新闻已合并进 events 表（body 字段 = 日程详情），不再使用 content 集合。
+export const collections = {};

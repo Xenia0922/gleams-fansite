@@ -21,11 +21,9 @@ interface Member {
 export default function ScheduleList({
   initial,
   initialMembers,
-  reportMap,
 }: {
   initial: EventRow[];
   initialMembers: Member[];
-  reportMap: Record<string, string>;
 }) {
   const [events, setEvents] = useState<EventRow[]>(initial || []);
   const [members, setMembers] = useState<Member[]>(initialMembers || []);
@@ -71,11 +69,10 @@ export default function ScheduleList({
               const d = new Date(evt.date);
               const isPast = evt.status === 'past';
               const img = evt.image || getEventImage(evt.id);
-              const slug = reportMap[evt.date] || evt.date;
               return (
                 <a
                   key={evt.id}
-                  href={'/news/' + slug}
+                  href={'/schedule/' + evt.id}
                   className={
                     'flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-3xl transition-opacity group ' +
                     (isPast ? 'opacity-65 hover:opacity-100 glass' : 'frost-card shadow-md')

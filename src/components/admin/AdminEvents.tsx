@@ -10,6 +10,7 @@ interface EventRow {
   performers?: string[];
   status?: string;
   image?: string;
+  body?: string;
 }
 
 const MEMBER_OPTS = [
@@ -125,6 +126,16 @@ export default function AdminEvents({ code }: { code: string }) {
         <label className="block">
           <span className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">地点</span>
           <input value={form.venue || ''} onChange={e => set('venue', e.target.value)} className={INPUT} />
+        </label>
+        <label className="block sm:col-span-2">
+          <span className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">日程详情（支持 Markdown，活动结算 / 歌单等）</span>
+          <textarea
+            value={form.body || ''}
+            onChange={e => set('body', e.target.value)}
+            rows={10}
+            placeholder={"## 标题\n\n正文…（**加粗**、列表、- 项目符号 均支持）"}
+            className={INPUT + ' font-mono resize-y leading-relaxed'}
+          />
         </label>
         <label className="block sm:col-span-2">
           <span className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">活动图片（海报 / 现场图）</span>
