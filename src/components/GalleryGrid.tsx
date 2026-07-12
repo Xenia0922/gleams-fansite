@@ -1,13 +1,17 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import ImageLightboxOverlay from './ImageLightboxOverlay';
 
-// 画廊页为纯展示：只读取 /api/gallery 返回的 gallery_photos（后台独立维护的快照），
-// 前台不提供任何上传/删除入口——编辑全部在后台「画廊」Tab 进行，粉丝投稿请去广场。
 interface Photo {
   id: string;
   url: string;
   member: string;
-  featured?: number;
+}
+
+interface FanPhoto {
+  key: string;
+  url: string;
+  thumbUrl?: string | null;
+  member?: string;
 }
 
 const META: Record<string, { name: string; emoji: string; color: string }> = {
@@ -16,40 +20,45 @@ const META: Record<string, { name: string; emoji: string; color: string }> = {
   yuzi: { name: '柚子', emoji: '💚', color: '#48D1A0' },
 };
 
-// 精选卡片渐变色（按成员）
-const FEATURED_ACCENT: Record<string, string> = {
-  hakusai: 'from-yellow-100/70 to-amber-50/40',
-  kumo: 'from-blue-100/70 to-sky-50/40',
-  yuzi: 'from-emerald-100/70 to-green-50/40',
-  __extra__: 'from-pink-100/70 to-rose-50/40',
-};
-
 export default function GalleryGrid() {
   const [filter, setFilter] = useState('all');
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
   const [photos, setPhotos] = useState<Photo[]>([]);
-  const [featured, setFeatured] = useState<Photo[]>([]);
+  const [featuredFan, setFeaturedFan] = useState<FanPhoto[]>([]);
   const [loading, setLoading] = useState(true);
 
   const reload = useCallback(async () => {
     try {
-      const res = await fetch('/api/gallery');
-      const data = await res.json();
-      if (Array.isArray(data.photos)) setPhotos(data.photos);
-      if (Array.isArray(data.featured)) setFeatured(data.featured);
+      const [galleryRes, photosRes, siteRes] = await Promise.all([
+        fetch('/api/gallery'),
+        fetch('/api/photos'),
+        fetch('/api/site'),
+      ]);
+      const galleryData = await galleryRes.json();
+      const photosData = await photosRes.json();
+      const siteData = await siteRes.json();
+
+      if (Array.isArray(galleryData.photos)) setPhotos(galleryData.photos);
+
+      // 广场返图精选：从 site_config.featured_square 取 key 列表，匹配 R2 照片
+      const featuredKeys: string[] = siteData.featured_square || [];
+      if (Array.isArray(photosData) && featuredKeys.length > 0) {
+        const keySet = new Set(featuredKeys);
+        const matched = photosData.filter((p: FanPhoto) => keySet.has(p.key));
+        setFeaturedFan(matched);
+      } else {
+        setFeaturedFan([]);
+      }
     } catch {
-      /* 离线时保留当前 */
+      /* offline */
     }
     setLoading(false);
   }, []);
 
-  useEffect(() => {
-    reload();
-  }, [reload]);
+  useEffect(() => { reload(); }, [reload]);
 
   const memberIds = useMemo(() => Object.keys(META), []);
 
-  // 按成员分组（保持 META 顺序），便于浏览与筛选
   const groups = useMemo(() => {
     const map = new Map<string, Photo[]>();
     for (const p of photos) {
@@ -103,6 +112,10 @@ export default function GalleryGrid() {
 
   const idxOf = (id: string) => visibleFlat.findIndex((p) => p.id === id);
 
+  // 精选 fan 照片的灯箱
+  const [fanLightboxIdx, setFanLightboxIdx] = useState<number | null>(null);
+  const fanLightboxImages = useMemo(() => featuredFan.map((p) => ({ src: p.url })), [featuredFan]);
+
   return (
     <>
       {/* 成员筛选按钮 */}
@@ -110,13 +123,8 @@ export default function GalleryGrid() {
         {filters.map((f) => (
           <button
             key={f.key}
-            onClick={() => {
-              setFilter(f.key);
-              setLightboxIdx(null);
-            }}
-            className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-              filter === f.key ? 'text-white shadow-md' : 'text-gray-500 bg-gray-100 hover:bg-gray-200'
-            }`}
+            onClick={() => { setFilter(f.key); setLightboxIdx(null); }}
+            className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${filter === f.key ? 'text-white shadow-md' : 'text-gray-500 bg-gray-100 hover:bg-gray-200'}`}
             style={filter === f.key ? { backgroundColor: f.color } : {}}
           >
             <span>{f.emoji}</span>
@@ -125,48 +133,35 @@ export default function GalleryGrid() {
         ))}
       </div>
 
-      {/* 骑士团精选 */}
-      {!loading && featured.length > 0 && (
+      {/* 骑士团精选 — 来自广场返图 */}
+      {!loading && featuredFan.length > 0 && (
         <div className="mb-12">
           <div className="flex items-center gap-3 mb-4">
-            <span className="text-sm font-bold text-[var(--accent)]">✨ 骑士团精选</span>
-            <span className="text-xs text-gray-400">管理员甄选 · {featured.length} 张</span>
+            <span className="text-sm font-bold text-[var(--accent)]">骑士团精选</span>
+            <span className="text-xs text-gray-400">{featuredFan.length} 张</span>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {featured.map((p) => {
-              const m = META[p.member] || { name: '其他', emoji: '⭐', color: '#e83e8c' };
-              const i = idxOf(p.id);
-              return (
-                <div
-                  key={`feat-${p.id}`}
-                  className="relative aspect-[4/5] rounded-3xl overflow-hidden glass cursor-pointer group ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-transparent"
-                  onClick={() => i >= 0 && setLightboxIdx(i)}
-                >
-                  <img
-                    src={p.url}
-                    alt=""
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    loading="lazy"
-                  />
-                  <span
-                    className="absolute bottom-2 left-2 inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-full backdrop-blur bg-white/75"
-                    style={{ color: m.color }}
-                  >
-                    {m.emoji} {m.name}
-                  </span>
-                  <span className="absolute top-2 right-2 text-[10px] bg-[var(--accent)] text-white font-bold px-2 py-0.5 rounded-full">
-                    精选
-                  </span>
-                </div>
-              );
-            })}
+            {featuredFan.map((p, i) => (
+              <div
+                key={p.key}
+                className="relative aspect-[4/5] rounded-3xl overflow-hidden glass cursor-pointer group ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-transparent"
+                onClick={() => setFanLightboxIdx(i)}
+              >
+                <img
+                  src={p.thumbUrl || p.url}
+                  alt=""
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  loading="lazy"
+                />
+              </div>
+            ))}
           </div>
         </div>
       )}
 
-      {/* 图片网格（按成员分组，纯展示） */}
+      {/* 图片网格（按成员分组） */}
       {loading ? (
-        <p className="text-center text-gray-400 py-16">加载中…</p>
+        <p className="text-center text-gray-400 py-16">加载中...</p>
       ) : (
         <div className="space-y-8">
           {groups
@@ -202,7 +197,7 @@ export default function GalleryGrid() {
                 </div>
               </div>
             ))}
-          {photos.length === 0 && <div className="text-center py-16 text-gray-400">画廊还空着，敬请期待 ✨</div>}
+          {photos.length === 0 && <div className="text-center py-16 text-gray-400">画廊还空着，敬请期待</div>}
         </div>
       )}
 
@@ -213,6 +208,16 @@ export default function GalleryGrid() {
           onClose={close}
           onPrev={prev}
           onNext={next}
+        />
+      )}
+
+      {fanLightboxIdx !== null && (
+        <ImageLightboxOverlay
+          images={fanLightboxImages}
+          currentIndex={fanLightboxIdx}
+          onClose={() => setFanLightboxIdx(null)}
+          onPrev={() => setFanLightboxIdx((i) => (i !== null ? (i - 1 + featuredFan.length) % featuredFan.length : null))}
+          onNext={() => setFanLightboxIdx((i) => (i !== null ? (i + 1) % featuredFan.length : null))}
         />
       )}
     </>

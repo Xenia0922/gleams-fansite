@@ -123,16 +123,14 @@ export async function onRequest(context) {
   if (request.method === 'GET') {
     try {
       await seedIfEmpty(env);
-      // 优先查询含 featured 列；若列尚未创建（旧表），降级为无精选字段查询
+      // 优先查询含 featured 列；若列尚未创建（旧表），降级查询
       let results;
       try {
         const { results: r } = await env.DB.prepare(
-          'SELECT id,url,member,featured FROM gallery_photos ORDER BY sort ASC, created_at ASC'
+          'SELECT id,url,member FROM gallery_photos ORDER BY sort ASC, created_at ASC'
         ).all();
         results = r;
-      } catch (colErr) {
-        // featured 列尚不存在，降级查询
-        console.warn('[gallery] featured column not found, falling back:', colErr.message);
+      } catch {
         const { results: r } = await env.DB.prepare(
           'SELECT id,url,member FROM gallery_photos ORDER BY sort ASC, created_at ASC'
         ).all();
@@ -142,11 +140,9 @@ export async function onRequest(context) {
         id: r.id,
         url: r.url,
         member: r.member || '__extra__',
-        featured: r.featured != null ? r.featured : 0,
       }));
       return json({
         photos: all,
-        featured: all.filter((p) => p.featured === 1),
         isAdmin: adminOk(request, env),
       });
     } catch (e) {
