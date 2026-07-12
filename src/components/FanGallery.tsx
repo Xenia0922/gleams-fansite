@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import ImageLightboxOverlay from './ImageLightboxOverlay';
 import { useEvents } from './useEvents';
+import { MEMBER_META, tint } from '../utils/members';
 
 interface Photo {
   key: string;
@@ -10,19 +11,6 @@ interface Photo {
   event?: string | null;
   thumbUrl?: string | null;
 }
-
-// 展示用成员元数据（含可读文字色）
-const MEMBER_META: Record<string, { emoji: string; name: string; color: string }> = {
-  hakusai: { emoji: '💛', name: '白菜', color: '#C99A00' },
-  kumo:    { emoji: '💙', name: '云团', color: '#2F6FED' },
-  yuzi:    { emoji: '💚', name: '柚子', color: '#1E9E6A' },
-  other:    { emoji: '🐙', name: '多人·其他', color: '#C2417A' },
-};
-
-const tint = (hex: string, a: number) => {
-  const n = parseInt(hex.slice(1), 16);
-  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
-};
 
 export default function FanGallery() {
   const { map } = useEvents();

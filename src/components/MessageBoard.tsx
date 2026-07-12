@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useEvents } from './useEvents';
+import { MEMBER_META, tint } from '../utils/members';
 
 const MEMBERS = [
   { id: 'hakusai', emoji: '💛', name: '白菜' },
@@ -10,20 +11,6 @@ const MEMBERS = [
 
 // 与返图发布页（FanUpload）同款下拉/输入框样式，保证两套表单视觉一致
 const selCls = 'w-full px-4 py-2 rounded-full text-sm text-center bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 outline-none focus:border-[var(--accent)] transition-colors';
-
-// 展示用成员元数据（含可读文字色，避免亮金/亮绿在浅底上糊）
-const MEMBER_META: Record<string, { emoji: string; name: string; color: string }> = {
-  hakusai: { emoji: '💛', name: '白菜', color: '#C99A00' },
-  kumo:    { emoji: '💙', name: '云团', color: '#2F6FED' },
-  yuzi:    { emoji: '💚', name: '柚子', color: '#1E9E6A' },
-  other:    { emoji: '⭐', name: '多人·其他', color: '#C2417A' },
-};
-
-// #RRGGBB → rgba(...)
-const tint = (hex: string, a: number) => {
-  const n = parseInt(hex.slice(1), 16);
-  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
-};
 
 interface Message {
   id: string;

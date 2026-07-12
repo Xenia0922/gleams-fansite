@@ -9,6 +9,8 @@
  * 表 members 由本接口首次请求时自动创建并播种（无需手动 migration）。
  */
 
+import { adminOk, json, withTable } from '../_shared.js';
+
 const DDL = `CREATE TABLE IF NOT EXISTS members (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
@@ -59,18 +61,6 @@ async function ensureTable(env) {
   } catch (e) { console.error('[members] seed failed:', e.message); }
 }
 
-async function withTable(env, fn) {
-  try { return await fn(); }
-  catch (e) {
-    if (/no such table/i.test(e.message || '')) { await ensureTable(env); return await fn(); }
-    throw e;
-  }
-}
-
-function adminOk(request, env) {
-  return (request.headers.get('x-admin-code') || '') === env.ADMIN_CODE;
-}
-
 function parseMember(row) {
   if (!row) return row;
   try { row.gallery = JSON.parse(row.gallery || '[]'); } catch { row.gallery = []; }
@@ -81,10 +71,10 @@ export async function onRequest(context) {
   const { request, env } = context;
   try { await ensureTable(env); } catch (e) { console.error('[members] ensureTable error:', e.message); }
 
-  if (request.method === 'GET') return withTable(env, () => listMembers(request, env));
-  if (request.method === 'POST') return withTable(env, () => createMember(request, env));
-  if (request.method === 'PUT') return withTable(env, () => putMember(request, env));
-  if (request.method === 'DELETE') return withTable(env, () => deleteMember(request, env));
+  if (request.method === 'GET') return withTable(env, ensureTable, () => listMembers(request, env));
+  if (request.method === 'POST') return withTable(env, ensureTable, () => createMember(request, env));
+  if (request.method === 'PUT') return withTable(env, ensureTable, () => putMember(request, env));
+  if (request.method === 'DELETE') return withTable(env, ensureTable, () => deleteMember(request, env));
   return new Response('Method not allowed', { status: 405 });
 }
 
@@ -172,6 +162,3 @@ async function deleteMember(request, env) {
   } catch (e) { return json({ error: e.message }, 500); }
 }
 
-function json(data, status = 200) {
-  return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
-}

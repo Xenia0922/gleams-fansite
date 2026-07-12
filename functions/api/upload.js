@@ -5,6 +5,8 @@
  *   图片经由现有 /api/photos?key= 提供访问（任意 key 均可 serve）。
  */
 
+import { json } from '../_shared.js';
+
 export async function onRequest(context) {
   const { request, env } = context;
   if (request.method !== 'POST') return json('Method not allowed', 405);
@@ -39,6 +41,3 @@ export async function onRequest(context) {
   }
 }
 
-function json(data, status = 200) {
-  return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
-}

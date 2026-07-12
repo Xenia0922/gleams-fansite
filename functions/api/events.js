@@ -10,6 +10,8 @@
  * body 字段存「日程详情」Markdown 正文。
  */
 
+import { adminOk, json, withTable } from '../_shared.js';
+
 const DDL = `CREATE TABLE IF NOT EXISTS events (
   id TEXT PRIMARY KEY,
   date TEXT NOT NULL,
@@ -186,18 +188,6 @@ async function ensureTable(env) {
   } catch (e) { console.error('[events] seed/backfill failed:', e.message); }
 }
 
-async function withTable(env, fn) {
-  try { return await fn(); }
-  catch (e) {
-    if (/no such table/i.test(e.message || '')) { await ensureTable(env); return await fn(); }
-    throw e;
-  }
-}
-
-function adminOk(request, env) {
-  return (request.headers.get('x-admin-code') || '') === env.ADMIN_CODE;
-}
-
 function parseEvent(row) {
   if (!row) return row;
   try { row.performers = JSON.parse(row.performers || '[]'); } catch { row.performers = []; }
@@ -208,10 +198,10 @@ export async function onRequest(context) {
   const { request, env } = context;
   try { await ensureTable(env); } catch (e) { console.error('[events] ensureTable error:', e.message); }
 
-  if (request.method === 'GET') return withTable(env, () => listEvents(request, env));
-  if (request.method === 'POST') return withTable(env, () => createEvent(request, env));
-  if (request.method === 'PUT') return withTable(env, () => putEvent(request, env));
-  if (request.method === 'DELETE') return withTable(env, () => deleteEvent(request, env));
+  if (request.method === 'GET') return withTable(env, ensureTable, () => listEvents(request, env));
+  if (request.method === 'POST') return withTable(env, ensureTable, () => createEvent(request, env));
+  if (request.method === 'PUT') return withTable(env, ensureTable, () => putEvent(request, env));
+  if (request.method === 'DELETE') return withTable(env, ensureTable, () => deleteEvent(request, env));
   return new Response('Method not allowed', { status: 405 });
 }
 
@@ -291,6 +281,3 @@ async function deleteEvent(request, env) {
   } catch (e) { return json({ error: e.message }, 500); }
 }
 
-function json(data, status = 200) {
-  return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
-}

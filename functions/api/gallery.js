@@ -14,6 +14,8 @@
  * 表 gallery_photos / gallery_meta 由本接口首次请求时自动创建（无需手动 migration）。
  */
 
+import { adminOk, json } from '../_shared.js';
+
 const DDL = `
 CREATE TABLE IF NOT EXISTS gallery_photos (
   id TEXT PRIMARY KEY,
@@ -27,17 +29,6 @@ CREATE TABLE IF NOT EXISTS gallery_meta (
   value TEXT
 );
 `;
-
-function json(data, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { 'Content-Type': 'application/json' },
-  });
-}
-
-function adminOk(request, env) {
-  return (request.headers.get('x-admin-code') || '') === env.ADMIN_CODE;
-}
 
 function parseGallery(v) {
   try {

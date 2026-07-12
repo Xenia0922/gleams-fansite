@@ -5,6 +5,8 @@
  * 表 site_config 为 key-value，首次请求自动建表并播种（来自 site.json + 关于/特典 硬编码文案）。
  */
 
+import { adminOk, json, withTable } from '../_shared.js';
+
 const DDL = `CREATE TABLE IF NOT EXISTS site_config (
   key TEXT PRIMARY KEY,
   value TEXT
@@ -54,18 +56,6 @@ async function ensureTable(env) {
   } catch (e) { console.error('[site] seed failed:', e.message); }
 }
 
-async function withTable(env, fn) {
-  try { return await fn(); }
-  catch (e) {
-    if (/no such table/i.test(e.message || '')) { await ensureTable(env); return await fn(); }
-    throw e;
-  }
-}
-
-function adminOk(request, env) {
-  return (request.headers.get('x-admin-code') || '') === env.ADMIN_CODE;
-}
-
 const JSON_KEYS = new Set(['tokuten_rules', 'tokuten_images']);
 
 async function loadConfig(env) {
@@ -85,8 +75,8 @@ export async function onRequest(context) {
   const { request, env } = context;
   try { await ensureTable(env); } catch (e) { console.error('[site] ensureTable error:', e.message); }
 
-  if (request.method === 'GET') return withTable(env, async () => json(await loadConfig(env)));
-  if (request.method === 'PUT') return withTable(env, () => updateConfig(request, env));
+  if (request.method === 'GET') return withTable(env, ensureTable, async () => json(await loadConfig(env)));
+  if (request.method === 'PUT') return withTable(env, ensureTable, () => updateConfig(request, env));
   return new Response('Method not allowed', { status: 405 });
 }
 
@@ -105,6 +95,3 @@ async function updateConfig(request, env) {
   } catch (e) { return json({ error: e.message }, 500); }
 }
 
-function json(data, status = 200) {
-  return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
-}

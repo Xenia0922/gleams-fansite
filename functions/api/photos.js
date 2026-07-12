@@ -6,6 +6,7 @@
  */
 
 import { rateAllow, rateLog } from './_rate.js';
+import { adminOk, json } from '../_shared.js';
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -28,10 +29,6 @@ export async function onRequest(context) {
   }
 
   return new Response('Method not allowed', { status: 405 });
-}
-
-function adminOk(request, env) {
-  return (request.headers.get('x-admin-code') || '') === env.ADMIN_CODE;
 }
 
 const THUMB_SUFFIX = '_thumb';
@@ -170,6 +167,3 @@ async function deletePhoto(request, env) {
   }
 }
 
-function json(data, status = 200) {
-  return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
-}

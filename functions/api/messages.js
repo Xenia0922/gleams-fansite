@@ -4,6 +4,8 @@
  * DELETE /api/messages — 删除留言（需 ADMIN_CODE）
  */
 
+import { adminOk, json } from '../_shared.js';
+
 export async function onRequest(context) {
   const { request, env } = context;
   // 旧手动建表补 event 列（幂等，仅首次执行）
@@ -13,10 +15,6 @@ export async function onRequest(context) {
   if (request.method === 'PUT') return editMessage(request, env);
   if (request.method === 'DELETE') return deleteMessage(request, env);
   return new Response('Method not allowed', { status: 405 });
-}
-
-function adminOk(request, env) {
-  return (request.headers.get('x-admin-code') || '') === env.ADMIN_CODE;
 }
 
 // messages 表为手动建表，这里补 event 列（部署前已存在的旧表兼容）
@@ -107,6 +105,3 @@ async function deleteMessage(request, env) {
   }
 }
 
-function json(data, status = 200) {
-  return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
-}

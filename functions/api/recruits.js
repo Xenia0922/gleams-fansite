@@ -9,6 +9,8 @@
  * 无需在 Cloudflare 控制台手动执行 migration。
  */
 
+import { adminOk, json, withTable } from '../_shared.js';
+
 const DDL = `CREATE TABLE IF NOT EXISTS recruits (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   title TEXT NOT NULL,
@@ -50,30 +52,14 @@ async function ensureTable(env) {
   } catch (e) { console.error('[recruits] seed failed:', e.message); }
 }
 
-// 表不存在时自动建表并重试一次，避免首请求直接 500
-async function withTable(env, fn) {
-  try { return await fn(); }
-  catch (e) {
-    if (/no such table/i.test(e.message || '')) {
-      await ensureTable(env);
-      return await fn();
-    }
-    throw e;
-  }
-}
-
 export async function onRequest(context) {
   const { request, env } = context;
   try { await ensureTable(env); } catch (e) { console.error('[recruits] ensureTable error:', e.message); }
-  if (request.method === 'GET') return withTable(env, () => listRecruits(request, env));
-  if (request.method === 'POST') return withTable(env, () => createRecruit(request, env));
-  if (request.method === 'PUT') return withTable(env, () => putRecruit(request, env));
-  if (request.method === 'DELETE') return withTable(env, () => deleteRecruit(request, env));
+  if (request.method === 'GET') return withTable(env, ensureTable, () => listRecruits(request, env));
+  if (request.method === 'POST') return withTable(env, ensureTable, () => createRecruit(request, env));
+  if (request.method === 'PUT') return withTable(env, ensureTable, () => putRecruit(request, env));
+  if (request.method === 'DELETE') return withTable(env, ensureTable, () => deleteRecruit(request, env));
   return new Response('Method not allowed', { status: 405 });
-}
-
-function adminOk(request, env) {
-  return (request.headers.get('x-admin-code') || '') === env.ADMIN_CODE;
 }
 
 async function listRecruits(request, env) {
@@ -198,11 +184,4 @@ async function deleteRecruit(request, env) {
   } catch (e) {
     return json({ error: e.message }, 500);
   }
-}
-
-function json(data, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { 'Content-Type': 'application/json' },
-  });
 }
