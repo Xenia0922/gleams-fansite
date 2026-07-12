@@ -36,19 +36,19 @@ export default function AboutContent({ siteName, initial }: { siteName: string; 
 
   return (
     <>
-      <div className="card p-8 mb-8">
+      <div className="card p-8 mb-8" data-reveal style={{ ['--reveal-delay' as any]: '0ms' }}>
         <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">✦ 世界观</h2>
         <blockquote className="text-gray-600 dark:text-gray-400 leading-relaxed italic border-l-4 border-pink-300 pl-4">
           {cfg.about_worldview}
         </blockquote>
       </div>
 
-      <div className="card p-8 mb-8">
+      <div className="card p-8 mb-8" data-reveal style={{ ['--reveal-delay' as any]: '70ms' }}>
         <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">✦ {siteName}</h2>
         <p className="text-gray-600 leading-relaxed mb-4">{cfg.about_intro}</p>
       </div>
 
-      <div className="card p-8 mb-8">
+      <div className="card p-8 mb-8" data-reveal style={{ ['--reveal-delay' as any]: '140ms' }}>
         <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">✦ 支持公主</h2>
         <div className="grid grid-cols-2 gap-4 text-center">
           <div className="rounded-3xl p-4 backdrop-blur-sm bg-white/30 dark:bg-white/[0.02] flex flex-col items-center">
@@ -64,7 +64,7 @@ export default function AboutContent({ siteName, initial }: { siteName: string; 
         </div>
       </div>
 
-      <div className="card p-8 text-center">
+      <div className="card p-8 text-center" data-reveal style={{ ['--reveal-delay' as any]: '210ms' }}>
         <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-6">✦ 关注 Gleams</h2>
         <SiteSocial variant="buttons" />
       </div>

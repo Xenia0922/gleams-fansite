@@ -27,12 +27,21 @@ export default function TokutenContent({ initial }: { initial: Cfg }) {
   return (
     <>
       {images.map((img, i) => (
-        <div className="card overflow-hidden mb-8" key={i}>
+        <div
+          className="card overflow-hidden mb-8"
+          key={i}
+          data-reveal
+          style={{ ['--reveal-delay' as any]: `${i * 70}ms` }}
+        >
           <img src={img} alt="物贩详情/集章细则" className="w-full" loading="lazy" />
         </div>
       ))}
 
-      <div className="card p-8 mb-8">
+      <div
+        className="card p-8 mb-8"
+        data-reveal
+        style={{ ['--reveal-delay' as any]: `${images.length * 70}ms` }}
+      >
         <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">✦ 文字规则</h2>
         <ol className="space-y-3">
           {rules.map((rule, i) => (
