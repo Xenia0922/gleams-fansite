@@ -78,7 +78,7 @@ export default function MembersList({ initial }: { initial: Member[] }) {
         <div className="border-t border-gray-100 dark:border-gray-800 pt-10">
           <p className="text-xs font-bold text-gray-400 tracking-widest text-center mb-5" data-reveal>已毕业</p>
           <div className="grid grid-cols-3 gap-4 sm:gap-6">
-            {graduated.map((m, i) => <Card key={m.id} m={m} index={i + 100} />)}
+            {graduated.map((m, i) => <Card key={m.id} m={m} index={i + active.length} />)}
           </div>
         </div>
       )}
