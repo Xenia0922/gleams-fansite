@@ -85,8 +85,6 @@ export default function ScheduleList({ initial }: { initial?: ScheduleEvent[] })
       <a
         key={evt.id}
         href={'/schedule/' + evt.id}
-        data-reveal
-        style={{ ['--reveal-delay' as any]: `${i * 70}ms` }}
         className={`card group flex flex-col ${isPast ? 'opacity-90 hover:opacity-100' : ''}`}
       >
         <div className="aspect-[16/9] overflow-hidden bg-gray-100 dark:bg-gray-800">
@@ -156,7 +154,7 @@ export default function ScheduleList({ initial }: { initial?: ScheduleEvent[] })
       ) : events.length === 0 ? (
         <p className="text-center text-gray-400 py-16">暂无日程</p>
       ) : (
-        <div>
+        <div className="content-enter">
           {groups.map(([month, evts]) => (
             <div key={month} className="mb-10">
               <h2 className="text-sm font-bold text-pink-500 tracking-widest mb-4">{month}</h2>

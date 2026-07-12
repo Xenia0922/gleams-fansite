@@ -93,7 +93,7 @@ export default function EventDetail({ id, event: eventProp }: EventDetailProps) 
   const d = new Date(ev.date);
 
   return (
-    <article className="max-w-3xl mx-auto px-4 py-12 md:py-16" data-reveal>
+    <article className="max-w-3xl mx-auto px-4 py-12 md:py-16 content-enter">
       <a
         href="/schedule"
         className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200 mb-6"

@@ -84,7 +84,7 @@ export default function UpcomingCountdown({ initial = [] }: { initial?: EventRow
   const ds = String(dd.getMonth() + 1).padStart(2, '0') + '-' + String(dd.getDate()).padStart(2, '0') + ' 周' + w[dd.getDay()];
 
   return (
-    <div className="frost-card p-4 text-center max-w-sm mx-auto">
+    <div className="frost-card p-4 text-center max-w-sm mx-auto content-enter">
       <div className="flex items-center justify-center gap-2 mb-1">
         <span className="text-xs font-bold text-[var(--accent)] uppercase tracking-wider">Next Live</span>
         <span className="text-xs text-gray-400">·</span>

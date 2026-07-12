@@ -192,7 +192,7 @@ export default function GalleryGrid() {
           ))}
         </div>
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-8 content-enter">
           {groups
             .filter((g) => filter === 'all' || g.id === filter)
             .map((g) => (

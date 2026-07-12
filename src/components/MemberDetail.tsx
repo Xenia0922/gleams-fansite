@@ -94,7 +94,7 @@ export default function MemberDetail({ slug, initial }: { slug?: string; initial
   const [month, day] = (member.birthday || '--').split('-');
 
   return (
-    <div className="flex flex-col md:flex-row gap-6 md:gap-10 items-center md:items-start" data-reveal>
+    <div className="flex flex-col md:flex-row gap-6 md:gap-10 items-center md:items-start content-enter">
       <div className="md:w-80 flex-shrink-0 max-w-56 md:max-w-none">
         <div className="aspect-[4/5] rounded-3xl overflow-hidden glass shadow-lg">
           {member.image ? (

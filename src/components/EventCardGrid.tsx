@@ -106,7 +106,7 @@ export default function EventCardGrid({
   if (filtered.length === 0) return <EventEmpty filter={filter} />;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 content-enter">
       {filtered.map((evt, i) => {
         const d = new Date(evt.date);
         const img = evt.image || getEventImage(evt.id, fallbackImg);
@@ -114,8 +114,6 @@ export default function EventCardGrid({
           <a
             key={evt.id}
             href={'/schedule/' + evt.id}
-            data-reveal
-            style={{ ['--reveal-delay' as any]: `${i * 70}ms` }}
             className="card group"
           >
             <div className="aspect-[16/9] overflow-hidden bg-gray-100 dark:bg-gray-800">

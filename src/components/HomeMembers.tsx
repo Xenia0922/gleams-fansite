@@ -59,7 +59,8 @@ export default function HomeMembers({ initial }: { initial: Member[] }) {
           <div key={i} className="text-center">
             <Skeleton className="aspect-[4/5] rounded-3xl mb-3" />
             <Skeleton className="h-4 w-16 mx-auto rounded-full mb-2" />
-            <Skeleton className="h-3 w-12 mx-auto rounded-full" />
+            <Skeleton className="h-3 w-12 mx-auto rounded-full mb-2" />
+            <Skeleton className="h-3 w-20 mx-auto rounded-full" />
           </div>
         ))}
       </div>
@@ -67,13 +68,11 @@ export default function HomeMembers({ initial }: { initial: Member[] }) {
   }
 
   return (
-    <div className="grid grid-cols-3 gap-4 sm:gap-6">
+    <div className="grid grid-cols-3 gap-4 sm:gap-6 content-enter">
       {active.map((m, i) => (
         <a
           key={m.id}
           href={`/members/detail?id=${m.id}`}
-          data-reveal
-          style={{ ['--reveal-delay' as any]: `${i * 70}ms` }}
           className="group block text-center transition-transform duration-300 group-hover:-translate-y-1"
         >
           <div className="aspect-[4/5] rounded-3xl overflow-hidden mb-3 glass shadow-md group-hover:shadow-lg transition-shadow">

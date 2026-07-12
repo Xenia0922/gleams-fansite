@@ -343,7 +343,7 @@ body::after {
 .skeleton {
   position: relative;
   overflow: hidden;
-  background: color-mix(in srgb, var(--accent) 8%, rgba(140, 132, 170, 0.14));
+  background: color-mix(in srgb, var(--accent) 9%, rgba(140, 132, 170, 0.13));
   border-radius: var(--radius-sm);
 }
 .skeleton::after {
@@ -351,18 +351,30 @@ body::after {
   position: absolute;
   inset: 0;
   transform: translateX(-100%);
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
-  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
 }
 @keyframes skeleton-shimmer { 100% { transform: translateX(100%); } }
 .dark .skeleton {
-  background: color-mix(in srgb, var(--accent) 12%, rgba(255, 255, 255, 0.06));
+  background: color-mix(in srgb, var(--accent) 14%, rgba(255, 255, 255, 0.05));
 }
 .dark .skeleton::after {
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.14), transparent);
 }
 @media (prefers-reduced-motion: reduce) {
   .skeleton::after { animation: none; }
+}
+
+/* ===== 内容入场：骨架 → 真实内容的平滑过渡（避免硬切闪烁） =====
+   统一应用于所有数据岛的正式内容容器：加载完成时内容以淡入+轻微上浮+去模糊
+   一次性浮现，与骨架屏形成连贯的视觉过渡，且尊重 prefers-reduced-motion。 */
+.content-enter { animation: content-in 0.45s var(--ease) both; }
+@keyframes content-in {
+  from { opacity: 0; transform: translateY(12px); filter: blur(4px); }
+  to   { opacity: 1; transform: translateY(0);    filter: blur(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .content-enter { animation: none; opacity: 1; transform: none; filter: none; }
 }
 
 /* ===== 全局路由加载进度条 ===== */

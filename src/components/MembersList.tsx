@@ -54,7 +54,7 @@ export default function MembersList({ initial }: { initial: Member[] }) {
   const graduated = members.filter(m => m.status === 'graduated');
 
   const Card = ({ m, index = 0 }: { m: Member; index?: number }) => (
-    <a href={`/members/detail?id=${m.id}`} data-reveal className="group block text-center" style={{ ['--reveal-delay' as any]: `${index * 70}ms` }}>
+    <a href={`/members/detail?id=${m.id}`} className="group block text-center">
       <div className="aspect-[4/5] rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800 mb-3 shadow-sm group-hover:shadow-md transition-shadow">
         {m.image ? (
           <img src={m.image} alt={m.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
@@ -85,7 +85,8 @@ export default function MembersList({ initial }: { initial: Member[] }) {
           <div key={i} className="text-center">
             <Skeleton className="aspect-[4/5] rounded-2xl mb-3" />
             <Skeleton className="h-4 w-16 mx-auto rounded-full mb-2" />
-            <Skeleton className="h-3 w-12 mx-auto rounded-full" />
+            <Skeleton className="h-3 w-12 mx-auto rounded-full mb-2" />
+            <Skeleton className="h-3 w-20 mx-auto rounded-full" />
           </div>
         ))}
       </div>
@@ -95,20 +96,20 @@ export default function MembersList({ initial }: { initial: Member[] }) {
   if (members.length === 0) return <p className="text-center text-gray-400 py-16">暂无成员</p>;
 
   return (
-    <>
-      <p className="text-xs font-bold text-pink-500 tracking-widest text-center mb-5" data-reveal>正在活动</p>
+    <div className="content-enter">
+      <p className="text-xs font-bold text-pink-500 tracking-widest text-center mb-5">正在活动</p>
       <div className="grid grid-cols-3 gap-4 sm:gap-6 mb-16">
         {active.map((m, i) => <Card key={m.id} m={m} index={i} />)}
       </div>
 
       {graduated.length > 0 && (
         <div className="border-t border-gray-100 dark:border-gray-800 pt-10">
-          <p className="text-xs font-bold text-gray-400 tracking-widest text-center mb-5" data-reveal>已毕业</p>
+          <p className="text-xs font-bold text-gray-400 tracking-widest text-center mb-5">已毕业</p>
           <div className="grid grid-cols-3 gap-4 sm:gap-6">
             {graduated.map((m, i) => <Card key={m.id} m={m} index={i + active.length} />)}
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

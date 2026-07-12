@@ -149,7 +149,7 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
   );
 
   const messageListEl = (
-    <div className="space-y-3">
+    <div className="space-y-3 content-enter">
       {visibleMessages.map(msg => (
         <div key={msg.id} className="frost-card p-4">
           <div className="flex items-center gap-2 mb-1.5">

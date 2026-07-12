@@ -103,7 +103,7 @@ export default function FanGallery() {
 
   return (
     <>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 content-enter">
         {visiblePhotos.map((p, i) => (
           <div key={p.key} className="frost-card overflow-hidden cursor-pointer group relative" onClick={() => setLightboxIdx(i)}>
             <img src={p.thumbUrl || p.url} alt="" className="w-full aspect-[4/5] object-cover group-hover:scale-105 transition-transform duration-500 lazy-blur" loading="lazy" decoding="async" onError={(e) => handleImgError(e, p.url)} />
