@@ -1,15 +1,15 @@
 /**
  * [[path]].js — catch-all 兜底。
- * 用途：日程详情页 /schedule/:id 是构建期静态产物（仅覆盖构建种子里的活动）。
- * 后台 admin 新增的活动不在构建种子中 → 没有静态文件 → Cloudflare 返 404，
- * 用户点进去会「闪一下 404」。本函数在该路径静态页缺失时，按 D1 实时数据
- * 服务端渲染一个与站点完全一致的详情页，返回 200，从而消除 404 闪现。
+ * 日程详情页 /schedule/:id 中：
+ *   - 已构建的静态详情页（构建种子里的活动）→ 由 next() 直接放行（middleware 已注入 __SSR_DATA__），最快。
+ *   - 后台 admin 新增的活动（不在构建种子、无静态文件）→ 本兜底按 D1 实时查询，复用站点外壳服务端渲染详情，返回 200，消除 404 闪现。
  *
- * 性能要点（避免慢）：
- *   - 已存在的静态详情页：next() 返回 200 HTML，直接放行（middleware 照常注入数据），零额外开销。
- *   - 静态页缺失时，next() 返回的「404 响应」本身已是带站点外壳(nav/footer/CSS)的主题化页面，
- *     直接复用它做外壳，省去一次「请求首页」的额外往返 + 其触发的中间件多次 D1 查询。
- *   - 仅做 1 次 D1 查询（取该活动）+ 轻量字符串手术，warm 路径极快。
+ * 健壮性要点（修复 Error 1101 / HTTP 500）：
+ *   - next() 在 Cloudflare 边缘对「已存在静态页」的调用可能抛异常（未捕获 → 1101/500）。
+ *     故 next() 全程用 .catch 兜底；整函数再包一层 try/catch，确保任何意外都「降级返回响应」而非抛到边缘。
+ *   - 若 next() 抛错/返回非 200 HTML，则回退动态渲染：查 D1 → 复用 next() 的 404 响应作外壳（轻量），
+ *     若连 404 响应都拿不到再回退 fetch('/') 取站点外壳；把 <main> 替换为真实详情返回 200。
+ *   - 数据库确实无此活动 → 维持 404（或 next() 异常时的兜底 404）。
  *
  * 注意：本文件为 Cloudflare Pages Functions，必须纯 JS（不可用 TS 注解）。
  */
@@ -72,43 +72,87 @@ function renderDetail(row) {
   );
 }
 
+function notFound() {
+  return new Response('Not Found', {
+    status: 404,
+    headers: { 'Content-Type': 'text/html; charset=utf-8' },
+  });
+}
+
 export async function onRequest(context) {
   const { request, env, next } = context;
-  const url = new URL(request.url);
-  const path = url.pathname.replace(/\/+$/, '');
-  const m = path.match(/^\/schedule\/([A-Za-z0-9_-]+)$/);
-  if (!m || m[1] === 'index') return next();
-
-  // 先尝试静态详情页（构建产物）。已存在的静态页直接放行，middleware 照常注入数据。
-  const resp = await next();
-  const ct = resp.headers.get('Content-Type') || '';
-  if (resp.status < 400 && ct.includes('text/html')) return resp;
-
-  // 静态页缺失 → 按 D1 实时查询
-  const id = m[1];
-  let row = null;
   try {
-    const { results } = await env.DB.prepare('SELECT * FROM events WHERE id = ?').bind(id).all();
-    row = results && results[0] ? results[0] : null;
-  } catch (e) {}
-  if (!row) return resp; // 确实不存在 → 维持 404
+    const url = new URL(request.url);
+    const path = url.pathname.replace(/\/+$/, '');
+    const m = path.match(/^\/schedule\/([A-Za-z0-9_-]+)$/);
+    if (!m || m[1] === 'index') return next();
 
-  // 复用 next() 返回的 404 响应作为外壳：它已是带站点 nav/footer/CSS 的主题化页面，
-  // 仅替换其 <main> 内容为真实详情，免去一次「请求首页」的额外往返与其触发的中间件多次 D1 查询。
-  const shell = await resp.text();
-  const mainOpen = shell.search(/<main[\s>]/i);
-  const mainClose = shell.search(/<\/main>/i);
-  if (mainOpen === -1 || mainClose === -1) return resp;
+    // 先尝试静态详情页（构建产物）。next() 在边缘可能对已存在静态页抛异常 → 用 .catch 兜底，绝不 500。
+    const resp = await next().catch(() => null);
+    const ct =
+      resp && resp.headers && resp.headers.get
+        ? resp.headers.get('Content-Type') || ''
+        : '';
+    if (resp && resp.status >= 200 && resp.status < 400 && ct.includes('text/html')) {
+      return resp; // 已构建静态页，直接放行（middleware 已注入数据），最快路径
+    }
 
-  const gt = shell.indexOf('>', mainOpen) + 1;
-  let html = shell.slice(0, gt) + renderDetail(row) + shell.slice(mainClose);
-  html = html.replace(/<title>[\s\S]*?<\/title>/i, '<title>' + escapeHtml(row.title || id) + ' | Gleams</title>');
+    // 静态缺失或 next() 异常 → 按 D1 实时查询兜底
+    const id = m[1];
+    let row = null;
+    try {
+      if (env && env.DB) {
+        const r = await env.DB.prepare('SELECT * FROM events WHERE id = ?').bind(id).all();
+        row = r && r.results && r.results[0] ? r.results[0] : null;
+      }
+    } catch (e) {
+      console.error('[path] d1 error', e && e.message);
+    }
+    if (!row) {
+      // 确实不存在：维持原响应（404；若 next() 异常则给兜底 404），绝不抛异常
+      return resp || notFound();
+    }
 
-  return new Response(html, {
-    status: 200,
-    headers: {
-      'Content-Type': 'text/html; charset=utf-8',
-      'Cache-Control': 'no-store',
-    },
-  });
+    // 取外壳：优先复用 next() 的响应（404 壳最轻量）；若 next() 异常/返回 500 则回退 fetch('/') 取站点外壳
+    let shellText = null;
+    if (resp && resp.status < 500) {
+      try {
+        shellText = await resp.text();
+      } catch (_) {}
+    }
+    if (!shellText) {
+      try {
+        const home = await fetch(new URL('/', request.url));
+        shellText = await home.text();
+      } catch (_) {}
+    }
+    if (!shellText) return resp || notFound();
+
+    const mainOpen = shellText.search(/<main[\s>]/i);
+    const mainClose = shellText.search(/<\/main>/i);
+    if (mainOpen === -1 || mainClose === -1) return resp || notFound();
+
+    const gt = shellText.indexOf('>', mainOpen) + 1;
+    let html = shellText.slice(0, gt) + renderDetail(row) + shellText.slice(mainClose);
+    html = html.replace(
+      /<title>[\s\S]*?<\/title>/i,
+      '<title>' + escapeHtml(row.title || id) + ' | Gleams</title>'
+    );
+
+    return new Response(html, {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'no-store',
+      },
+    });
+  } catch (e) {
+    // 任何意外，绝不抛到边缘（避免 1101）；降级为 404
+    console.error('[path] fatal', e && e.message, e && e.stack);
+    try {
+      return notFound();
+    } catch (_) {
+      return new Response('Not Found', { status: 404 });
+    }
+  }
 }
