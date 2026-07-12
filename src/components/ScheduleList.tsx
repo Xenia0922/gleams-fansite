@@ -36,8 +36,8 @@ export default function ScheduleList({
     ])
       .then(([ev, mb]) => {
         if (!alive) return;
-        if (Array.isArray(ev) && ev.length) setEvents(ev);
-        if (Array.isArray(mb) && mb.length) setMembers(mb);
+        if (Array.isArray(ev)) setEvents(ev);
+        if (Array.isArray(mb)) setMembers(mb);
       })
       .catch(() => {});
     return () => { alive = false; };
