@@ -13,10 +13,20 @@ function calcCountdown(target: Date) {
 function fm(n: number) { return String(n).padStart(2, '0'); }
 
 export default function UpcomingCountdown() {
-  const [event, setEvent] = useState<any>(null);
+  const ssr = typeof window !== 'undefined' ? (window as any).__SSR_DATA__ : null;
+  const [event, setEvent] = useState<any>(() => {
+    if (ssr?.events) {
+      const up = ssr.events
+        .filter((e: any) => e.status === 'upcoming')
+        .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      return up.length > 0 ? up[0] : null;
+    }
+    return null;
+  });
   const [cd, setCd] = useState<ReturnType<typeof calcCountdown>>(null);
 
   useEffect(() => {
+    if (ssr?.events) return; // 已有 SSR 数据
     let alive = true;
     fetch('/api/events')
       .then(r => r.json())

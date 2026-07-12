@@ -23,11 +23,29 @@ const META: Record<string, { name: string; emoji: string; color: string }> = {
 export default function GalleryGrid() {
   const [filter, setFilter] = useState('all');
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
-  const [photos, setPhotos] = useState<Photo[]>([]);
+  const ssr = typeof window !== 'undefined' ? (window as any).__SSR_DATA__ : null;
+  const [photos, setPhotos] = useState<Photo[]>(ssr?.galleryPhotos || []);
   const [featuredFan, setFeaturedFan] = useState<FanPhoto[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!ssr?.galleryPhotos);
 
   const reload = useCallback(async () => {
+    if (ssr?.galleryPhotos) {
+      // SSR 数据已有 gallery photos，只补拉 fan photos 用于精选区
+      try {
+        const photosRes = await fetch('/api/photos');
+        const photosData = await photosRes.json();
+        const raw = ssr.featuredSquare || [];
+        const featuredKeys: string[] = Array.isArray(raw)
+          ? raw.map((e: string | { key: string }) => (typeof e === 'string' ? e : e.key))
+          : [];
+        if (Array.isArray(photosData) && featuredKeys.length > 0) {
+          const keySet = new Set(featuredKeys);
+          setFeaturedFan(photosData.filter((p: FanPhoto) => keySet.has(p.key)));
+        }
+      } catch {}
+      setLoading(false);
+      return;
+    }
     try {
       const [galleryRes, photosRes, siteRes] = await Promise.all([
         fetch('/api/gallery'),

@@ -13,10 +13,12 @@ interface Member {
 }
 
 export default function HomeMembers({ initial }: { initial: Member[] }) {
-  const [members, setMembers] = useState<Member[]>(initial || []);
+  const ssr = typeof window !== 'undefined' ? (window as any).__SSR_DATA__ : null;
+  const [members, setMembers] = useState<Member[]>(ssr?.members || initial || []);
   const [activeColor, setActiveColor] = useState('');
 
   useEffect(() => {
+    if (ssr?.members) return;
     let alive = true;
     fetch('/api/members')
       .then(r => r.json())

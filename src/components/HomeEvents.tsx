@@ -15,9 +15,11 @@ export default function HomeEvents({
 }: {
   initial: EventRow[];
 }) {
-  const [events, setEvents] = useState<EventRow[]>(initial || []);
+  const ssr = typeof window !== 'undefined' ? (window as any).__SSR_DATA__ : null;
+  const [events, setEvents] = useState<EventRow[]>(ssr?.events || initial || []);
 
   useEffect(() => {
+    if (ssr?.events) return; // 已有 SSR 数据，不重复加载
     let alive = true;
     fetch('/api/events')
       .then(r => r.json())
