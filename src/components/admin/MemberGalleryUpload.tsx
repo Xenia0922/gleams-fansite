@@ -108,13 +108,13 @@ export default function MemberGalleryUpload({ code, section, value, onChange, la
           <div
             key={url}
             draggable
-            onDragStart={() => setDragIdx(i)}
+            onDragStart={(e) => { setDragIdx(i); e.dataTransfer.effectAllowed = 'move'; }}
             onDragOver={e => e.preventDefault()}
             onDrop={e => onThumbDrop(e, i)}
             onDragEnd={() => setDragIdx(null)}
             className="relative group aspect-square rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-white/10 cursor-grab active:cursor-grabbing"
           >
-            <img src={url} alt="" className="w-full h-full object-cover" loading="lazy" />
+            <img src={url} alt="" className="w-full h-full object-cover" loading="lazy" draggable={false} />
             <button
               type="button"
               onClick={e => { e.stopPropagation(); e.preventDefault(); remove(url); }}
