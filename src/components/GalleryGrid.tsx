@@ -242,11 +242,11 @@ export default function GalleryGrid() {
             <span className="text-sm font-bold text-[var(--accent)]">骑士团精选</span>
             <span className="text-xs text-gray-400">{visibleFeaturedFan.length} 张</span>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {visibleFeaturedFan.map((p, i) => (
               <div
                 key={p.key}
-                className="relative aspect-[4/5] rounded-3xl overflow-hidden glass cursor-pointer group ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-transparent"
+                className="relative aspect-[4/5] rounded-3xl overflow-hidden glass cursor-pointer group ring-2 ring-[var(--accent)]"
                 onClick={() => setFanLightboxIdx(i)}
               >
                 <img
