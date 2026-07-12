@@ -111,7 +111,7 @@ export default function AdminGallery({ code }: { code: string }) {
         const res = await fetch('/api/gallery', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-admin-code': code },
-          body: JSON.stringify({ url: p.url, member: p.member || 'other' }),
+          body: JSON.stringify({ url: p.url, member: p.member === 'other' ? '__extra__' : (p.member || '__extra__') }),
         });
         const data = await res.json();
         if (data.ok && data.id) {
