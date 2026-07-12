@@ -14,7 +14,7 @@ const GROUPS: { key: string; name: string; emoji: string; color: string }[] = [
   { key: 'hakusai', name: '白菜', emoji: '💛', color: '#FFD700' },
   { key: 'kumo', name: '云团', emoji: '💙', color: '#4DA6FF' },
   { key: 'yuzi', name: '柚子', emoji: '💚', color: '#48D1A0' },
-  { key: '__extra__', name: '全部 / 不分类', emoji: '🐙', color: '#e83e8c' },
+  { key: '__extra__', name: '全部 / 不分类', emoji: '⭐', color: '#e83e8c' },
 ];
 
 // 上传时可选择的分类（与分组一一对应）

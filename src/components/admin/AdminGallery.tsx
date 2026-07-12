@@ -15,7 +15,7 @@ const MEMBER_OPTS = [
   { id: 'kumo', label: '💙 云团' },
   { id: 'yuzi', label: '💚 柚子' },
   { id: 'huangyuyu', label: '🩷 黄鱼鱼' },
-  { id: 'other', label: '🐙 其他' },
+  { id: 'other', label: '⭐ 其他' },
 ];
 
 export default function AdminGallery({ code }: { code: string }) {

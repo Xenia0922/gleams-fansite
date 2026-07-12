@@ -13,7 +13,7 @@ export const MEMBER_META: Record<string, MemberMeta> = {
   hakusai:  { emoji: '💛', name: '白菜', color: '#C99A00' },
   kumo:     { emoji: '💙', name: '云团', color: '#2F6FED' },
   yuzi:     { emoji: '💚', name: '柚子', color: '#1E9E6A' },
-  other:    { emoji: '🐙', name: '多人·其他', color: '#C2417A' },
+  other:    { emoji: '⭐', name: '多人·其他', color: '#C2417A' },
 };
 
 /**

@@ -61,7 +61,7 @@ export default function GalleryGrid() {
     for (const id of memberIds) {
       if (map.has(id)) ordered.push({ id, name: META[id].name, emoji: META[id].emoji, color: META[id].color, items: map.get(id)! });
     }
-    if (map.has('__other__')) ordered.push({ id: '__other__', name: '其他', emoji: '🐙', color: '#e83e8c', items: map.get('__other__')! });
+    if (map.has('__other__')) ordered.push({ id: '__other__', name: '其他', emoji: '⭐', color: '#e83e8c', items: map.get('__other__')! });
     return ordered;
   }, [photos, memberIds]);
 
@@ -134,7 +134,7 @@ export default function GalleryGrid() {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {featured.map((p) => {
-              const m = META[p.member] || { name: '其他', emoji: '🐙', color: '#e83e8c' };
+              const m = META[p.member] || { name: '其他', emoji: '⭐', color: '#e83e8c' };
               const i = idxOf(p.id);
               return (
                 <div
