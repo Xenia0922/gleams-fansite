@@ -1,6 +1,19 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import membersData from '../../data/members.json';
 import MembersList from '../../components/MembersList';
+
+const initialMembers = membersData.members.map((m: any) => ({
+  id: m.id,
+  name: m.name,
+  name_jp: m.nameJP || '',
+  color: m.color || '',
+  emoji: m.emoji || '',
+  birthday: m.birthday || '',
+  constellation: m.constellation || '',
+  status: m.status || 'active',
+  image: m.image || '',
+}));
 ---
 
 <BaseLayout title="成员">
@@ -10,6 +23,6 @@ import MembersList from '../../components/MembersList';
       <h1 class="section-title">成员</h1>
     </div>
 
-    <MembersList client:load initial={[]} />
+    <MembersList client:load initial={initialMembers} />
   </section>
 </BaseLayout>

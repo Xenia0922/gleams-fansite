@@ -1,17 +1,25 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import EventDetail from './EventDetail';
 
-// 404 页面兜底：如果 URL 是 /schedule/xxx，直接渲染日程详情
+/**
+ * 404 页面兜底。SSR 时返回 null（不预渲染任何 404 内容，避免运行时日程请求闪出 404 文本），
+ * 客户端 mount 后再根据实际 URL 决定渲染日程详情还是 404 页面。
+ */
 export default function NotFoundHandler() {
-  // 同步检查避免闪烁
-  const [id] = useState(() => {
-    if (typeof window === 'undefined') return null;
+  const [id, setId] = useState<string | null | false>(null);
+
+  useEffect(() => {
     const m = location.pathname.match(/^\/schedule\/(live-[\w-]+)/);
-    return m ? m[1] : null;
-  });
+    setId(m ? m[1] : false);
+  }, []);
 
-  if (id) return <EventDetail id={id} />;
+  // SSR：不渲染任何内容（等待客户端判定）
+  if (id === null) return null;
 
+  // 客户端判定为日程路由 → 直接渲染 EventDetail（无 404 闪烁）
+  if (typeof id === 'string') return <EventDetail id={id} />;
+
+  // 客户端判定为真正 404
   return (
     <section className="min-h-[60vh] flex items-center justify-center px-4 text-center">
       <div>
