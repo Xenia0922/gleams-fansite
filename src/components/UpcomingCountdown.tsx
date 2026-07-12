@@ -1,4 +1,12 @@
 import { useState, useEffect } from 'react';
+import { type EventRow } from './EventCardGrid';
+
+function firstUpcoming(list: EventRow[]): EventRow | null {
+  const up = list
+    .filter((e) => e.status === 'upcoming')
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  return up.length > 0 ? up[0] : null;
+}
 
 function calcCountdown(target: Date) {
   const diff = target.getTime() - Date.now();
@@ -12,32 +20,28 @@ function calcCountdown(target: Date) {
 }
 function fm(n: number) { return String(n).padStart(2, '0'); }
 
-export default function UpcomingCountdown() {
+export default function UpcomingCountdown({ initial = [] }: { initial?: EventRow[] }) {
   const ssr = typeof window !== 'undefined' ? (window as any).__SSR_DATA__ : null;
-  const [event, setEvent] = useState<any>(() => {
-    if (ssr?.events) {
-      const up = ssr.events
-        .filter((e: any) => e.status === 'upcoming')
-        .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
-      return up.length > 0 ? up[0] : null;
-    }
-    return null;
-  });
+  const [event, setEvent] = useState<EventRow | null>(() =>
+    ssr?.events ? firstUpcoming(ssr.events) : firstUpcoming(initial)
+  );
   const [cd, setCd] = useState<ReturnType<typeof calcCountdown>>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (ssr?.events) return; // 已有 SSR 数据
+    if (ssr?.events) return; // 已有 SSR 实时数据
+    if (initial && initial.length > 0) return; // 有构建期种子，无需请求
     let alive = true;
+    setLoading(true);
     fetch('/api/events')
-      .then(r => r.json())
-      .then(data => {
+      .then((r) => r.json())
+      .then((data) => {
         if (!alive || !Array.isArray(data)) return;
-        const up = data
-          .filter((e: any) => e.status === 'upcoming')
-          .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
-        if (up.length > 0) setEvent(up[0]);
+        const up = firstUpcoming(data);
+        if (up) setEvent(up);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
   }, []);
 
@@ -51,6 +55,16 @@ export default function UpcomingCountdown() {
     const t = setInterval(tick, 1000);
     return () => clearInterval(t);
   }, [event]);
+
+  if (loading) {
+    return (
+      <div className="frost-card p-4 max-w-sm mx-auto animate-pulse" aria-hidden="true">
+        <div className="h-3 w-24 mx-auto rounded bg-gray-200 dark:bg-gray-700 mb-2" />
+        <div className="h-4 w-40 mx-auto rounded bg-gray-200 dark:bg-gray-700 mb-2" />
+        <div className="h-6 w-32 mx-auto rounded bg-gray-200 dark:bg-gray-700" />
+      </div>
+    );
+  }
 
   if (!event || !cd) return null;
 

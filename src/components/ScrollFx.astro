@@ -3,16 +3,34 @@
   // 页面加载滚回顶部
   window.scrollTo(0, 0);
 
-  // 滚动入场动画
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
-      }
-    });
-  }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
+  const targets = document.querySelectorAll('[data-reveal]');
 
-  document.querySelectorAll('[data-reveal]').forEach(el => observer.observe(el));
+  // 滚动入场动画（无 JS 时由 .js 门控保证内容可见，无需此处兜底）
+  if (!('IntersectionObserver' in window)) {
+    // 极旧浏览器：直接全部显示，避免永久隐藏
+    targets.forEach(el => el.classList.add('visible'));
+  } else {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
+
+    targets.forEach(el => observer.observe(el));
+
+    // 安全兜底：若 observer 因故未触发（罕见），1.5s 后强制显示在视口内者
+    setTimeout(() => {
+      targets.forEach(el => {
+        const r = el.getBoundingClientRect();
+        if (r.top < window.innerHeight && !el.classList.contains('visible')) {
+          el.classList.add('visible');
+        }
+      });
+    }, 1500);
+  }
 
   // 返回顶部按钮
   const topBtn = document.getElementById('back-to-top');
@@ -30,25 +48,26 @@
 </script>
 
 <style is:global>
-  [data-reveal] {
+  /* 隐藏初始态仅在 JS 可用时生效；无 JS 时内容默认可见 */
+  .js [data-reveal] {
     opacity: 0;
     transform: translateY(20px);
     transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
                 transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
     transition-delay: var(--reveal-delay, 0ms);
   }
-  [data-reveal].visible {
+  .js [data-reveal].visible {
     opacity: 1;
     transform: translateY(0);
   }
   @media (max-width: 767px) {
-    [data-reveal] {
+    .js [data-reveal] {
       transform: translateY(14px);
       transition-duration: 0.45s;
     }
   }
   @media (prefers-reduced-motion: reduce) {
-    [data-reveal] { transition: none; opacity: 1; transform: none; }
+    .js [data-reveal], .js [data-reveal].visible { transition: none; opacity: 1; transform: none; }
   }
 </style>
 

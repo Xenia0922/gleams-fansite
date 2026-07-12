@@ -2,11 +2,29 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import HeroTitle from '../components/HeroTitle.astro';
 import site from '../data/site.json';
+import membersData from '../data/members.json';
+import scheduleData from '../data/schedule.json';
 import HomeMembers from '../components/HomeMembers';
 import HomeEvents from '../components/HomeEvents';
 import UpcomingEvents from '../components/UpcomingEvents';
 import { SiteSocial, LiveLink, SiteMeta } from '../components/SiteBits';
 import UpcomingCountdown from '../components/UpcomingCountdown';
+
+// 构建期种子：让静态 HTML 直接带内容（消除“后加载空白”）。
+// 运行时 middleware 仍会把 D1 实时数据注入 window.__SSR_DATA__，
+// 组件优先读它（后台新增/修改即时同步，无需重建）。
+const initialMembers = membersData.members.map((m: any) => ({
+  id: m.id,
+  name: m.name,
+  name_jp: m.nameJP || '',
+  color: m.color || '',
+  emoji: m.emoji || '',
+  birthday: m.birthday || '',
+  constellation: m.constellation || '',
+  status: m.status || 'active',
+  image: m.image || '',
+}));
+const initialEvents = scheduleData.events as any[];
 ---
 
 <BaseLayout>
@@ -25,7 +43,7 @@ import UpcomingCountdown from '../components/UpcomingCountdown';
         <LiveLink client:load field="weibo" label="微博" initial={site.weibo} className="btn-outline text-xs sm:text-sm !px-5 sm:!px-7 !py-2.5 sm:!py-3" />
       </div>
       <div class="rise mt-6" style="animation-delay:.65s; min-height: 0;">
-        <UpcomingCountdown client:load />
+        <UpcomingCountdown client:load initial={initialEvents} />
       </div>
     </div>
   </section>
@@ -35,7 +53,9 @@ import UpcomingCountdown from '../components/UpcomingCountdown';
       <p class="section-title-en">✦</p>
       <h2 class="section-title">成员</h2>
     </div>
-    <HomeMembers client:load initial={[]} />
+    <div data-reveal>
+      <HomeMembers client:visible initial={initialMembers} />
+    </div>
   </section>
 
   <section class="py-16 md:py-20 border-t glass-divider">
@@ -44,7 +64,9 @@ import UpcomingCountdown from '../components/UpcomingCountdown';
         <p class="section-title-en">✦</p>
         <h2 class="section-title">即将到来</h2>
       </div>
-      <UpcomingEvents client:load initial={[]} />
+      <div data-reveal>
+        <UpcomingEvents client:visible initial={initialEvents} />
+      </div>
     </div>
   </section>
 
@@ -54,7 +76,9 @@ import UpcomingCountdown from '../components/UpcomingCountdown';
         <p class="section-title-en">✦</p>
         <h2 class="section-title">过往行程</h2>
       </div>
-      <HomeEvents client:load initial={[]} />
+      <div data-reveal>
+        <HomeEvents client:visible initial={initialEvents} />
+      </div>
       <div class="text-center mt-8">
         <a href="/schedule" class="btn-outline text-xs sm:text-sm">查看完整日程 →</a>
       </div>

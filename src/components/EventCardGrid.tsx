@@ -29,6 +29,31 @@ interface EventCardGridProps {
  * 数据优先来自 window.__SSR_DATA__.events（middleware 注入），
  * 无 SSR 时才回退一次 fetch（极少见）。
  */
+function EventSkeleton({ count = 4 }: { count?: number }) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6" aria-hidden="true">
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="card overflow-hidden">
+          <div className="aspect-[16/9] bg-gray-100 dark:bg-gray-800 animate-pulse" />
+          <div className="p-4 space-y-2">
+            <div className="h-3 w-16 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
+            <div className="h-4 w-3/4 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
+            <div className="h-3 w-1/2 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function EventEmpty({ filter }: { filter: 'past' | 'upcoming' }) {
+  return (
+    <div className="text-center py-10">
+      <p className="text-sm text-[var(--text-soft)]">{filter === 'upcoming' ? '暂无即将到来的公演，敬请期待 ✦' : '暂无过往行程'}</p>
+    </div>
+  );
+}
+
 export default function EventCardGrid({
   initial,
   filter,
@@ -38,14 +63,19 @@ export default function EventCardGrid({
 }: EventCardGridProps) {
   const ssr = typeof window !== 'undefined' ? (window as any).__SSR_DATA__ : null;
   const [events, setEvents] = useState<EventRow[]>(ssr?.events || initial || []);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    // 有 SSR 实时数据（middleware 注入）或构建期种子，无需再请求
     if (ssr?.events) return;
+    if (initial && initial.length > 0) return;
     let alive = true;
+    setLoading(true);
     fetch('/api/events')
       .then((r) => r.json())
       .then((d) => { if (alive && Array.isArray(d) && d.length) setEvents(d); })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
   }, []);
 
@@ -63,7 +93,8 @@ export default function EventCardGrid({
     return list;
   }, [events, filter, sortDir, limit]);
 
-  if (filtered.length === 0) return null;
+  if (loading) return <EventSkeleton count={limit} />;
+  if (filtered.length === 0) return <EventEmpty filter={filter} />;
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
