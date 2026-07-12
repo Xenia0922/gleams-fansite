@@ -129,9 +129,15 @@ export default function GalleryGrid() {
 
   const idxOf = (id: string) => visibleFlat.findIndex((p) => p.id === id);
 
+  // 精选区也响应成员筛选
+  const visibleFeaturedFan = useMemo(
+    () => (filter === 'all' ? featuredFan : featuredFan.filter((p) => p.member === filter)),
+    [featuredFan, filter]
+  );
+
   // 精选 fan 照片的灯箱
   const [fanLightboxIdx, setFanLightboxIdx] = useState<number | null>(null);
-  const fanLightboxImages = useMemo(() => featuredFan.map((p) => ({ src: p.url })), [featuredFan]);
+  const fanLightboxImages = useMemo(() => visibleFeaturedFan.map((p) => ({ src: p.url })), [visibleFeaturedFan]);
 
   return (
     <>
@@ -193,14 +199,14 @@ export default function GalleryGrid() {
       )}
 
       {/* 骑士团精选 — 来自广场返图 */}
-      {!loading && featuredFan.length > 0 && (
+      {!loading && visibleFeaturedFan.length > 0 && (
         <div className="mt-12">
           <div className="flex items-center gap-3 mb-4">
             <span className="text-sm font-bold text-[var(--accent)]">骑士团精选</span>
-            <span className="text-xs text-gray-400">{featuredFan.length} 张</span>
+            <span className="text-xs text-gray-400">{visibleFeaturedFan.length} 张</span>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {featuredFan.map((p, i) => (
+            {visibleFeaturedFan.map((p, i) => (
               <div
                 key={p.key}
                 className="relative aspect-[4/5] rounded-3xl overflow-hidden glass cursor-pointer group ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-transparent"
