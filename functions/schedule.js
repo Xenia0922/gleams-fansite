@@ -1,7 +1,6 @@
 /**
  * /schedule — 纯服务端渲染，数据直接嵌在 HTML 里，不二次加载
  */
-import { adminOk, json } from '../_shared.js';
 
 const DDL = `CREATE TABLE IF NOT EXISTS events (
   id TEXT PRIMARY KEY, date TEXT, time TEXT, title TEXT, venue TEXT,
