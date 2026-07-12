@@ -365,6 +365,50 @@ body::after {
   .skeleton::after { animation: none; }
 }
 
+/* ===== 全局路由加载进度条 ===== */
+#page-progress {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 3px;
+  z-index: 9999;
+  transform: scaleX(0);
+  transform-origin: left center;
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+  background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 55%, #b14ce6));
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+#page-progress.is-active {
+  opacity: 1;
+  animation: page-progress-creep 1.2s cubic-bezier(0.2, 0.6, 0.2, 1) forwards;
+}
+#page-progress.is-done {
+  opacity: 0;
+  transform: scaleX(1);
+  animation: none;
+  transition: transform 0.25s ease, opacity 0.4s ease 0.05s;
+}
+@keyframes page-progress-creep {
+  0%   { transform: scaleX(0.08); }
+  100% { transform: scaleX(0.82); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #page-progress { display: none; }
+}
+
+/* ===== 整页入场淡入（仅 JS 可用时，无 JS 不应用；与 data-reveal 不冲突） ===== */
+.js main {
+  animation: page-enter 0.34s var(--ease) both;
+}
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .js main { animation: none; }
+}
+
 /* ===== 移动端滚动优化 ===== */
 @media (max-width: 767px) {
   * { -webkit-tap-highlight-color: transparent; }
