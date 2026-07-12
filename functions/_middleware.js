@@ -67,7 +67,7 @@ async function fetchPageData(path, env) {
   } catch {}
 
   // 首页 / 成员页 / 日程页 / 画廊页 都需要 events
-  if (path === '/' || path === '/members' || path === '/gallery' || path.startsWith('/schedule')) {
+  if (path === '/' || path === '/members' || path === '/gallery' || path === '/fans' || path.startsWith('/schedule')) {
     try {
       let events = await fetchEvents(env);
       // 全新 D1：首次访问时确保已播种真实数据，再取一次

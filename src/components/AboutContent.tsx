@@ -21,9 +21,11 @@ const DEFAULTS: Cfg = {
 };
 
 export default function AboutContent({ siteName, initial }: { siteName: string; initial: Cfg }) {
-  const [cfg, setCfg] = useState<Cfg>({ ...DEFAULTS, ...(initial || {}) });
+  const ssr = typeof window !== 'undefined' ? (window as any).__SSR_DATA__ : null;
+  const [cfg, setCfg] = useState<Cfg>(() => ({ ...DEFAULTS, ...(initial || {}), ...(ssr?.siteConfig || {}) }));
 
   useEffect(() => {
+    if (ssr?.siteConfig) return; // 已有 SSR 数据
     let alive = true;
     fetch('/api/site')
       .then(r => r.json())

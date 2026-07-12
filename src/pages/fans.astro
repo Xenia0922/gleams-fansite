@@ -105,23 +105,29 @@ import FanGallery from '../components/FanGallery';
     });
   });
 
-  // 场次筛选：拉取日程填充下拉，选择后广播给两个孤岛
+  // 场次筛选：优先读 SSR 注入，无则 fetch 兜底
   const evSel = document.getElementById('fan-event-filter');
   if (evSel) {
     const sel = evSel as HTMLSelectElement;
-    fetch('/api/events')
-      .then(r => r.json())
-      .then((list: any[]) => {
-        if (!Array.isArray(list)) return;
-        list.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
-        for (const e of list) {
-          const opt = document.createElement('option');
-          opt.value = e.id;
-          opt.textContent = `🎫 ${e.date} ${e.title}`;
-          sel.appendChild(opt);
-        }
-      })
-      .catch(() => {});
+    function fillEvents(list: any[]) {
+      if (!Array.isArray(list)) return;
+      list.sort((a: any, b: any) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+      for (const e of list) {
+        const opt = document.createElement('option');
+        opt.value = e.id;
+        opt.textContent = `🎫 ${e.date} ${e.title}`;
+        sel.appendChild(opt);
+      }
+    }
+    const ssrEvents = (window as any).__SSR_DATA__?.events;
+    if (ssrEvents && ssrEvents.length) {
+      fillEvents(ssrEvents);
+    } else {
+      fetch('/api/events')
+        .then(r => r.json())
+        .then(fillEvents)
+        .catch(() => {});
+    }
     sel.addEventListener('change', () => {
       window.dispatchEvent(new CustomEvent('fan-event-filter', { detail: sel.value }));
     });

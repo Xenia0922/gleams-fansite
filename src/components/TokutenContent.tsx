@@ -8,9 +8,11 @@ interface Cfg {
 }
 
 export default function TokutenContent({ initial }: { initial: Cfg }) {
-  const [cfg, setCfg] = useState<Cfg>(initial || {});
+  const ssr = typeof window !== 'undefined' ? (window as any).__SSR_DATA__ : null;
+  const [cfg, setCfg] = useState<Cfg>(() => ({ ...(initial || {}), ...(ssr?.siteConfig || {}) }));
 
   useEffect(() => {
+    if (ssr?.siteConfig) return;
     let alive = true;
     fetch('/api/site')
       .then(r => r.json())
