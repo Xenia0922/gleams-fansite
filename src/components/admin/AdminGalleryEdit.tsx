@@ -177,7 +177,7 @@ export default function AdminGalleryEdit({ code }: { code: string }) {
           if (u) add(u);
           setDraft('');
         }}
-        label={`添加画廊照片（${badgeOf(cat).emoji} ${badgeOf(cat).name}）`}
+        label={`添加画廊照片（${badgeOf(cat).name}）`}
       />
       {busy && <p className="text-xs text-gray-400 mt-2">上传中…</p>}
       {err && <p className="text-xs text-red-500 mt-2">{err}</p>}
@@ -227,9 +227,6 @@ export default function AdminGalleryEdit({ code }: { code: string }) {
                         loading="lazy"
                         draggable={false}
                       />
-                      <span className="absolute top-2 left-2 text-[10px] bg-black/45 text-white px-2 py-1 rounded-full">
-                        {badgeOf(p.member).emoji}
-                      </span>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
