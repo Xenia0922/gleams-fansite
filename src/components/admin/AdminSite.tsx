@@ -9,6 +9,8 @@ interface HeroCfg {
   subtitle?: string;
   logo?: string;
   bg?: string;
+  bgOpacity?: number;
+  bgPosition?: string;
 }
 
 interface SiteCfg {
@@ -43,10 +45,20 @@ export default function AdminSite({ code }: { code: string }) {
   useEffect(() => { load(); }, [load]);
 
   const set = (k: keyof SiteCfg, v: string) => { setCfg(c => ({ ...c, [k]: v })); setSaved(false); };
-  const setHero = (k: keyof HeroCfg, v: string) => {
+  const setHero = (k: keyof HeroCfg, v: string | number) => {
     setCfg(c => ({ ...c, hero_config: { ...(c.hero_config || {}), [k]: v } }));
     setSaved(false);
   };
+  // 解析 bgPosition（"x% y%" 或 "center center"/"top"/"bottom"）为 [x, y] 百分比
+  const parsePos = (pos?: string): [number, number] => {
+    if (!pos) return [50, 50];
+    const m = pos.match(/(\d+)%\s+(\d+)%/);
+    if (m) return [parseInt(m[1]), parseInt(m[2])];
+    if (/top/i.test(pos)) return [50, 0];
+    if (/bottom/i.test(pos)) return [50, 100];
+    return [50, 50];
+  };
+  const setHeroPos = (x: number, y: number) => setHero('bgPosition', `${x}% ${y}%`);
 
   const save = async () => {
     setErr(''); setSaved(false);
@@ -85,20 +97,53 @@ export default function AdminSite({ code }: { code: string }) {
 
       <div className="border-t border-gray-100 dark:border-gray-800 pt-4">
         <h3 className="text-sm font-bold text-gray-800 dark:text-gray-100 mb-2">首页 Hero 栏</h3>
-        <p className="text-xs text-gray-400 mb-3">主标题、副标题、Logo 与背景图。简介文案复用下方「微博简介」字段。</p>
-        <div className="space-y-3">
-          <Labeled label="主标题">
-            <input value={cfg.hero_config?.title || ''} onChange={e => setHero('title', e.target.value)} className={INPUT} />
-          </Labeled>
-          <Labeled label="副标题">
-            <input value={cfg.hero_config?.subtitle || ''} onChange={e => setHero('subtitle', e.target.value)} className={INPUT} />
-          </Labeled>
-          <Labeled label="Logo 图片">
-            <ImageUpload code={code} section="hero" value={cfg.hero_config?.logo || ''} onChange={u => setHero('logo', u)} label="Logo" />
-          </Labeled>
-          <Labeled label="背景图">
-            <ImageUpload code={code} section="hero" value={cfg.hero_config?.bg || ''} onChange={u => setHero('bg', u)} label="背景图" />
-          </Labeled>
+        <p className="text-xs text-gray-400 mb-3">主标题、副标题、Logo、背景图、透明度与焦点位置。简介复用下方「微博简介」。</p>
+        <div className="grid md:grid-cols-2 gap-4">
+          {/* 左：控件 */}
+          <div className="space-y-3">
+            <Labeled label="主标题">
+              <input value={cfg.hero_config?.title || ''} onChange={e => setHero('title', e.target.value)} className={INPUT} />
+            </Labeled>
+            <Labeled label="副标题">
+              <input value={cfg.hero_config?.subtitle || ''} onChange={e => setHero('subtitle', e.target.value)} className={INPUT} />
+            </Labeled>
+            <Labeled label="Logo 图片">
+              <ImageUpload code={code} section="hero" value={cfg.hero_config?.logo || ''} onChange={u => setHero('logo', u)} label="Logo" />
+            </Labeled>
+            <Labeled label="背景图">
+              <ImageUpload code={code} section="hero" value={cfg.hero_config?.bg || ''} onChange={u => setHero('bg', u)} label="背景图" />
+            </Labeled>
+            <Labeled label={`背景透明度 ${Math.round((cfg.hero_config?.bgOpacity ?? 0.22) * 100)}%`}>
+              <input type="range" min={0} max={1} step={0.02} value={cfg.hero_config?.bgOpacity ?? 0.22} onChange={e => setHero('bgOpacity', parseFloat(e.target.value))} className="w-full accent-[var(--accent)]" />
+            </Labeled>
+            {(() => {
+              const [px, py] = parsePos(cfg.hero_config?.bgPosition);
+              return (
+                <>
+                  <Labeled label={`背景焦点 水平 ${px}%（0=左 50=中 100=右）`}>
+                    <input type="range" min={0} max={100} step={1} value={px} onChange={e => setHeroPos(parseInt(e.target.value), py)} className="w-full accent-[var(--accent)]" />
+                  </Labeled>
+                  <Labeled label={`背景焦点 垂直 ${py}%（0=上 50=中 100=下）`}>
+                    <input type="range" min={0} max={100} step={1} value={py} onChange={e => setHeroPos(px, parseInt(e.target.value))} className="w-full accent-[var(--accent)]" />
+                  </Labeled>
+                </>
+              );
+            })()}
+          </div>
+          {/* 右：实时预览 */}
+          <div>
+            <span className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">实时预览（亮色模式）</span>
+            <div className="relative w-full aspect-[16/9] rounded-xl overflow-hidden border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-gray-900">
+              <img src={cfg.hero_config?.bg || '/hero-bg.webp'} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ opacity: cfg.hero_config?.bgOpacity ?? 0.22, objectPosition: cfg.hero_config?.bgPosition || 'center center' }} />
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
+                <img src={cfg.hero_config?.logo || '/logo.png'} alt="" className="w-10 h-10 rounded-full shadow mb-1.5 object-cover" />
+                <p className="text-[10px] text-gray-500 mb-0.5">{cfg.hero_config?.subtitle || '副标题'}</p>
+                <h3 className="text-lg font-extrabold text-gradient">{cfg.hero_config?.title || 'Gleams'}</h3>
+                <p className="text-[9px] text-gray-400 mt-1">{cfg.weibo_desc || '简介'}</p>
+              </div>
+            </div>
+            <p className="text-[10px] text-gray-400 mt-1">暗色模式下透明度会自动按比例降低，保持整体协调。</p>
+          </div>
         </div>
       </div>
 

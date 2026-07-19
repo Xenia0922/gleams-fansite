@@ -184,8 +184,24 @@ function applyHero(html, hero, weiboDesc) {
     // src 可能在 data-hero 前或后，先匹配整个 img 标签再替换其 src（与属性顺序无关）
     html = html.replace(/<img[^>]*data-hero="logo"[^>]*>/i, (m) => m.replace(/\bsrc="[^"]*"/i, `src="${escapeHtml(hero.logo)}"`));
   }
-  if (hero.bg) {
-    html = html.replace(/<img[^>]*data-hero="bg"[^>]*>/i, (m) => m.replace(/\bsrc="[^"]*"/i, `src="${escapeHtml(hero.bg)}"`));
+  if (hero.bg || hero.bgOpacity != null || hero.bgPosition != null) {
+    // bg img：替换 src + 替换 style（--bg-opacity + object-position）
+    const opacity = hero.bgOpacity != null ? hero.bgOpacity : 0.22;
+    const pos = hero.bgPosition || 'center center';
+    html = html.replace(/<img[^>]*data-hero="bg"[^>]*>/i, (m) => {
+      let out = m;
+      if (hero.bg) {
+        out = out.replace(/\bsrc="[^"]*"/i, `src="${escapeHtml(hero.bg)}"`);
+      }
+      // bg img 的 style 只含 --bg-opacity 与 object-position，整段替换安全
+      const newStyle = `--bg-opacity:${opacity};object-position:${escapeHtml(pos)}`;
+      if (/\bstyle="[^"]*"/i.test(out)) {
+        out = out.replace(/\bstyle="[^"]*"/i, `style="${newStyle}"`);
+      } else {
+        out = out.replace(/\/?>/, ` style="${newStyle}"$&`);
+      }
+      return out;
+    });
   }
   return html;
 }

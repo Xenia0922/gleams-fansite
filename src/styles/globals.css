@@ -339,6 +339,11 @@ body::after {
   .rise { animation: none; opacity: 1; transform: none; filter: none; }
 }
 
+/* Hero 背景图：透明度由 CSS 变量 --bg-opacity 控制（admin 可调），
+   暗色模式按 0.55 比例自动降低（保持原 0.22/0.12 的明暗比例）。 */
+.hero-bg-img { opacity: var(--bg-opacity, 0.22); }
+.dark .hero-bg-img { opacity: calc(var(--bg-opacity, 0.22) * 0.55); }
+
 /* ===== 统一骨架屏（加载占位） ===== */
 .skeleton {
   position: relative;

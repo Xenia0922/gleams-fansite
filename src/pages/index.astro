@@ -29,7 +29,7 @@ const initialEvents = scheduleData.events as any[];
 
 <BaseLayout>
   <section class="relative overflow-hidden">
-    <img src={site.hero.bg} alt="" data-hero="bg" class="absolute inset-0 w-full h-full object-cover opacity-[0.22] dark:opacity-[0.12]" fetchpriority="high" decoding="async" />
+    <img src={site.hero.bg} alt="" data-hero="bg" class="hero-bg-img absolute inset-0 w-full h-full object-cover" style={`--bg-opacity:${site.hero.bgOpacity ?? 0.22};object-position:${site.hero.bgPosition ?? 'center center'}`} fetchpriority="high" decoding="async" />
     <div class="absolute left-1/2 -translate-x-1/2 top-6 sm:top-10 w-44 h-44 sm:w-56 sm:h-56 rounded-full blur-3xl pointer-events-none" style="background: color-mix(in srgb, var(--accent) 38%, transparent); opacity: 0.55;"></div>
     <div class="relative max-w-7xl mx-auto px-4 py-16 sm:py-20 md:py-28 text-center">
       <img src={site.hero.logo} alt={site.name} data-hero="logo" class="rise relative z-10 mx-auto w-24 h-24 sm:w-32 sm:h-32 rounded-full shadow-xl mb-6" style="animation-delay:.05s" />

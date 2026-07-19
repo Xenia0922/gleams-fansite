@@ -49,6 +49,8 @@ const SEED = {
     subtitle: '广西南宁公主风王道系地下偶像团体',
     logo: '/logo.png',
     bg: '/hero-bg.webp',
+    bgOpacity: 0.22,
+    bgPosition: 'center center',
   }),
 };
 
