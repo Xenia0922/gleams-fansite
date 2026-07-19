@@ -57,20 +57,23 @@ export async function verifyTurnstile(token, ip, env) {
 }
 
 /**
- * 屏蔽词命中检查（每行一个正则，大小写不敏感）。
- * words 为字符串数组（每项是一个正则表达式）；text 为待检文本。命中返回 true。
- * 无效正则自动降级为子串匹配（避免语法错误导致全部放行）。
+ * 屏蔽词命中检查。
+ * - 普通词：子串匹配（大小写不敏感，含该词即命中）
+ * - /pattern/ 格式：正则匹配（如 /加.{0,2}信/ 匹配"加微信/加q信"）
+ * 普通词不会被正则元字符误伤（. * + 等按字面匹配）。
  */
 export function containsBlocked(text, words) {
   if (!words || !Array.isArray(words) || !words.length || !text) return false;
-  const str = String(text);
+  const lower = String(text).toLowerCase();
   for (const w of words) {
     if (!w) continue;
-    try {
-      if (new RegExp(w, 'i').test(str)) return true;
-    } catch {
-      // 无效正则降级为子串匹配
-      if (str.toLowerCase().includes(String(w).toLowerCase())) return true;
+    const reMatch = /^\/(.+)\/([imu]*)$/.exec(w);
+    if (reMatch) {
+      try {
+        if (new RegExp(reMatch[1], reMatch[2] || 'i').test(text)) return true;
+      } catch { /* 无效正则跳过 */ }
+    } else {
+      if (lower.includes(String(w).toLowerCase())) return true;
     }
   }
   return false;

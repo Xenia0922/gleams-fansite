@@ -180,7 +180,7 @@ export default function AdminSite({ code }: { code: string }) {
 
       <div className="border-t border-gray-100 dark:border-gray-800 pt-4">
         <h3 className="text-sm font-bold text-gray-800 dark:text-gray-100 mb-2">留言屏蔽词</h3>
-        <p className="text-xs text-gray-400 mb-2">每行一个，按换行分隔。支持正则表达式。命中则拒绝，无效正则自动降级为子串匹配。</p>
+        <p className="text-xs text-gray-400 mb-2">每行一个，按换行分隔，子串匹配（含该词即拒绝）。用 /正则/ 格式可启用正则（如 /加.&#123;0,2&#125;信/）。</p>
         <textarea value={blockedText} onChange={e => setBlockedText(e.target.value)} rows={5} className={INPUT + ' resize-none font-mono text-xs'} placeholder={'加微信\n代购\nhttp://'} />
       </div>
 
