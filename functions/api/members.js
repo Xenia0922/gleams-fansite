@@ -119,7 +119,7 @@ async function createMember(request, env) {
         String(b.emoji || '⭐').slice(0, 8), String(b.birthday || '').slice(0, 10), String(b.constellation || '').slice(0, 10),
         b.status === 'graduated' ? 'graduated' : 'active', String(b.image || '').slice(0, 500),
         JSON.stringify(gallery), String(b.weibo || '').slice(0, 200), String((b.weibo_name ?? b.weiboName) || '').slice(0, 60),
-        String((b.weibo_desc ?? b.weiboDesc) || '').slice(0, 120), String(b.intro || '').slice(0, 600),
+        String((b.weibo_desc ?? b.weiboDesc) || '').slice(0, 120), String(b.intro || ''),
         Number.isFinite(+b.sort_order) ? +b.sort_order : 99, new Date().toISOString()
       )
       .run();
@@ -138,7 +138,7 @@ async function putMember(request, env) {
     if (!id) return json({ error: '缺少 id' }, 400);
     const sets = [];
     const binds = [];
-    const map = { name: 30, nameJP: 30, color: 20, emoji: 8, birthday: 10, constellation: 10, image: 500, weibo: 200, weibo_name: 60, weibo_desc: 120, intro: 600 };
+    const map = { name: 30, nameJP: 30, color: 20, emoji: 8, birthday: 10, constellation: 10, image: 500, weibo: 200, weibo_name: 60, weibo_desc: 120, intro: 10000 };
     for (const k of Object.keys(map)) {
       if (b[k] !== undefined) { sets.push(`${k} = ?`); binds.push(String(b[k]).trim().slice(0, map[k])); }
     }

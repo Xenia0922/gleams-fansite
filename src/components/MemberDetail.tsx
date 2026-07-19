@@ -94,66 +94,74 @@ export default function MemberDetail({ slug, initial }: { slug?: string; initial
   const [month, day] = (member.birthday || '--').split('-');
 
   return (
-    <div className="flex flex-col md:flex-row gap-6 md:gap-10 items-center md:items-start content-enter">
-      <div className="md:w-80 flex-shrink-0 max-w-56 md:max-w-none">
-        <div className="aspect-[4/5] rounded-3xl overflow-hidden glass shadow-lg">
-          {member.image ? (
-            <img src={member.image} alt={member.name} className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-6xl">{member.emoji}</div>
+    <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-center md:items-start content-enter">
+      {/* 左：sticky 信息名片（桌面端跟随滚动，紧凑呈现头像+基本信息+微博） */}
+      <div className="md:w-72 flex-shrink-0 w-full max-w-xs md:sticky md:top-24">
+        <div className="frost-card p-5 space-y-4">
+          <div className="aspect-[4/5] rounded-2xl overflow-hidden shadow-lg mx-auto max-w-[220px]">
+            {member.image ? (
+              <img src={member.image} alt={member.name} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-6xl">{member.emoji}</div>
+            )}
+          </div>
+          <div className="text-center space-y-1">
+            <div className="flex items-center justify-center gap-2">
+              <span className="text-2xl">{member.emoji}</span>
+              <h1 className="text-2xl font-extrabold text-gray-900 dark:text-gray-100">{member.name}</h1>
+            </div>
+            <p className="text-sm text-gray-400">{member.name_jp}</p>
+          </div>
+          <div className="flex flex-wrap justify-center gap-2 text-xs">
+            <span className="frost-card px-3 py-1 rounded-full text-gray-600">{month}月{day}日</span>
+            <span className="frost-card px-3 py-1 rounded-full text-gray-600">{member.constellation}</span>
+            <span
+              data-member-color={member.id}
+              data-color={member.color}
+              className={'inline-flex items-center gap-1.5 frost-card px-3 py-1 rounded-full text-gray-600 cursor-pointer ' + (activeColor && activeColor.toLowerCase() === (member.color || '').toLowerCase() ? 'ring-2 ring-[var(--accent)]' : '')}
+              title={`切换${member.name}主题色`}
+            >
+              <span className="w-2.5 h-2.5 rounded-full" style={{ background: member.color }} />成员色
+            </span>
+          </div>
+          {member.weibo && (
+            <div className="text-center pt-3 border-t border-gray-100 dark:border-gray-800">
+              <a href={member.weibo} target="_blank" rel="noopener" className="inline-flex items-center gap-1.5 text-sm text-pink-500 hover:text-pink-600 font-medium">
+                {member.weibo_name}
+              </a>
+              {member.weibo_desc && <p className="text-xs text-gray-400 mt-1">{member.weibo_desc}</p>}
+            </div>
           )}
         </div>
       </div>
 
-      <div className="flex-1 space-y-5 w-full">
-        <div className="flex items-center gap-2 mb-1 justify-center md:justify-start">
-          <span className="text-2xl">{member.emoji}</span>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-gray-100">{member.name}</h1>
-          <span className="text-sm text-gray-400">{member.name_jp}</span>
-        </div>
-
-        <div className="flex flex-wrap gap-2 text-sm justify-center md:justify-start">
-          <span className="frost-card px-3 py-1 rounded-full text-gray-600">{month}月{day}日</span>
-          <span className="frost-card px-3 py-1 rounded-full text-gray-600">{member.constellation}</span>
-          <span
-            data-member-color={member.id}
-            data-color={member.color}
-            className={'inline-flex items-center gap-1.5 frost-card px-3 py-1 rounded-full text-gray-600 cursor-pointer ' + (activeColor && activeColor.toLowerCase() === (member.color || '').toLowerCase() ? 'ring-2 ring-[var(--accent)]' : '')}
-            title={`切换${member.name}主题色`}
-          >
-            <span className="w-2.5 h-2.5 rounded-full" style={{ background: member.color }} />成员色
-          </span>
-        </div>
-
-        <div className="frost-card p-4 space-y-2">
-          {(member.intro || '').split('\n').filter(Boolean).map((line, i) => (
-            <p key={i} className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">{line.trim()}</p>
-          ))}
-        </div>
-
-        {member.weibo && (
-          <div>
-            <a href={member.weibo} target="_blank" rel="noopener" className="inline-flex items-center gap-1.5 text-sm text-pink-500 hover:text-pink-600 font-medium">
-              {member.weibo_name}
-            </a>
-            <p className="text-xs text-gray-400 mt-1">{member.weibo_desc}</p>
+      {/* 右：主内容流（简介 + 画廊），长内容自然展开，左侧 sticky 名片平衡视觉 */}
+      <div className="flex-1 space-y-8 w-full min-w-0">
+        {member.intro && (
+          <div className="frost-card p-5 md:p-6">
+            <h2 className="text-sm font-bold text-[var(--accent)] tracking-wider mb-3">✦ 简介</h2>
+            <div className="space-y-3">
+              {member.intro.split('\n').filter(Boolean).map((line, i) => (
+                <p key={i} className="text-[15px] text-gray-700 dark:text-gray-300 leading-loose">{line.trim()}</p>
+              ))}
+            </div>
           </div>
         )}
 
         {gallery.length > 0 && (
           <div>
-            <div className="flex items-center justify-center md:justify-start gap-3 mb-3">
-              <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100">更多照片</h3>
+            <div className="flex items-center gap-3 mb-4">
+              <h2 className="text-sm font-bold text-[var(--accent)] tracking-wider">✦ 更多照片</h2>
               <span className="text-xs text-gray-400">{gallery.length} 张{gallery.length > 9 ? '（显示前 9 张，点开看全部）' : ''}</span>
             </div>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-2 md:gap-3">
               {gallery.slice(0, 9).map((img, i) => (
                 <div
                   key={i}
-                  className="aspect-[4/5] rounded-3xl overflow-hidden glass block w-full cursor-pointer group"
+                  className="aspect-[4/5] rounded-2xl md:rounded-3xl overflow-hidden glass block w-full cursor-pointer group"
                   onClick={() => setLightboxIdx(i)}
                 >
-                  <img src={img} alt={member.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" loading="lazy" />
+                  <img src={img} alt={member.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                 </div>
               ))}
             </div>
