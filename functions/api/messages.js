@@ -49,7 +49,7 @@ async function postMessage(request, env) {
         const r = await env.DB.prepare("SELECT value FROM site_config WHERE key='blocked_words'").first();
         if (r?.value) blockedWords = JSON.parse(r.value);
       } catch {}
-      if (containsBlocked(message, blockedWords)) {
+      if (containsBlocked(message + ' ' + name, blockedWords)) {
         return json({ error: '内容包含敏感词，请修改后重试' }, 400);
       }
     }
