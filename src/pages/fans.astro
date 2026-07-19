@@ -55,10 +55,8 @@ import FanGallery from '../components/FanGallery';
         <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">📸 分享现场照</h2>
         <FanUpload client:idle />
       </div>
-      <p class="text-center mt-6">
-        <button id="hint-btn" class="text-[11px] text-gray-400 hover:text-pink-400 dark:text-gray-500 dark:hover:text-pink-400 transition-colors bg-transparent border-none cursor-pointer">
-          不知道暗号？点这里试试！
-        </button>
+      <p class="text-center mt-6 text-[11px] text-gray-400">
+        加入应援会 QQ 群：480408977 获取最新动态
       </p>
     </div>
   </section>
@@ -85,14 +83,6 @@ import FanGallery from '../components/FanGallery';
         post.classList.remove('hidden');
       }
     });
-  });
-
-  // 暗号提示切换
-  const hint = document.getElementById('hint-btn');
-  let hintOn = false;
-  hint?.addEventListener('click', () => {
-    hintOn = !hintOn;
-    hint.textContent = hintOn ? 'Gleams应援会QQ群：480408977' : '不知道暗号？点这里试试！';
   });
 
   // 成员筛选：广播给 MessageBoard / FanGallery 两个孤岛

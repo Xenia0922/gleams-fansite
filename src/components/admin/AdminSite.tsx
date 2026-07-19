@@ -24,6 +24,7 @@ interface SiteCfg {
   xiaohongshu?: string;
   douyin?: string;
   hero_config?: HeroCfg;
+  blocked_words?: string[];
 }
 
 export default function AdminSite({ code }: { code: string }) {
@@ -59,6 +60,9 @@ export default function AdminSite({ code }: { code: string }) {
     return [50, 50];
   };
   const setHeroPos = (x: number, y: number) => setHero('bgPosition', `${x}% ${y}%`);
+  // 屏蔽词：数组 ↔ textarea 文本互转
+  const blockedText = (cfg.blocked_words || []).join('\n');
+  const setBlockedText = (v: string) => setCfg(c => ({ ...c, blocked_words: v.split('\n').map(w => w.trim()).filter(Boolean) }));
 
   const save = async () => {
     setErr(''); setSaved(false);
@@ -166,6 +170,12 @@ export default function AdminSite({ code }: { code: string }) {
             <input value={cfg.douyin || ''} onChange={e => set('douyin', e.target.value)} className={INPUT} />
           </Labeled>
         </div>
+      </div>
+
+      <div className="border-t border-gray-100 dark:border-gray-800 pt-4">
+        <h3 className="text-sm font-bold text-gray-800 dark:text-gray-100 mb-2">留言屏蔽词</h3>
+        <p className="text-xs text-gray-400 mb-2">每行一个关键词，命中（大小写不敏感、子串匹配）的留言将被拒绝。留空则不启用。</p>
+        <textarea value={blockedText} onChange={e => setBlockedText(e.target.value)} rows={5} className={INPUT + ' resize-none font-mono text-xs'} placeholder={'加微信\n代购\nhttp://'} />
       </div>
 
       {err && <p className="text-xs text-red-500">{err}</p>}

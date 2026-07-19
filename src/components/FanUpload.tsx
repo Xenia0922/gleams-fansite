@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useEvents } from './useEvents';
+import Turnstile from './Turnstile';
 
 const MEMBERS = [
   { id: 'hakusai', emoji: '💛', name: '白菜' },
@@ -12,20 +13,6 @@ const MAX_FILES = 9;
 const MAX_SIZE = 23 * 1024 * 1024;
 const ALLOWED = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
-function getCode(): string | null {
-  if (typeof window === 'undefined') return null;
-  const entry = localStorage.getItem('gleams-code');
-  if (!entry) return null;
-  try {
-    const { code, ts } = JSON.parse(entry);
-    if (Date.now() - ts < 30 * 60 * 1000) return code;
-    localStorage.removeItem('gleams-code');
-  } catch {
-    localStorage.removeItem('gleams-code');
-  }
-  return null;
-}
-
 interface Item { id: string; file: File; preview: string; }
 
 export default function FanUpload() {
@@ -36,11 +23,14 @@ export default function FanUpload() {
   const [items, setItems] = useState<Item[]>([]);
   const [uploading, setUploading] = useState(false);
   const [msg, setMsg] = useState('');
-  const [code, setCode] = useState(() => getCode() || '');
-  const [verified, setVerified] = useState(() => !!getCode());
   const fileRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mountedRef = useRef(true);
+
+  // Turnstile：siteKey 由 middleware 注入，未配置则不渲染（后端 fail-open 兜底）
+  const ssr = typeof window !== 'undefined' ? (window as any).__SSR_DATA__ : null;
+  const turnstileSiteKey: string | null = ssr?.turnstileSiteKey || null;
+  const [turnstileToken, setTurnstileToken] = useState('');
 
   useEffect(() => () => {
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -76,26 +66,12 @@ export default function FanUpload() {
     });
   };
 
-  const handleVerify = () => {
-    if (!code.trim()) return;
-    localStorage.setItem('gleams-code', JSON.stringify({ code: code.trim(), ts: Date.now() }));
-    window.dispatchEvent(new Event('gleams-code-set'));
-    setVerified(true);
-  };
-
-  useEffect(() => {
-    const onSet = () => { const c = getCode(); if (c) { setCode(c); setVerified(true); } };
-    const onClear = () => { setCode(''); setVerified(false); };
-    window.addEventListener('gleams-code-set', onSet);
-    window.addEventListener('gleams-code-clear', onClear);
-    return () => {
-      window.removeEventListener('gleams-code-set', onSet);
-      window.removeEventListener('gleams-code-clear', onClear);
-    };
-  }, []);
-
   const handleUpload = async () => {
     if (items.length === 0) return;
+    if (turnstileSiteKey && !turnstileToken) {
+      setMsg('❌ 请先完成人机验证');
+      return;
+    }
     setUploading(true);
     setMsg('');
     const fd = new FormData();
@@ -103,47 +79,28 @@ export default function FanUpload() {
     fd.append('member', member);
     fd.append('nickname', nickname || '匿名骑士');
     fd.append('event', event);
-    fd.append('code', code.trim());
+    if (turnstileToken) fd.append('turnstileToken', turnstileToken);
     try {
       const res = await fetch('/api/photos', { method: 'POST', body: fd });
       const data = await res.json();
       if (data.ok) {
-        setMsg(`✅ 已上传 ${data.count || items.length} 张，感谢分享！`);
+        setMsg(data.pending
+          ? `✅ 已上传 ${data.count || items.length} 张，审核通过后会在广场展示，感谢分享！`
+          : `✅ 已上传 ${data.count || items.length} 张，感谢分享！`);
         items.forEach(it => URL.revokeObjectURL(it.preview));
         setItems([]);
+        setTurnstileToken('');
         // 刷新浏览区的画廊
         window.dispatchEvent(new Event('tab-browse-visible'));
-        timerRef.current = setTimeout(() => { if (mountedRef.current) setMsg(''); }, 3000);
+        timerRef.current = setTimeout(() => { if (mountedRef.current) setMsg(''); }, 4000);
       } else {
         setMsg('❌ ' + (data.error || '上传失败'));
-        if (res.status === 403) {
-          localStorage.removeItem('gleams-code');
-          window.dispatchEvent(new Event('gleams-code-clear'));
-          setVerified(false);
-        }
       }
     } catch {
       setMsg('❌ 网络错误');
     }
     setUploading(false);
   };
-
-  if (!verified) {
-    return (
-      <div className="frost-card p-8 text-center">
-        <p className="text-gray-500 mb-4 text-sm">请输入骑士团暗号以上传照片</p>
-        <input
-          type="text"
-          value={code}
-          onChange={e => setCode(e.target.value)}
-          placeholder="暗号（在 QQ 群获取）"
-          className="w-full max-w-xs px-4 py-2 rounded-full text-sm text-center bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 outline-none focus:border-[var(--accent)] transition-colors"
-          onKeyDown={e => e.key === 'Enter' && handleVerify()}
-        />
-        <button onClick={handleVerify} className="btn-pink text-xs mt-3 !px-4 !py-1.5">验证</button>
-      </div>
-    );
-  }
 
   const selCls = 'w-full px-4 py-2 rounded-full text-sm text-center bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 outline-none focus:border-[var(--accent)] transition-colors';
 
@@ -212,9 +169,15 @@ export default function FanUpload() {
           className={`${selCls} mt-4 block mx-auto w-full max-w-xs`}
         />
 
+        {turnstileSiteKey && (
+          <div className="mt-4">
+            <Turnstile siteKey={turnstileSiteKey} onToken={setTurnstileToken} />
+          </div>
+        )}
+
         <button
           onClick={handleUpload}
-          disabled={items.length === 0 || uploading}
+          disabled={items.length === 0 || uploading || (!!turnstileSiteKey && !turnstileToken)}
           className="btn-pink mt-4 text-sm disabled:opacity-50"
         >
           {uploading ? '上传中...' : `上传 ${items.length > 0 ? items.length + ' 张' : ''}`.trim()}
@@ -225,6 +188,7 @@ export default function FanUpload() {
             {msg}
           </p>
         )}
+        <p className="text-[10px] text-gray-400 mt-2">粉丝上传的照片需管理员审核后才会公开展示</p>
       </div>
     </div>
   );

@@ -30,6 +30,45 @@ export function adminOk(request, env) {
 }
 
 /**
+ * 验证 Cloudflare Turnstile token。
+ * 未配置 TURNSTILE_SECRET_KEY 时 fail-open（返回 true，靠限流+屏蔽词+审核兜底）；
+ * 配置了则强制 siteverify，验证失败 fail-closed（返回 false）。
+ */
+export async function verifyTurnstile(token, ip, env) {
+  if (!env.TURNSTILE_SECRET_KEY) return true; // 未配置，fail-open
+  if (!token) return false;
+  try {
+    const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        secret: env.TURNSTILE_SECRET_KEY,
+        response: token,
+        remoteip: ip || '',
+      }).toString(),
+    });
+    const data = await res.json();
+    return !!data.success;
+  } catch (e) {
+    console.error('[turnstile] verify failed:', e.message);
+    return false; // 验证服务异常，fail-closed
+  }
+}
+
+/**
+ * 屏蔽词命中检查（大小写不敏感，子串匹配）。
+ * words 为字符串数组；text 为待检文本。命中返回 true。
+ */
+export function containsBlocked(text, words) {
+  if (!words || !Array.isArray(words) || !words.length || !text) return false;
+  const lower = String(text).toLowerCase();
+  for (const w of words) {
+    if (w && lower.includes(String(w).toLowerCase())) return true;
+  }
+  return false;
+}
+
+/**
  * 表不存在时自动建表并重试一次，避免首请求直接 500。
  * @param {D1Database} env.DB — 从 env 传入的 D1 绑定
  * @param {() => Promise<void>} ensureTable — 建表/播种函数（每个 API 文件自定义）

@@ -7,6 +7,7 @@ import AdminMessages from './admin/AdminMessages';
 import AdminGallery from './admin/AdminGallery';
 import AdminGalleryEdit from './admin/AdminGalleryEdit';
 import AdminRecruits from './admin/AdminRecruits';
+import AdminModeration from './admin/AdminModeration';
 import ErrorBoundary from './ErrorBoundary';
 
 // 登录失败次数限制：30 分钟内最多 5 次，超出锁定至窗口结束
@@ -56,7 +57,7 @@ export default function AdminPanel() {
     getAttempts().count >= ATT_MAX ? `尝试次数过多，请于 ${lockReleaseText()} 后再试` : ''
   );
   const [checking, setChecking] = useState(false);
-  const [tab, setTab] = useState<'members' | 'events' | 'photos' | 'messages' | 'tokuten' | 'site' | 'recruits'>('members');
+  const [tab, setTab] = useState<'members' | 'events' | 'photos' | 'messages' | 'moderation' | 'tokuten' | 'site' | 'recruits'>('members');
 
   // 挂载时校验已存储的暗号：仅服务端 200 才放行，否则清空并停在登录态
   const inited = useRef(false);
@@ -167,6 +168,7 @@ export default function AdminPanel() {
         <button onClick={() => setTab('events')} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${tab === 'events' ? 'btn-pink' : 'btn-outline'}`}>日程</button>
         <button onClick={() => setTab('photos')} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${tab === 'photos' ? 'btn-pink' : 'btn-outline'}`}>画廊</button>
         <button onClick={() => setTab('messages')} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${tab === 'messages' ? 'btn-pink' : 'btn-outline'}`}>广场</button>
+        <button onClick={() => setTab('moderation')} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${tab === 'moderation' ? 'btn-pink' : 'btn-outline'}`}>审核</button>
         <button onClick={() => setTab('tokuten')} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${tab === 'tokuten' ? 'btn-pink' : 'btn-outline'}`}>特典</button>
         <button onClick={() => setTab('site')} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${tab === 'site' ? 'btn-pink' : 'btn-outline'}`}>关于</button>
         <button onClick={() => setTab('recruits')} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${tab === 'recruits' ? 'btn-pink' : 'btn-outline'}`}>广告</button>
@@ -182,6 +184,7 @@ export default function AdminPanel() {
             <AdminGallery code={code} />
           </div>
         )}
+        {tab === 'moderation' && <AdminModeration code={code} />}
         {tab === 'tokuten' && <AdminTokuten code={code} />}
         {tab === 'site' && <AdminSite code={code} />}
         {tab === 'recruits' && <AdminRecruits code={code} />}

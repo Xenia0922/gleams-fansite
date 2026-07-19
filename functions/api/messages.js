@@ -4,7 +4,7 @@
  * DELETE /api/messages — 删除留言（需 ADMIN_CODE）
  */
 
-import { adminOk, json } from '../_shared.js';
+import { adminOk, json, verifyTurnstile, containsBlocked } from '../_shared.js';
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -32,10 +32,27 @@ async function postMessage(request, env) {
     const message = body.message?.trim().slice(0, 500);
     const member = body.member || null;
     const event = body.event?.trim().slice(0, 40) || null;
-    const code = body.code?.trim() || '';
 
     if (!message) return json({ error: '内容不能为空' }, 400);
-    if (!isAdmin && code !== env.SECRET_CODE) return json({ error: '暗号不对哦' }, 403);
+
+    // 粉丝走 Turnstile 人机验证（admin 免）
+    if (!isAdmin) {
+      const ip = request.headers.get('cf-connecting-ip') || '';
+      const ok = await verifyTurnstile(body.turnstileToken, ip, env);
+      if (!ok) return json({ error: '人机验证失败，请刷新重试' }, 403);
+    }
+
+    // 屏蔽词检查（admin 免）：从 site_config 读 blocked_words
+    if (!isAdmin) {
+      let blockedWords = [];
+      try {
+        const r = await env.DB.prepare("SELECT value FROM site_config WHERE key='blocked_words'").first();
+        if (r?.value) blockedWords = JSON.parse(r.value);
+      } catch {}
+      if (containsBlocked(message + ' ' + name, blockedWords)) {
+        return json({ error: '内容包含敏感词，请修改后重试' }, 400);
+      }
+    }
 
     // 粉丝走 IP 限流；后台发帖不受限
     if (!isAdmin) {

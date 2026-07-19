@@ -1,12 +1,13 @@
 /**
  * GET  /api/photos?key=xxx        — 读取单张图片
- * GET  /api/photos                 — 列出已上传的照片（含缩略图 URL + 关联场次 event）
- * POST /api/photos                 — 上传照片（支持一次多张，最多 9 张，单张 ≤23MB，需暗号）
- * DELETE /api/photos               — 删除照片（含缩略图，需 ADMIN_CODE）
+ * GET  /api/photos                 — 列出已审核照片（粉丝上传默认 pending，admin ?all=1 看全部）
+ * POST /api/photos                 — 上传照片（最多 9 张，单张 ≤23MB，粉丝需 Turnstile + 审核后才公开）
+ * PUT  /api/photos                 — admin 审核（approve/reject，需 ADMIN_CODE）
+ * DELETE /api/photos               — 删除照片（需 ADMIN_CODE）
  */
 
 import { rateAllow, rateLog } from './_rate.js';
-import { adminOk, json } from '../_shared.js';
+import { adminOk, json, verifyTurnstile } from '../_shared.js';
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -17,11 +18,15 @@ export async function onRequest(context) {
   }
 
   if (request.method === 'GET') {
-    return listPhotos(env);
+    return listPhotos(request, env);
   }
 
   if (request.method === 'POST') {
     return uploadPhoto(request, env);
+  }
+
+  if (request.method === 'PUT') {
+    return moderatePhoto(request, env);
   }
 
   if (request.method === 'DELETE') {
@@ -56,8 +61,13 @@ async function uploadPhoto(request, env) {
     if (files.length === 0) return json({ error: '请选择图片' }, 400);
     if (files.length > MAX_FILES) return json({ error: `一次最多上传 ${MAX_FILES} 张` }, 400);
 
-    const code = formData.get('code')?.trim() || '';
-    if (!isAdmin && code !== env.SECRET_CODE) return json({ error: '暗号不对哦' }, 403);
+    // 粉丝走 Turnstile 人机验证（admin 免）
+    if (!isAdmin) {
+      const token = formData.get('turnstileToken')?.toString() || '';
+      const ip = request.headers.get('cf-connecting-ip') || '';
+      const ok = await verifyTurnstile(token, ip, env);
+      if (!ok) return json({ error: '人机验证失败，请刷新重试' }, 403);
+    }
 
     // 逐张校验类型与大小
     for (const f of files) {
@@ -89,7 +99,7 @@ async function uploadPhoto(request, env) {
       const key = `uploads/${member}/${id}.${ext}`;
       await env.PHOTOS.put(key, file.stream(), {
         httpMetadata: { contentType: file.type },
-        customMetadata: { nickname, member, event: event || '', uploadedAt: new Date().toISOString() },
+        customMetadata: { nickname, member, event: event || '', uploadedAt: new Date().toISOString(), status: isAdmin ? 'approved' : 'pending' },
       });
       urls.push(`/api/photos?key=${encodeURIComponent(key)}`);
       keys.push(key);
@@ -104,6 +114,8 @@ async function uploadPhoto(request, env) {
       // 兼容单图消费的旧客户端
       url: urls[0] || null,
       key: keys[0] || null,
+      // 粉丝上传需审核后才公开（admin 上传直接公开）
+      pending: !isAdmin,
     });
   } catch (e) {
     return json({ error: '上传失败: ' + e.message }, 500);
@@ -126,20 +138,28 @@ async function servePhoto(env, key) {
 }
 
 /**
- * 列出 R2 中已上传的照片（不含缩略图对象），返回纯数据数组。
+ * 列出 R2 中已上传的照片（不含缩略图对象）。
+ * @param approvedOnly true 时只返回已审核（status='approved' 或无 status 的旧数据）；
+ *                    false 时返回全部（admin 审核 UI 用）。
  * 同时被 GET /api/photos（包装成 JSON）与 _middleware.js（SSR 注入 featuredFan）复用。
  */
-export async function listPhotosData(env) {
+export async function listPhotosData(env, approvedOnly = true) {
   try {
     const { objects } = await env.PHOTOS.list({ limit: 1000, prefix: 'uploads/' });
     return objects
       .filter(o => !isThumbKey(o.key))
+      .filter(o => {
+        if (!approvedOnly) return true;
+        const st = o.customMetadata?.status;
+        return !st || st === 'approved'; // 无 status 的旧数据视为已公开
+      })
       .map(o => ({
         key: o.key,
         url: `/api/photos?key=${encodeURIComponent(o.key)}`,
         uploaded: o.uploaded,
         member: o.key.split('/')[1] || 'other',
         event: o.customMetadata?.event || null,
+        status: o.customMetadata?.status || 'approved',
       }));
   } catch (e) {
     console.error('[photos] list failed:', e.message);
@@ -147,8 +167,12 @@ export async function listPhotosData(env) {
   }
 }
 
-async function listPhotos(env) {
-  return json(await listPhotosData(env));
+async function listPhotos(request, env) {
+  const url = new URL(request.url);
+  const all = url.searchParams.get('all') === '1';
+  // admin 可看全部（含 pending）；公开只返回 approved
+  const approvedOnly = !all || !adminOk(request, env);
+  return json(await listPhotosData(env, approvedOnly));
 }
 
 async function deletePhoto(request, env) {
@@ -160,6 +184,35 @@ async function deletePhoto(request, env) {
     await env.PHOTOS.delete(key);
     await env.PHOTOS.delete(toThumbKey(key)).catch(() => {});
     return json({ ok: true });
+  } catch (e) {
+    return json({ error: e.message }, 500);
+  }
+}
+
+// admin 审核：approve（R2 不支持单独更新 metadata，需 get+put 重写）/ reject（删 R2 对象）
+async function moderatePhoto(request, env) {
+  if (!adminOk(request, env)) return json({ error: '无权限' }, 403);
+  try {
+    const { key, action } = await request.json();
+    if (!key || !key.startsWith('uploads/')) return json({ error: '无效 key' }, 400);
+    if (action !== 'approve' && action !== 'reject') return json({ error: '无效操作' }, 400);
+
+    if (action === 'reject') {
+      await env.PHOTOS.delete(key);
+      await env.PHOTOS.delete(toThumbKey(key)).catch(() => {});
+      return json({ ok: true, action: 'rejected' });
+    }
+
+    // approve：get 原对象 → put 同 key 同 body + customMetadata.status='approved'
+    const obj = await env.PHOTOS.get(key);
+    if (!obj) return json({ error: '图片不存在' }, 404);
+    const body = await obj.arrayBuffer();
+    const meta = { ...(obj.customMetadata || {}), status: 'approved' };
+    await env.PHOTOS.put(key, body, {
+      httpMetadata: obj.httpMetadata,
+      customMetadata: meta,
+    });
+    return json({ ok: true, action: 'approved' });
   } catch (e) {
     return json({ error: e.message }, 500);
   }

@@ -48,6 +48,9 @@ async function fetchEvents(env) {
 async function fetchPageData(path, env) {
   const data = {};
 
+  // Turnstile site key（公开值，前端 widget 用；未配置则 null，前端不渲染 widget）
+  data.turnstileSiteKey = env.TURNSTILE_SITE_KEY || null;
+
   // 所有页面都可能需要 site_config (SiteBits 组件)
   try {
     const { results } = await env.DB.prepare('SELECT key, value FROM site_config').all();
@@ -55,7 +58,7 @@ async function fetchPageData(path, env) {
       const cfg = {};
       for (const r of results) {
         try {
-          cfg[r.key] = ['tokuten_rules', 'tokuten_images', 'featured_square', 'hero_config'].includes(r.key)
+          cfg[r.key] = ['tokuten_rules', 'tokuten_images', 'featured_square', 'hero_config', 'blocked_words'].includes(r.key)
             ? JSON.parse(r.value)
             : r.value;
           // 防御旧 bug 数据：hero_config 曾被 updateConfig 存为 '[]'，强制转为 {}

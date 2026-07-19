@@ -3,6 +3,7 @@ import { useEvents } from './useEvents';
 import { MEMBER_META, tint } from '../utils/members';
 import Skeleton from './Skeleton';
 import SkeletonSwap from './SkeletonSwap';
+import Turnstile from './Turnstile';
 
 const MEMBERS = [
   { id: 'hakusai', emoji: '💛', name: '白菜' },
@@ -23,20 +24,6 @@ interface Message {
   created_at: string;
 }
 
-function getCode(): string | null {
-  if (typeof window === 'undefined') return null;
-  const entry = localStorage.getItem('gleams-code');
-  if (!entry) return null;
-  try {
-    const { code, ts } = JSON.parse(entry);
-    if (Date.now() - ts < 30 * 60 * 1000) return code;
-    localStorage.removeItem('gleams-code');
-  } catch {
-    localStorage.removeItem('gleams-code');
-  }
-  return null;
-}
-
 export default function MessageBoard({ readonly }: { readonly?: boolean }) {
   const { events, map } = useEvents();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -44,13 +31,16 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
   const [text, setText] = useState('');
   const [member, setMember] = useState<string | null>(null);
   const [event, setEvent] = useState('');
-  const [code, setCode] = useState(() => getCode() || '');
-  const [verified, setVerified] = useState(() => !!getCode());
   const [posting, setPosting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState('');
   const [filter, setFilter] = useState<string | null>(null);
   const [eventFilter, setEventFilter] = useState<string | null>(null);
+
+  // Turnstile：siteKey 由 middleware 注入，未配置则不渲染（后端 fail-open 兜底）
+  const ssr = typeof window !== 'undefined' ? (window as any).__SSR_DATA__ : null;
+  const turnstileSiteKey: string | null = ssr?.turnstileSiteKey || null;
+  const [turnstileToken, setTurnstileToken] = useState('');
 
   const fetchMessages = useCallback(async () => {
     try {
@@ -69,18 +59,10 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
   }, [fetchMessages]);
 
   useEffect(() => {
-    const onSet = () => {
-      const c = getCode();
-      if (c) { setCode(c); setVerified(true); }
-    };
-    const onClear = () => { setCode(''); setVerified(false); };
-    // 浏览页成员筛选
     const onFilter = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       setFilter(detail === '' || detail == null ? null : detail);
     };
-    window.addEventListener('gleams-code-set', onSet);
-    window.addEventListener('gleams-code-clear', onClear);
     window.addEventListener('fan-member-filter', onFilter);
     const onEventFilter = (e: Event) => {
       const detail = (e as CustomEvent).detail;
@@ -88,22 +70,17 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
     };
     window.addEventListener('fan-event-filter', onEventFilter);
     return () => {
-      window.removeEventListener('gleams-code-set', onSet);
-      window.removeEventListener('gleams-code-clear', onClear);
       window.removeEventListener('fan-member-filter', onFilter);
       window.removeEventListener('fan-event-filter', onEventFilter);
     };
   }, []);
 
-  const handleVerify = () => {
-    if (!code.trim()) return;
-    localStorage.setItem('gleams-code', JSON.stringify({ code: code.trim(), ts: Date.now() }));
-    window.dispatchEvent(new Event('gleams-code-set'));
-    setVerified(true);
-  };
-
   const handlePost = async () => {
     if (!text.trim()) return;
+    if (turnstileSiteKey && !turnstileToken) {
+      setMsg('❌ 请先完成人机验证');
+      return;
+    }
     setPosting(true);
     setMsg('');
     try {
@@ -115,20 +92,16 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
           message: text.trim(),
           member,
           event: event || null,
-          code: code.trim(),
+          turnstileToken,
         }),
       });
       const data = await res.json();
       if (data.ok) {
         setText('');
+        setTurnstileToken('');
         await fetchMessages();
       } else {
         setMsg('❌ ' + (data.error || '发送失败'));
-        if (res.status === 403) {
-          localStorage.removeItem('gleams-code');
-          window.dispatchEvent(new Event('gleams-code-clear'));
-          setVerified(false);
-        }
       }
     } catch {
       setMsg('❌ 网络错误');
@@ -207,28 +180,9 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
     );
   }
 
-  if (!verified) {
-    return (
-      <div className="frost-card p-8 text-center">
-        <p className="text-gray-500 mb-4 text-sm">请输入骑士团暗号以参与互动</p>
-        <input
-          type="text"
-          value={code}
-          onChange={e => setCode(e.target.value)}
-          placeholder="暗号（在 QQ 群获取）"
-          className="w-full max-w-xs px-4 py-2 rounded-full text-sm text-center bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 outline-none focus:border-[var(--accent)] transition-colors"
-          onKeyDown={e => e.key === 'Enter' && handleVerify()}
-        />
-        <button onClick={handleVerify} className="btn-pink text-xs mt-3 !px-4 !py-1.5">
-          验证
-        </button>
-      </div>
-    );
-  }
-
   return (
     <div className="w-full">
-      {/* 成员选择 + 关联场次 — 与返图发布页一致，置于白框外（不再把成员选择包进底框） */}
+      {/* 成员选择 + 关联场次 — 与返图发布页一致，置于白框外 */}
       <div className="flex flex-wrap gap-2 mb-4 justify-center">
         {MEMBERS.map(m => (
           <button
@@ -255,7 +209,7 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
         ))}
       </select>
 
-      {/* 白框内只放正文 + 底部昵称 + 发送，结构与返图一致 */}
+      {/* 白框内只放正文 + 底部昵称 + 验证 + 发送 */}
       <div className="frost-card p-6 text-center">
         <textarea
           value={text}
@@ -275,9 +229,15 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
           className={`${selCls} mt-4 block mx-auto w-full max-w-xs`}
         />
 
+        {turnstileSiteKey && (
+          <div className="mt-4">
+            <Turnstile siteKey={turnstileSiteKey} onToken={setTurnstileToken} />
+          </div>
+        )}
+
         <button
           onClick={handlePost}
-          disabled={!text.trim() || posting}
+          disabled={!text.trim() || posting || (!!turnstileSiteKey && !turnstileToken)}
           className="btn-pink mt-4 text-sm disabled:opacity-50"
         >
           {posting ? '发送中...' : '发送留言'}

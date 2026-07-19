@@ -21,6 +21,7 @@ const ALLOWED = [
   'weibo', 'weibo_name', 'weibo_desc',
   'xiaohongshu', 'douyin',
   'hero_config',
+  'blocked_words',
 ];
 
 const SEED = {
@@ -52,6 +53,7 @@ const SEED = {
     bgOpacity: 0.22,
     bgPosition: 'center center',
   }),
+  blocked_words: JSON.stringify(['加微信', '加qq', '代购', '兼职', '招募代理', 'http://', 'https://']),
 };
 
 async function ensureTable(env) {
@@ -66,7 +68,7 @@ async function ensureTable(env) {
   } catch (e) { console.error('[site] seed failed:', e.message); }
 }
 
-const JSON_KEYS = new Set(['tokuten_rules', 'tokuten_images', 'featured_square', 'hero_config']);
+const JSON_KEYS = new Set(['tokuten_rules', 'tokuten_images', 'featured_square', 'hero_config', 'blocked_words']);
 
 async function loadConfig(env) {
   const { results } = await env.DB.prepare('SELECT key, value FROM site_config').all();
