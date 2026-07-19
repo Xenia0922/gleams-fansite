@@ -233,9 +233,10 @@ export async function onRequest(context) {
 
     if (Object.keys(pageData).length === 0) return response;
 
-    // 注入数据脚本
+    // 注入数据脚本（转义 < 防止数据含 </script> 破坏 HTML，JSON.parse 自动还原）
     const html = await response.text();
-    const dataScript = `<script>window.__SSR_DATA__=${JSON.stringify(pageData)};</script>`;
+    const dataStr = JSON.stringify(pageData).replace(/</g, '\\u003c');
+    const dataScript = `<script>window.__SSR_DATA__=${dataStr};</script>`;
     let modified = html.replace('</body>', dataScript + '</body>');
     // hero 栏可自定义：对 `/` 路径替换 data-hero 元素（首屏直出 D1 最新值，无闪烁）
     if (path === '/' && pageData.siteConfig && pageData.siteConfig.hero_config) {

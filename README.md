@@ -19,7 +19,7 @@
 
 **后台 CMS（`/admin`）**
 
-管理暗号保护，支持成员 / 日程 / 画廊 / 广场 / 特典 / 站点配置 / 广告的增删改查。
+`ADMIN_CODE` 保护，支持成员 / 日程 / 画廊 / 广场 / 特典 / 站点配置 / 广告的增删改查。粉丝上传/留言已去暗号，改用 Turnstile + 屏蔽词 + 图片审核。
 
 ---
 
@@ -66,7 +66,7 @@ npm run build     # 构建到 dist/
 
 1. Cloudflare Dashboard → Workers & Pages → 连接 GitHub 仓库
 2. 框架预设 Astro，构建命令 `npm run build`，输出目录 `dist`
-3. 环境变量：`SECRET_CODE`（粉丝暗号）、`ADMIN_CODE`（管理暗号）
+3. 环境变量：`ADMIN_CODE`（后台管理）、`TURNSTILE_SECRET_KEY`（Turnstile 人机验证 secret）
 4. 绑定：`DB`（D1 数据库）、`PHOTOS`（R2 存储桶）
 5. 部署——所有表首次 API 请求时自动创建，无需手动 migration
 

@@ -10,6 +10,7 @@
  */
 
 import { adminOk, json, withTable } from '../_shared.js';
+import { rateAllow, rateLog } from './_rate.js';
 
 const DDL = `CREATE TABLE IF NOT EXISTS recruits (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -67,7 +68,14 @@ async function listRecruits(request, env) {
   const all = url.searchParams.get('all') === '1';
 
   if (all) {
-    if (!adminOk(request, env)) return json({ error: '无权限' }, 403);
+    // 服务端登录尝试限制：30 分钟 5 次（前端 localStorage 可绕过，这里兜底）
+    const ip = request.headers.get('cf-connecting-ip') || 'unknown';
+    const allowed = await rateAllow(env, ip, 'admin', 5, 30 * 60 * 1000);
+    if (!allowed) return json({ error: '尝试过多，请30分钟后再试' }, 429);
+    if (!adminOk(request, env)) {
+      await rateLog(env, ip, 'admin');
+      return json({ error: '无权限' }, 403);
+    }
     const { results } = await env.DB
       .prepare('SELECT * FROM recruits ORDER BY sort_order ASC, id DESC')
       .all();
