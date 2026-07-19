@@ -93,6 +93,18 @@ const FALLBACK = {
   }
   .recruit-cta:hover { gap: 0.5rem; }
 
+  /* 广告切换：内容元素统一过渡，切换时 .switching 触发淡出+轻微上移 */
+  .recruit-title, .recruit-sub, .recruit-meta, .recruit-cta {
+    transition: opacity 0.22s var(--ease), transform 0.22s var(--ease);
+  }
+  .recruit-toast.switching .recruit-title,
+  .recruit-toast.switching .recruit-sub,
+  .recruit-toast.switching .recruit-meta,
+  .recruit-toast.switching .recruit-cta {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
   /* 多广告指示点（仅多条时出现） */
   .recruit-dots {
     display: flex; gap: 0.3rem; margin-top: 0.55rem;
@@ -138,6 +150,10 @@ const FALLBACK = {
   @media (prefers-reduced-motion: reduce) {
     .recruit-toast { transition: opacity 0.25s ease; transform: none; }
     .recruit-toast.show { transform: none; }
+    .recruit-toast.switching .recruit-title,
+    .recruit-toast.switching .recruit-sub,
+    .recruit-toast.switching .recruit-meta,
+    .recruit-toast.switching .recruit-cta { transform: none; }
   }
 </style>
 
@@ -255,15 +271,36 @@ const FALLBACK = {
         var ad = allAds[j];
         if (!isClosed(ad.id) && isActive(ad.deadline)) {
           idx = j;
-          current = mapAd(ad);
-          applyRecruit(current);
-          renderDots();
-          if (!shown) { shown = true; reveal(); }
+          if (!shown) {
+            // 首次显示：直接填充内容 + reveal（toast 本身淡入即可，内容无需额外过渡）
+            current = mapAd(ad);
+            applyRecruit(current);
+            renderDots();
+            shown = true;
+            reveal();
+          } else {
+            // 后续切换：淡出 → 换内容 → 淡入
+            switchAd(ad);
+          }
           return true;
         }
       }
       el.remove();   // 全部已关闭/过期
       return false;
+    }
+
+    // 切换动画：内容淡出(220ms) → 换内容 → 下一帧淡入
+    function switchAd(ad) {
+      el.classList.add('switching');
+      setTimeout(function () {
+        current = mapAd(ad);
+        applyRecruit(current);
+        renderDots();
+        // 下一帧移除 switching，触发淡入
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () { el.classList.remove('switching'); });
+        });
+      }, 220);
     }
 
     function startCycling() {
