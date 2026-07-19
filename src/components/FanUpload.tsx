@@ -29,6 +29,7 @@ export default function FanUpload() {
 
   // Turnstile：site key 硬编码在组件内（公开值），未配置 secret 时后端 fail-open
   const [turnstileToken, setTurnstileToken] = useState('');
+  const [turnstileReady, setTurnstileReady] = useState(false);
 
   useEffect(() => () => {
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -66,7 +67,7 @@ export default function FanUpload() {
 
   const handleUpload = async () => {
     if (items.length === 0) return;
-    if (!turnstileToken) {
+    if (turnstileReady && !turnstileToken) {
       setMsg('❌ 请先完成人机验证');
       return;
     }
@@ -168,12 +169,12 @@ export default function FanUpload() {
         />
 
         <div className="mt-4">
-          <Turnstile onToken={setTurnstileToken} />
+          <Turnstile onToken={setTurnstileToken} onReady={() => setTurnstileReady(true)} />
         </div>
 
         <button
           onClick={handleUpload}
-          disabled={items.length === 0 || uploading || !turnstileToken}
+          disabled={items.length === 0 || uploading || (turnstileReady && !turnstileToken)}
           className="btn-pink mt-4 text-sm disabled:opacity-50"
         >
           {uploading ? '上传中...' : `上传 ${items.length > 0 ? items.length + ' 张' : ''}`.trim()}

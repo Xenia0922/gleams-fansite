@@ -33,12 +33,14 @@ function loadScript(): Promise<void> {
  * 注：用 explicit render（turnstile.render）而非 declarative cf-turnstile div，
  * 因为 React 重渲染会导致 declarative widget 丢失。action 参数与 data-action 等价。
  */
-export default function Turnstile({ siteKey = TURNSTILE_SITE_KEY, onToken }: { siteKey?: string; onToken: (t: string) => void }) {
+export default function Turnstile({ siteKey = TURNSTILE_SITE_KEY, onToken, onReady }: { siteKey?: string; onToken: (t: string) => void; onReady?: () => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetId = useRef<string | null>(null);
-  // onToken 用 ref 持有，避免 callback 变化导致 widget 重建
+  // onToken/onReady 用 ref 持有，避免 callback 变化导致 widget 重建
   const cbRef = useRef(onToken);
   cbRef.current = onToken;
+  const readyRef = useRef(onReady);
+  readyRef.current = onReady;
 
   useEffect(() => {
     let cancelled = false;
@@ -52,6 +54,7 @@ export default function Turnstile({ siteKey = TURNSTILE_SITE_KEY, onToken }: { s
           'expired-callback': () => cbRef.current(''),
           'error-callback': () => cbRef.current(''),
         });
+        readyRef.current?.(); // widget 渲染成功，通知父组件可要求 token
       } catch { /* 渲染失败静默，后端 fail-open 兜底 */ }
     });
     return () => {

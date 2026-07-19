@@ -39,6 +39,7 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
 
   // Turnstile：site key 硬编码在组件内（公开值），未配置 secret 时后端 fail-open
   const [turnstileToken, setTurnstileToken] = useState('');
+  const [turnstileReady, setTurnstileReady] = useState(false);
 
   const fetchMessages = useCallback(async () => {
     try {
@@ -75,7 +76,7 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
 
   const handlePost = async () => {
     if (!text.trim()) return;
-    if (!turnstileToken) {
+    if (turnstileReady && !turnstileToken) {
       setMsg('❌ 请先完成人机验证');
       return;
     }
@@ -228,12 +229,12 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
         />
 
         <div className="mt-4">
-          <Turnstile onToken={setTurnstileToken} />
+          <Turnstile onToken={setTurnstileToken} onReady={() => setTurnstileReady(true)} />
         </div>
 
         <button
           onClick={handlePost}
-          disabled={!text.trim() || posting || !turnstileToken}
+          disabled={!text.trim() || posting || (turnstileReady && !turnstileToken)}
           className="btn-pink mt-4 text-sm disabled:opacity-50"
         >
           {posting ? '发送中...' : '发送留言'}
