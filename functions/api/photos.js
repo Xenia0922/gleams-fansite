@@ -96,10 +96,11 @@ async function uploadPhoto(request, env) {
       const rawExt = (file.name.split('.').pop() || '').toLowerCase();
       const ext = ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(rawExt) ? rawExt : 'jpg';
       const id = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
-      const key = `uploads/${member}/${id}.${ext}`;
+      // 粉丝上传进 pending 前缀（审核后才公开），admin 上传直接进 uploads/
+      const key = isAdmin ? `uploads/${member}/${id}.${ext}` : `uploads/pending/${member}/${id}.${ext}`;
       await env.PHOTOS.put(key, file.stream(), {
         httpMetadata: { contentType: file.type },
-        customMetadata: { nickname, member, event: event || '', uploadedAt: new Date().toISOString(), status: isAdmin ? 'approved' : 'pending' },
+        customMetadata: { nickname, member, event: event || '', uploadedAt: new Date().toISOString() },
       });
       urls.push(`/api/photos?key=${encodeURIComponent(key)}`);
       keys.push(key);
@@ -139,8 +140,9 @@ async function servePhoto(env, key) {
 
 /**
  * 列出 R2 中已上传的照片（不含缩略图对象）。
- * @param approvedOnly true 时只返回已审核（status='approved' 或无 status 的旧数据）；
- *                    false 时返回全部（admin 审核 UI 用）。
+ * 审核状态用 key 前缀区分：uploads/pending/{member}/... = 待审，uploads/{member}/... = 已通过。
+ * 不依赖 R2 customMetadata（list 不保证返回 customMetadata，曾导致审核过滤失效）。
+ * @param approvedOnly true 时只返回已审核（不含 uploads/pending/ 前缀）；false 时返回全部。
  * 同时被 GET /api/photos（包装成 JSON）与 _middleware.js（SSR 注入 featuredFan）复用。
  */
 export async function listPhotosData(env, approvedOnly = true) {
@@ -148,19 +150,21 @@ export async function listPhotosData(env, approvedOnly = true) {
     const { objects } = await env.PHOTOS.list({ limit: 1000, prefix: 'uploads/' });
     return objects
       .filter(o => !isThumbKey(o.key))
-      .filter(o => {
-        if (!approvedOnly) return true;
-        const st = o.customMetadata?.status;
-        return !st || st === 'approved'; // 无 status 的旧数据视为已公开
-      })
-      .map(o => ({
-        key: o.key,
-        url: `/api/photos?key=${encodeURIComponent(o.key)}`,
-        uploaded: o.uploaded,
-        member: o.key.split('/')[1] || 'other',
-        event: o.customMetadata?.event || null,
-        status: o.customMetadata?.status || 'approved',
-      }));
+      .filter(o => !approvedOnly || !o.key.startsWith('uploads/pending/'))
+      .map(o => {
+        const isPending = o.key.startsWith('uploads/pending/');
+        // member：uploads/pending/{member}/... 或 uploads/{member}/...
+        const parts = o.key.split('/');
+        const member = isPending ? (parts[2] || 'other') : (parts[1] || 'other');
+        return {
+          key: o.key,
+          url: `/api/photos?key=${encodeURIComponent(o.key)}`,
+          uploaded: o.uploaded,
+          member,
+          event: o.customMetadata?.event || null,
+          status: isPending ? 'pending' : 'approved',
+        };
+      });
   } catch (e) {
     console.error('[photos] list failed:', e.message);
     return [];
@@ -203,15 +207,19 @@ async function moderatePhoto(request, env) {
       return json({ ok: true, action: 'rejected' });
     }
 
-    // approve：get 原对象 → put 同 key 同 body + customMetadata.status='approved'
+    // approve：从 uploads/pending/{member}/... copy 到 uploads/{member}/...，删 pending key
     const obj = await env.PHOTOS.get(key);
     if (!obj) return json({ error: '图片不存在' }, 404);
     const body = await obj.arrayBuffer();
-    const meta = { ...(obj.customMetadata || {}), status: 'approved' };
-    await env.PHOTOS.put(key, body, {
+    const newKey = key.replace('uploads/pending/', 'uploads/');
+    await env.PHOTOS.put(newKey, body, {
       httpMetadata: obj.httpMetadata,
-      customMetadata: meta,
+      customMetadata: { ...(obj.customMetadata || {}), status: 'approved' },
     });
+    if (newKey !== key) {
+      await env.PHOTOS.delete(key);
+      await env.PHOTOS.delete(toThumbKey(key)).catch(() => {});
+    }
     return json({ ok: true, action: 'approved' });
   } catch (e) {
     return json({ error: e.message }, 500);
