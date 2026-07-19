@@ -31,12 +31,13 @@ export function adminOk(request, env) {
 
 /**
  * 验证 Cloudflare Turnstile token（canonical siteverify）。
- * 未配置 TURNSTILE_SECRET_KEY 时 fail-open（返回 true，靠限流+屏蔽词+审核兜底）；
- * 配置了则强制 siteverify，验证失败 fail-closed（返回 false）。
+ * - 未配置 TURNSTILE_SECRET_KEY：fail-open（返回 true）
+ * - token 空（Turnstile 脚本加载失败，国内常见）：fail-open（返回 true，靠限流+屏蔽词+审核兜底）
+ * - token 非空：siteverify 验证，success===true 放行，否则拒绝
  */
 export async function verifyTurnstile(token, ip, env) {
   if (!env.TURNSTILE_SECRET_KEY) return true; // 未配置，fail-open
-  if (!token) return false;
+  if (!token) return true; // token 空（Turnstile 脚本加载失败），fail-open
   try {
     const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
       method: 'POST',
