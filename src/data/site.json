@@ -11,6 +11,12 @@
   "weiboName": "@Gleams_Official",
   "weiboDesc": "非官方粉丝应援站 ✨",
   "ogImage": "/logo.png",
+  "hero": {
+    "title": "Gleams",
+    "subtitle": "广西南宁公主风王道系地下偶像团体",
+    "logo": "/logo.png",
+    "bg": "/hero-bg.webp"
+  },
   "douyin": "https://v.douyin.com/hAh667o1k14/",
   "xiaohongshu": "https://www.xiaohongshu.com/user/profile/641e8c220000000012011e4a",
   "tokutenRules": [

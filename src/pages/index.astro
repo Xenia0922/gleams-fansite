@@ -7,7 +7,7 @@ import scheduleData from '../data/schedule.json';
 import HomeMembers from '../components/HomeMembers';
 import HomeEvents from '../components/HomeEvents';
 import UpcomingEvents from '../components/UpcomingEvents';
-import { SiteSocial, LiveLink, SiteMeta } from '../components/SiteBits';
+import { SiteSocial, LiveLink } from '../components/SiteBits';
 import UpcomingCountdown from '../components/UpcomingCountdown';
 
 // 构建期种子：让静态 HTML 直接带内容（消除“后加载空白”）。
@@ -29,13 +29,13 @@ const initialEvents = scheduleData.events as any[];
 
 <BaseLayout>
   <section class="relative overflow-hidden">
-    <img src="/hero-bg.webp" alt="" class="absolute inset-0 w-full h-full object-cover opacity-[0.22] dark:opacity-[0.12]" fetchpriority="high" decoding="async" />
+    <img src={site.hero.bg} alt="" data-hero="bg" class="absolute inset-0 w-full h-full object-cover opacity-[0.22] dark:opacity-[0.12]" fetchpriority="high" decoding="async" />
     <div class="absolute left-1/2 -translate-x-1/2 top-6 sm:top-10 w-44 h-44 sm:w-56 sm:h-56 rounded-full blur-3xl pointer-events-none" style="background: color-mix(in srgb, var(--accent) 38%, transparent); opacity: 0.55;"></div>
     <div class="relative max-w-7xl mx-auto px-4 py-16 sm:py-20 md:py-28 text-center">
-      <img src="/logo.png" alt={site.name} class="rise relative z-10 mx-auto w-24 h-24 sm:w-32 sm:h-32 rounded-full shadow-xl mb-6" style="animation-delay:.05s" />
-      <HeroTitle name={site.name} subtitle={site.subtitle} />
-      <p class="rise text-xs sm:text-sm text-[var(--text-soft)] dark:text-gray-400 max-w-sm mx-auto mb-7 sm:mb-9 px-2 leading-relaxed" style="animation-delay:.45s">
-        <SiteMeta client:load field="weibo_desc" initial={site.weiboDesc} />
+      <img src={site.hero.logo} alt={site.name} data-hero="logo" class="rise relative z-10 mx-auto w-24 h-24 sm:w-32 sm:h-32 rounded-full shadow-xl mb-6" style="animation-delay:.05s" />
+      <HeroTitle name={site.hero.title} subtitle={site.hero.subtitle} />
+      <p class="rise text-xs sm:text-sm text-[var(--text-soft)] dark:text-gray-400 max-w-sm mx-auto mb-7 sm:mb-9 px-2 leading-relaxed" data-hero="desc" style="animation-delay:.45s">
+        {site.weiboDesc}
       </p>
       <div class="rise flex flex-wrap justify-center gap-2.5 sm:gap-3" style="animation-delay:.55s">
         <a href="/members" class="btn-pink text-xs sm:text-sm !px-5 sm:!px-7 !py-2.5 sm:!py-3">成员介绍</a>

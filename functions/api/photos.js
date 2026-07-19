@@ -81,7 +81,6 @@ async function uploadPhoto(request, env) {
 
     const urls = [];
     const keys = [];
-    const thumbUrls = [];
 
     for (const file of files) {
       const rawExt = (file.name.split('.').pop() || '').toLowerCase();
@@ -94,7 +93,6 @@ async function uploadPhoto(request, env) {
       });
       urls.push(`/api/photos?key=${encodeURIComponent(key)}`);
       keys.push(key);
-      thumbUrls.push(null);
       if (!isAdmin) await rateLog(env, ip, 'photo');
     }
 
@@ -103,11 +101,9 @@ async function uploadPhoto(request, env) {
       count: files.length,
       urls,
       keys,
-      thumbUrls,
       // 兼容单图消费的旧客户端
       url: urls[0] || null,
       key: keys[0] || null,
-      thumbUrl: thumbUrls[0] || null,
     });
   } catch (e) {
     return json({ error: '上传失败: ' + e.message }, 500);
@@ -135,23 +131,16 @@ async function servePhoto(env, key) {
  */
 export async function listPhotosData(env) {
   try {
-    const { objects } = await env.PHOTOS.list({ limit: 50, prefix: 'uploads/' });
-    const thumbKeys = new Set(objects.filter(o => isThumbKey(o.key)).map(o => o.key));
+    const { objects } = await env.PHOTOS.list({ limit: 1000, prefix: 'uploads/' });
     return objects
       .filter(o => !isThumbKey(o.key))
-      .map(o => {
-        const thumbKey = toThumbKey(o.key);
-        return {
-          key: o.key,
-          url: `/api/photos?key=${encodeURIComponent(o.key)}`,
-          uploaded: o.uploaded,
-          member: o.key.split('/')[1] || 'other',
-          event: o.customMetadata?.event || null,
-          thumbUrl: thumbKeys.has(thumbKey)
-            ? `/api/photos?key=${encodeURIComponent(thumbKey)}`
-            : null,
-        };
-      });
+      .map(o => ({
+        key: o.key,
+        url: `/api/photos?key=${encodeURIComponent(o.key)}`,
+        uploaded: o.uploaded,
+        member: o.key.split('/')[1] || 'other',
+        event: o.customMetadata?.event || null,
+      }));
   } catch (e) {
     console.error('[photos] list failed:', e.message);
     return [];

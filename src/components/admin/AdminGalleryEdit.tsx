@@ -8,14 +8,7 @@ interface Photo {
   member: string;
 }
 
-const GROUPS: { key: string; name: string; color: string }[] = [
-  { key: 'hakusai', name: '白菜', color: '#FFD700' },
-  { key: 'kumo', name: '云团', color: '#4DA6FF' },
-  { key: 'yuzi', name: '柚子', color: '#48D1A0' },
-  { key: '__extra__', name: '不分类', color: '#e83e8c' },
-];
-
-const CATEGORY_OPTS = GROUPS.map((g) => ({ value: g.key, label: g.name }));
+const EXTRA_GROUP = { key: '__extra__', name: '不分类', color: '#e83e8c' };
 
 export default function AdminGalleryEdit({ code }: { code: string }) {
   const [photos, setPhotos] = useState<Photo[]>([]);
@@ -28,18 +21,29 @@ export default function AdminGalleryEdit({ code }: { code: string }) {
   const [dragId, setDragId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [lightbox, setLightbox] = useState<{ images: { src: string }[]; idx: number } | null>(null);
+  const [groups, setGroups] = useState<{ key: string; name: string; color: string }[]>([EXTRA_GROUP]);
   const photosRef = useRef<Photo[]>([]);
   useEffect(() => { photosRef.current = photos; }, [photos]);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [galleryRes, siteRes] = await Promise.all([
+      const [galleryRes, siteRes, membersRes] = await Promise.all([
         fetch('/api/gallery'),
         fetch('/api/site'),
+        fetch('/api/members'),
       ]);
       const galleryData = await galleryRes.json();
       const siteData = await siteRes.json();
+      const membersData = await membersRes.json().catch(() => []);
+
+      // 动态成员分组 + 不分类兜底（新增成员无需改代码）
+      if (Array.isArray(membersData)) {
+        const mg = membersData
+          .filter((m: any) => m.status !== 'graduated')
+          .map((m: any) => ({ key: m.id, name: m.name, color: m.color || '#888' }));
+        setGroups([...mg, EXTRA_GROUP]);
+      }
 
       if (Array.isArray(galleryData.photos)) setPhotos(galleryData.photos);
       else if (galleryData.error) setErr(galleryData.error);
@@ -71,18 +75,18 @@ export default function AdminGalleryEdit({ code }: { code: string }) {
     return { regular: reg, featured: feat };
   }, [photos, featuredIds]);
 
-  // 普通照片按成员分组
+  // 普通照片按成员分组（动态成员 + 不分类兜底）
   const grouped = useMemo(() => {
     const map = new Map<string, Photo[]>();
-    for (const g of GROUPS) map.set(g.key, []);
+    for (const g of groups) map.set(g.key, []);
     for (const p of regular) {
       const key = map.has(p.member) ? p.member : '__extra__';
       map.get(key)!.push(p);
     }
-    return GROUPS.map((g) => ({ ...g, items: map.get(g.key)! }));
-  }, [regular]);
+    return groups.map((g) => ({ ...g, items: map.get(g.key)! }));
+  }, [regular, groups]);
 
-  const badgeOf = (m: string) => GROUPS.find((g) => g.key === m) || GROUPS[GROUPS.length - 1];
+  const badgeOf = (m: string) => groups.find((g) => g.key === m) || groups[groups.length - 1];
 
   const add = async (url: string) => {
     if (!url) return;
@@ -156,12 +160,12 @@ export default function AdminGalleryEdit({ code }: { code: string }) {
     setSaving(true);
     const fids = Array.from(featuredIds);
     // 普通分组
-    const groups = GROUPS.map((g) => ({
+    const groupPayload = groups.map((g) => ({
       member: g.key,
       ids: arr.filter((p) => !fids.includes(p.id) && p.member === g.key).map((p) => p.id),
     }));
     // 广场精选
-    groups.push({
+    groupPayload.push({
       member: '__featured__',
       ids: arr.filter((p) => fids.includes(p.id)).map((p) => p.id),
     });
@@ -169,11 +173,11 @@ export default function AdminGalleryEdit({ code }: { code: string }) {
       await fetch('/api/gallery', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'x-admin-code': code },
-        body: JSON.stringify({ groups }),
+        body: JSON.stringify({ groups: groupPayload }),
       });
     } catch { /* ignore */ }
     finally { setTimeout(() => setSaving(false), 800); }
-  }, [code, featuredIds]);
+  }, [code, featuredIds, groups]);
 
   return (
     <div className="frost-card p-5">
@@ -186,8 +190,8 @@ export default function AdminGalleryEdit({ code }: { code: string }) {
         <label className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">上传到</label>
         <select value={cat} onChange={(e) => setCat(e.target.value)}
           className="flex-1 px-3 py-2 rounded-full text-sm bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 outline-none focus:border-[var(--accent)] transition-colors">
-          {CATEGORY_OPTS.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
+          {groups.map((g) => (
+            <option key={g.key} value={g.key}>{g.name}</option>
           ))}
         </select>
       </div>

@@ -16,11 +16,12 @@ interface FanPhoto {
   member?: string;
 }
 
-const META: Record<string, { name: string; emoji: string; color: string }> = {
-  hakusai: { name: '白菜', emoji: '💛', color: '#FFD700' },
-  kumo: { name: '云团', emoji: '💙', color: '#4DA6FF' },
-  yuzi: { name: '柚子', emoji: '💚', color: '#48D1A0' },
-};
+interface MemberMeta {
+  id: string;
+  name: string;
+  emoji: string;
+  color: string;
+}
 
 export default function GalleryGrid() {
   const [filter, setFilter] = useState('all');
@@ -29,9 +30,20 @@ export default function GalleryGrid() {
   // 骨架优先：初始空 + loading，reload 中按 SSR > fetch 填充（消除 hydration 不匹配）
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [featuredFan, setFeaturedFan] = useState<FanPhoto[]>([]);
+  const [membersMeta, setMembersMeta] = useState<MemberMeta[]>([]);
   const [loading, setLoading] = useState(true);
 
   const reload = useCallback(async () => {
+    // 成员 meta：SSR 优先（middleware 为 /gallery 注入），否则 fetch /api/members
+    if (ssr?.membersMeta && ssr.membersMeta.length) {
+      setMembersMeta(ssr.membersMeta);
+    } else {
+      try {
+        const mr = await fetch('/api/members');
+        const md = await mr.json();
+        if (Array.isArray(md)) setMembersMeta(md.map((m: any) => ({ id: m.id, name: m.name, emoji: m.emoji || '', color: m.color || '' })));
+      } catch {}
+    }
     if (ssr?.galleryPhotos) {
       setPhotos(ssr.galleryPhotos); // SSR 已注入画廊图
       // 精选区若也已注入则直接采用，免二次 fetch（无布局跳动）
@@ -102,22 +114,26 @@ export default function GalleryGrid() {
 
   useEffect(() => { reload(); }, [reload]);
 
-  const memberIds = useMemo(() => Object.keys(META), []);
+  const metaMap = useMemo(() => {
+    const m = new Map<string, MemberMeta>();
+    for (const mm of membersMeta) m.set(mm.id, mm);
+    return m;
+  }, [membersMeta]);
 
   const groups = useMemo(() => {
     const map = new Map<string, Photo[]>();
     for (const p of photos) {
-      const key = META[p.member] ? p.member : '__other__';
+      const key = metaMap.has(p.member) ? p.member : '__other__';
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(p);
     }
     const ordered: { id: string; name: string; emoji: string; color: string; items: Photo[] }[] = [];
-    for (const id of memberIds) {
-      if (map.has(id)) ordered.push({ id, name: META[id].name, emoji: META[id].emoji, color: META[id].color, items: map.get(id)! });
+    for (const mm of membersMeta) {
+      if (map.has(mm.id)) ordered.push({ id: mm.id, name: mm.name, emoji: mm.emoji, color: mm.color, items: map.get(mm.id)! });
     }
     if (map.has('__other__')) ordered.push({ id: '__other__', name: '其他', emoji: '⭐', color: '#e83e8c', items: map.get('__other__')! });
     return ordered;
-  }, [photos, memberIds]);
+  }, [photos, metaMap, membersMeta]);
 
   const flat = useMemo(() => groups.flatMap((g) => g.items), [groups]);
   const visibleFlat = useMemo(

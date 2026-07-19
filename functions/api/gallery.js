@@ -123,19 +123,9 @@ export async function onRequest(context) {
   if (request.method === 'GET') {
     try {
       await seedIfEmpty(env);
-      // 优先查询含 featured 列；若列尚未创建（旧表），降级查询
-      let results;
-      try {
-        const { results: r } = await env.DB.prepare(
-          'SELECT id,url,member FROM gallery_photos ORDER BY sort ASC, created_at ASC'
-        ).all();
-        results = r;
-      } catch {
-        const { results: r } = await env.DB.prepare(
-          'SELECT id,url,member FROM gallery_photos ORDER BY sort ASC, created_at ASC'
-        ).all();
-        results = r;
-      }
+      const { results } = await env.DB.prepare(
+        'SELECT id,url,member FROM gallery_photos ORDER BY sort ASC, created_at ASC'
+      ).all();
       const all = (results || []).map((r) => ({
         id: r.id,
         url: r.url,

@@ -55,7 +55,7 @@ async function fetchPageData(path, env) {
       const cfg = {};
       for (const r of results) {
         try {
-          cfg[r.key] = ['tokuten_rules', 'tokuten_images', 'featured_square'].includes(r.key)
+          cfg[r.key] = ['tokuten_rules', 'tokuten_images', 'featured_square', 'hero_config'].includes(r.key)
             ? JSON.parse(r.value)
             : r.value;
         } catch {
@@ -97,8 +97,14 @@ async function fetchPageData(path, env) {
     } catch {}
   }
 
-  // 画廊页需要 gallery photos + 骑士团精选（已解析 url，免二次 fetch）
+  // 画廊页需要 gallery photos + 成员 meta（分组显示）+ 骑士团精选（已解析 url，免二次 fetch）
   if (path === '/gallery') {
+    try {
+      const { results } = await env.DB
+        .prepare("SELECT id,name,emoji,color FROM members WHERE status='active' ORDER BY sort_order ASC, id ASC")
+        .all();
+      data.membersMeta = results || [];
+    } catch {}
     try {
       const { results } = await env.DB
         .prepare('SELECT id,url,member FROM gallery_photos ORDER BY sort ASC, created_at ASC')
@@ -153,6 +159,34 @@ async function fetchPageData(path, env) {
   return data;
 }
 
+function escapeHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// hero 栏可自定义：对 `/` 路径，按 D1 hero_config 替换 data-hero 元素（首屏直出最新值，无闪烁）。
+// 替换失败（匹配不到）则保留原样，不影响渲染。
+function applyHero(html, hero, weiboDesc) {
+  if (!hero) return html;
+  if (hero.title) {
+    html = html.replace(/(<[^>]*data-hero="title"[^>]*>)([\s\S]*?)(<\/[a-z0-9]+>)/i, (m, a, _c, b) => a + escapeHtml(hero.title) + b);
+  }
+  if (hero.subtitle) {
+    html = html.replace(/(<[^>]*data-hero="subtitle"[^>]*>)([\s\S]*?)(<\/[a-z0-9]+>)/i, (m, a, _c, b) => a + escapeHtml(hero.subtitle) + b);
+  }
+  // desc 复用 weibo_desc
+  if (weiboDesc) {
+    html = html.replace(/(<[^>]*data-hero="desc"[^>]*>)([\s\S]*?)(<\/[a-z0-9]+>)/i, (m, a, _c, b) => a + escapeHtml(weiboDesc) + b);
+  }
+  if (hero.logo) {
+    html = html.replace(/(<img[^>]*data-hero="logo"[^>]*\bsrc=")[^"]*(")/i, `$1${escapeHtml(hero.logo)}$2`);
+  }
+  if (hero.bg) {
+    html = html.replace(/(<img[^>]*data-hero="bg"[^>]*\bsrc=")[^"]*(")/i, `$1${escapeHtml(hero.bg)}$2`);
+  }
+  return html;
+}
+
 export async function onRequest(context) {
   const { request, env, next } = context;
   const url = new URL(request.url);
@@ -183,7 +217,11 @@ export async function onRequest(context) {
     // 注入数据脚本
     const html = await response.text();
     const dataScript = `<script>window.__SSR_DATA__=${JSON.stringify(pageData)};</script>`;
-    const modified = html.replace('</body>', dataScript + '</body>');
+    let modified = html.replace('</body>', dataScript + '</body>');
+    // hero 栏可自定义：对 `/` 路径替换 data-hero 元素（首屏直出 D1 最新值，无闪烁）
+    if (path === '/' && pageData.siteConfig && pageData.siteConfig.hero_config) {
+      modified = applyHero(modified, pageData.siteConfig.hero_config, pageData.siteConfig.weibo_desc);
+    }
 
     return new Response(modified, {
       status: response.status,

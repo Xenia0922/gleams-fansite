@@ -20,6 +20,7 @@ const ALLOWED = [
   'featured_square',
   'weibo', 'weibo_name', 'weibo_desc',
   'xiaohongshu', 'douyin',
+  'hero_config',
 ];
 
 const SEED = {
@@ -43,6 +44,12 @@ const SEED = {
   weibo_desc: '非官方粉丝应援站 ✨',
   xiaohongshu: 'https://www.xiaohongshu.com/user/profile/641e8c220000000012011e4a',
   douyin: 'https://v.douyin.com/hAh667o1k14/',
+  hero_config: JSON.stringify({
+    title: 'Gleams',
+    subtitle: '广西南宁公主风王道系地下偶像团体',
+    logo: '/logo.png',
+    bg: '/hero-bg.webp',
+  }),
 };
 
 async function ensureTable(env) {
@@ -57,7 +64,7 @@ async function ensureTable(env) {
   } catch (e) { console.error('[site] seed failed:', e.message); }
 }
 
-const JSON_KEYS = new Set(['tokuten_rules', 'tokuten_images', 'featured_square']);
+const JSON_KEYS = new Set(['tokuten_rules', 'tokuten_images', 'featured_square', 'hero_config']);
 
 async function loadConfig(env) {
   const { results } = await env.DB.prepare('SELECT key, value FROM site_config').all();

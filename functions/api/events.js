@@ -53,7 +53,10 @@ async function listEvents(request, env) {
   }
 
   if (all && !adminOk(request, env)) return json({ error: '无权限' }, 403);
-  const { results } = await env.DB.prepare('SELECT * FROM events ORDER BY date DESC, id DESC').all();
+  // 列表接口不查 body（最长 20000 字），节省带宽；单条查询（带 id）才返回 body
+  const { results } = await env.DB.prepare(
+    'SELECT id,date,time,title,venue,performers,status,image FROM events ORDER BY date DESC, id DESC'
+  ).all();
   results.forEach(parseEvent);
   return json(results);
 }
