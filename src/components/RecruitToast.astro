@@ -76,10 +76,10 @@ const FALLBACK = {
   }
   :global(.dark) .recruit-title { color: var(--accent); }
   .recruit-sub {
-    font-size: 0.75rem; color: var(--accent); font-weight: 600; line-height: 1.4;
+    font-size: 0.75rem; color: var(--text-soft); line-height: 1.4;
     margin-bottom: 0.55rem;
   }
-  :global(.dark) .recruit-sub { color: var(--accent); }
+  :global(.dark) .recruit-sub { color: #a59fc0; }
   .recruit-meta {
     font-size: 0.75rem; color: var(--text-soft); line-height: 1.45; margin-bottom: 0.7rem;
   }
@@ -190,18 +190,8 @@ const FALLBACK = {
     // 以安全方式重建 meta 行：强调色片段 + 普通正文（避免 innerHTML 注入）
     function renderMeta() {
       var metaEl = el.querySelector('[data-field="meta"]');
-      metaEl.textContent = '';
-      if (current.deadline) {
-        var acc = document.createElement('span');
-        acc.className = 'recruit-accent';
-        acc.style.display = 'block';
-        acc.style.marginBottom = '0.2rem';
-        acc.textContent = '报名截止 ' + fmtDeadline(current.deadline);
-        metaEl.appendChild(acc);
-      }
-      if (current.body) {
-        metaEl.appendChild(document.createTextNode(current.body));
-      }
+      // 截止日不再单独显示（用户在正文里自行写"报名截止 X.X · ..."）；deadline 仅用于过期判断
+      metaEl.textContent = current.body || '';
     }
 
     function mapAd(r) {
