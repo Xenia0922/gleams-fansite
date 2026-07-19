@@ -70,7 +70,7 @@ async function loadConfig(env) {
   const { results } = await env.DB.prepare('SELECT key, value FROM site_config').all();
   const cfg = {};
   for (const r of results) {
-    cfg[r.key] = JSON_KEYS.has(r.key) ? safeParse(r.value, []) : r.value;
+    cfg[r.key] = JSON_KEYS.has(r.key) ? safeParse(r.value, r.key === 'hero_config' ? {} : []) : r.value;
   }
   return cfg;
 }
@@ -95,7 +95,11 @@ async function updateConfig(request, env) {
     const entries = Object.entries(b).filter(([k]) => ALLOWED.includes(k));
     if (entries.length === 0) return json({ error: '无有效字段' }, 400);
     for (const [k, v] of entries) {
-      const val = JSON_KEYS.has(k) ? JSON.stringify(Array.isArray(v) ? v : []) : String(v == null ? '' : v).slice(0, 2000);
+      // JSON 字段：tokuten_rules/tokuten_images/featured_square 是数组，hero_config 是对象；
+      // 直接 stringify 原值（null 兜底为空数组/空对象），不再强制转数组（否则 hero_config 对象会变成 []）
+      const val = JSON_KEYS.has(k)
+        ? JSON.stringify(v == null ? (k === 'hero_config' ? {} : []) : v)
+        : String(v == null ? '' : v).slice(0, 2000);
       await env.DB.prepare('INSERT INTO site_config (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = ?')
         .bind(k, val, val).run();
     }
