@@ -148,8 +148,8 @@ export default function AdminMembers({ code }: { code: string }) {
         <Field label="微博简介">
           <input value={form.weibo_desc || ''} onChange={e => set('weibo_desc', e.target.value)} className={INPUT} />
         </Field>
-        <Field label="简介">
-          <textarea value={form.intro || ''} onChange={e => set('intro', e.target.value)} rows={3} className={INPUT + ' resize-none'} />
+        <Field label="简介（换行分段，会按段落显示在详情页）">
+          <textarea value={form.intro || ''} onChange={e => set('intro', e.target.value)} rows={6} className={INPUT + ' resize-y'} />
         </Field>
         {err && <p className="text-xs text-red-500">{err}</p>}
         <div className="flex gap-2 pt-1">

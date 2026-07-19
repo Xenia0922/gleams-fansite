@@ -125,8 +125,10 @@ export default function MemberDetail({ slug, initial }: { slug?: string; initial
           </span>
         </div>
 
-        <div className="frost-card p-4">
-          <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">{member.intro}</p>
+        <div className="frost-card p-4 space-y-2">
+          {(member.intro || '').split('\n').filter(Boolean).map((line, i) => (
+            <p key={i} className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">{line.trim()}</p>
+          ))}
         </div>
 
         {member.weibo && (
@@ -140,9 +142,12 @@ export default function MemberDetail({ slug, initial }: { slug?: string; initial
 
         {gallery.length > 0 && (
           <div>
-            <h3 className="text-sm font-bold text-center md:text-left text-gray-900 dark:text-gray-100 mb-3">更多照片</h3>
+            <div className="flex items-center justify-center md:justify-start gap-3 mb-3">
+              <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100">更多照片</h3>
+              <span className="text-xs text-gray-400">{gallery.length} 张{gallery.length > 9 ? '（显示前 9 张，点开看全部）' : ''}</span>
+            </div>
             <div className="grid grid-cols-3 gap-2">
-              {gallery.map((img, i) => (
+              {gallery.slice(0, 9).map((img, i) => (
                 <div
                   key={i}
                   className="aspect-[4/5] rounded-3xl overflow-hidden glass block w-full cursor-pointer group"

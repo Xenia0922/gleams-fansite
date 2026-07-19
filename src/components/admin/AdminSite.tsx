@@ -136,17 +136,23 @@ export default function AdminSite({ code }: { code: string }) {
           </div>
           {/* 右：实时预览 */}
           <div>
-            <span className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">实时预览（亮色模式）</span>
-            <div className="relative w-full aspect-[16/9] rounded-xl overflow-hidden border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-gray-900">
+            <span className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">实时预览（亮色模式效果）</span>
+            <div className="relative w-full aspect-[16/9] rounded-xl overflow-hidden border border-gray-200 dark:border-white/10 bg-[#fbf8fe]">
               <img src={cfg.hero_config?.bg || '/hero-bg.webp'} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ opacity: cfg.hero_config?.bgOpacity ?? 0.22, objectPosition: cfg.hero_config?.bgPosition || 'center center' }} />
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
-                <img src={cfg.hero_config?.logo || '/logo.png'} alt="" className="w-10 h-10 rounded-full shadow mb-1.5 object-cover" />
-                <p className="text-[10px] text-gray-500 mb-0.5">{cfg.hero_config?.subtitle || '副标题'}</p>
-                <h3 className="text-lg font-extrabold text-gradient">{cfg.hero_config?.title || 'Gleams'}</h3>
-                <p className="text-[9px] text-gray-400 mt-1">{cfg.weibo_desc || '简介'}</p>
+              {/* accent 光晕（模拟实际 hero 的模糊圆） */}
+              <div className="absolute left-1/2 -translate-x-1/2 top-3 w-20 h-20 rounded-full blur-2xl pointer-events-none" style={{ background: 'color-mix(in srgb, var(--accent) 38%, transparent)', opacity: 0.55 }} />
+              <div className="relative h-full flex flex-col items-center justify-center text-center px-4 py-3">
+                <img src={cfg.hero_config?.logo || '/logo.png'} alt="" className="w-9 h-9 rounded-full shadow-lg mb-1.5 object-cover" />
+                <p className="text-[9px] tracking-[0.16em] text-[var(--text-soft)] mb-1">{cfg.hero_config?.subtitle || '副标题'}</p>
+                <h3 className="text-base font-extrabold text-gradient mb-1">{cfg.hero_config?.title || 'Gleams'}</h3>
+                <p className="text-[8px] text-[var(--text-soft)] mb-2 max-w-[80%]">{cfg.weibo_desc || '简介'}</p>
+                <div className="flex gap-1.5">
+                  <span className="text-[8px] font-bold text-white px-2 py-0.5 rounded-full" style={{ background: 'var(--accent)' }}>成员介绍</span>
+                  <span className="text-[8px] font-bold text-[var(--text)] px-2 py-0.5 rounded-full border border-gray-300 bg-white/50">演出日程</span>
+                </div>
               </div>
             </div>
-            <p className="text-[10px] text-gray-400 mt-1">暗色模式下透明度会自动按比例降低，保持整体协调。</p>
+            <p className="text-[10px] text-gray-400 mt-1">暗色模式下背景透明度自动按比例降低（×0.55）。</p>
           </div>
         </div>
       </div>
