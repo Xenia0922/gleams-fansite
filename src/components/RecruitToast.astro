@@ -194,11 +194,13 @@ const FALLBACK = {
       if (current.deadline) {
         var acc = document.createElement('span');
         acc.className = 'recruit-accent';
+        acc.style.display = 'block';
+        acc.style.marginBottom = '0.2rem';
         acc.textContent = '报名截止 ' + fmtDeadline(current.deadline);
         metaEl.appendChild(acc);
-        metaEl.appendChild(document.createTextNode(' · ' + (current.body || '')));
-      } else {
-        metaEl.textContent = current.body || '';
+      }
+      if (current.body) {
+        metaEl.appendChild(document.createTextNode(current.body));
       }
     }
 

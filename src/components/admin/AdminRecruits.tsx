@@ -191,12 +191,11 @@ export default function AdminRecruits({ code }: Props) {
         <p style={{ color: 'var(--accent)', fontWeight: 600 }} className="text-xs leading-snug mb-2">
           {subtitle || '　副标题'}
         </p>
+        {dl && (
+          <p style={{ color: accent }} className="text-xs font-bold leading-snug mb-1">报名截止 {dl}</p>
+        )}
         <p style={{ color: dark ? '#a59fc0' : 'var(--text-soft)' }} className="text-xs leading-snug mb-2.5">
-          {dl ? (
-            <><span style={{ color: accent }} className="font-bold">报名截止 {dl}</span> · {body || '正文内容'}</>
-          ) : (
-            body
-          )}
+          {body || '正文内容'}
         </p>
         <span style={{ color: accent }} className="inline-flex items-center gap-1 text-[13px] font-bold">{cta}</span>
       </div>
@@ -242,10 +241,10 @@ export default function AdminRecruits({ code }: Props) {
                 {r.subtitle && (
                   <p className="text-xs text-[var(--accent)] font-semibold break-words">{r.subtitle}</p>
                 )}
-                <p className="text-sm text-gray-600 dark:text-gray-300 break-words">
-                  {r.deadline && <span className="text-[var(--accent)] font-semibold">报名截止 {r.deadline.slice(5).replace('-', '.')} · </span>}
-                  {r.body}
-                </p>
+                {r.deadline && (
+                  <p className="text-xs text-[var(--accent)] font-semibold break-words">报名截止 {r.deadline.slice(5).replace('-', '.')}</p>
+                )}
+                <p className="text-sm text-gray-600 dark:text-gray-300 break-words">{r.body}</p>
                 <p className="text-xs text-gray-400 mt-0.5 truncate">{r.cta_url}</p>
               </div>
               <div className="flex-shrink-0 flex flex-col gap-1">
