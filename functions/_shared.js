@@ -57,14 +57,21 @@ export async function verifyTurnstile(token, ip, env) {
 }
 
 /**
- * 屏蔽词命中检查（大小写不敏感，子串匹配）。
- * words 为字符串数组；text 为待检文本。命中返回 true。
+ * 屏蔽词命中检查（每行一个正则，大小写不敏感）。
+ * words 为字符串数组（每项是一个正则表达式）；text 为待检文本。命中返回 true。
+ * 无效正则自动降级为子串匹配（避免语法错误导致全部放行）。
  */
 export function containsBlocked(text, words) {
   if (!words || !Array.isArray(words) || !words.length || !text) return false;
-  const lower = String(text).toLowerCase();
+  const str = String(text);
   for (const w of words) {
-    if (w && lower.includes(String(w).toLowerCase())) return true;
+    if (!w) continue;
+    try {
+      if (new RegExp(w, 'i').test(str)) return true;
+    } catch {
+      // 无效正则降级为子串匹配
+      if (str.toLowerCase().includes(String(w).toLowerCase())) return true;
+    }
   }
   return false;
 }
