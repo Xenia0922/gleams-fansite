@@ -71,6 +71,8 @@ async function loadConfig(env) {
   const cfg = {};
   for (const r of results) {
     cfg[r.key] = JSON_KEYS.has(r.key) ? safeParse(r.value, r.key === 'hero_config' ? {} : []) : r.value;
+    // 防御旧 bug 数据：hero_config 曾被 updateConfig 存为 '[]'，强制转为 {}
+    if (r.key === 'hero_config' && Array.isArray(cfg[r.key])) cfg[r.key] = {};
   }
   return cfg;
 }

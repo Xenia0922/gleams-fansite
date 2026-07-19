@@ -58,6 +58,8 @@ async function fetchPageData(path, env) {
           cfg[r.key] = ['tokuten_rules', 'tokuten_images', 'featured_square', 'hero_config'].includes(r.key)
             ? JSON.parse(r.value)
             : r.value;
+          // 防御旧 bug 数据：hero_config 曾被 updateConfig 存为 '[]'，强制转为 {}
+          if (r.key === 'hero_config' && Array.isArray(cfg[r.key])) cfg[r.key] = {};
         } catch {
           cfg[r.key] = r.value;
         }
@@ -179,10 +181,11 @@ function applyHero(html, hero, weiboDesc) {
     html = html.replace(/(<[^>]*data-hero="desc"[^>]*>)([\s\S]*?)(<\/[a-z0-9]+>)/i, (m, a, _c, b) => a + escapeHtml(weiboDesc) + b);
   }
   if (hero.logo) {
-    html = html.replace(/(<img[^>]*data-hero="logo"[^>]*\bsrc=")[^"]*(")/i, `$1${escapeHtml(hero.logo)}$2`);
+    // src 可能在 data-hero 前或后，先匹配整个 img 标签再替换其 src（与属性顺序无关）
+    html = html.replace(/<img[^>]*data-hero="logo"[^>]*>/i, (m) => m.replace(/\bsrc="[^"]*"/i, `src="${escapeHtml(hero.logo)}"`));
   }
   if (hero.bg) {
-    html = html.replace(/(<img[^>]*data-hero="bg"[^>]*\bsrc=")[^"]*(")/i, `$1${escapeHtml(hero.bg)}$2`);
+    html = html.replace(/<img[^>]*data-hero="bg"[^>]*>/i, (m) => m.replace(/\bsrc="[^"]*"/i, `src="${escapeHtml(hero.bg)}"`));
   }
   return html;
 }
