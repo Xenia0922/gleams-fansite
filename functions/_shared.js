@@ -30,25 +30,25 @@ export function adminOk(request, env) {
 }
 
 /**
- * 验证 Cloudflare Turnstile token。
- * 未配置 TURNSTILE_SECRET_KEY 时 fail-open（返回 true，靠限流+屏蔽词+审核兜底）；
+ * 验证 Cloudflare Turnstile token（canonical siteverify）。
+ * 未配置 TURNSTILE_SECRET 时 fail-open（返回 true，靠限流+屏蔽词+审核兜底）；
  * 配置了则强制 siteverify，验证失败 fail-closed（返回 false）。
  */
 export async function verifyTurnstile(token, ip, env) {
-  if (!env.TURNSTILE_SECRET_KEY) return true; // 未配置，fail-open
+  if (!env.TURNSTILE_SECRET) return true; // 未配置，fail-open
   if (!token) return false;
   try {
     const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
-        secret: env.TURNSTILE_SECRET_KEY,
+        secret: env.TURNSTILE_SECRET,
         response: token,
         remoteip: ip || '',
       }).toString(),
     });
     const data = await res.json();
-    return !!data.success;
+    return data.success === true;
   } catch (e) {
     console.error('[turnstile] verify failed:', e.message);
     return false; // 验证服务异常，fail-closed

@@ -48,9 +48,6 @@ async function fetchEvents(env) {
 async function fetchPageData(path, env) {
   const data = {};
 
-  // Turnstile site key（公开值，前端 widget 用；未配置则 null，前端不渲染 widget）
-  data.turnstileSiteKey = env.TURNSTILE_SITE_KEY || null;
-
   // 所有页面都可能需要 site_config (SiteBits 组件)
   try {
     const { results } = await env.DB.prepare('SELECT key, value FROM site_config').all();

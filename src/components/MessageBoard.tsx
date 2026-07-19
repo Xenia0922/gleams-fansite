@@ -37,9 +37,7 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
   const [filter, setFilter] = useState<string | null>(null);
   const [eventFilter, setEventFilter] = useState<string | null>(null);
 
-  // Turnstile：siteKey 由 middleware 注入，未配置则不渲染（后端 fail-open 兜底）
-  const ssr = typeof window !== 'undefined' ? (window as any).__SSR_DATA__ : null;
-  const turnstileSiteKey: string | null = ssr?.turnstileSiteKey || null;
+  // Turnstile：site key 硬编码在组件内（公开值），未配置 secret 时后端 fail-open
   const [turnstileToken, setTurnstileToken] = useState('');
 
   const fetchMessages = useCallback(async () => {
@@ -77,7 +75,7 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
 
   const handlePost = async () => {
     if (!text.trim()) return;
-    if (turnstileSiteKey && !turnstileToken) {
+    if (!turnstileToken) {
       setMsg('❌ 请先完成人机验证');
       return;
     }
@@ -229,15 +227,13 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
           className={`${selCls} mt-4 block mx-auto w-full max-w-xs`}
         />
 
-        {turnstileSiteKey && (
-          <div className="mt-4">
-            <Turnstile siteKey={turnstileSiteKey} onToken={setTurnstileToken} />
-          </div>
-        )}
+        <div className="mt-4">
+          <Turnstile onToken={setTurnstileToken} />
+        </div>
 
         <button
           onClick={handlePost}
-          disabled={!text.trim() || posting || (!!turnstileSiteKey && !turnstileToken)}
+          disabled={!text.trim() || posting || !turnstileToken}
           className="btn-pink mt-4 text-sm disabled:opacity-50"
         >
           {posting ? '发送中...' : '发送留言'}

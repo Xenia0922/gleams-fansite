@@ -4,6 +4,9 @@ declare global {
   interface Window { turnstile?: any; }
 }
 
+// 公开 site key（用户在 CF dashboard 创建的 widget，公开值可硬编码）
+export const TURNSTILE_SITE_KEY = '0x4AAAAAAD5OaNp_KO9s7Y2d';
+
 // Turnstile 脚本只加载一次（多组件共享）
 let scriptPromise: Promise<void> | null = null;
 function loadScript(): Promise<void> {
@@ -24,10 +27,13 @@ function loadScript(): Promise<void> {
 
 /**
  * Cloudflare Turnstile 人机验证 widget。
- * siteKey 由 middleware 注入到 window.__SSR_DATA__.turnstileSiteKey（未配置则不渲染）。
- * 验证通过后调用 onToken(token)；过期/失败调用 onToken('')。
+ * siteKey 默认用硬编码的 TURNSTILE_SITE_KEY（公开值）；验证通过后调用 onToken(token)。
+ * data-action="turnstile-spin-v2" + render option action 用于 analytics 归因。
+ *
+ * 注：用 explicit render（turnstile.render）而非 declarative cf-turnstile div，
+ * 因为 React 重渲染会导致 declarative widget 丢失。action 参数与 data-action 等价。
  */
-export default function Turnstile({ siteKey, onToken }: { siteKey: string; onToken: (t: string) => void }) {
+export default function Turnstile({ siteKey = TURNSTILE_SITE_KEY, onToken }: { siteKey?: string; onToken: (t: string) => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetId = useRef<string | null>(null);
   // onToken 用 ref 持有，避免 callback 变化导致 widget 重建
@@ -41,6 +47,7 @@ export default function Turnstile({ siteKey, onToken }: { siteKey: string; onTok
       try {
         widgetId.current = window.turnstile.render(containerRef.current, {
           sitekey: siteKey,
+          action: 'turnstile-spin-v2', // analytics 归因（等价于 declarative data-action）
           callback: (token: string) => cbRef.current(token),
           'expired-callback': () => cbRef.current(''),
           'error-callback': () => cbRef.current(''),
@@ -55,5 +62,5 @@ export default function Turnstile({ siteKey, onToken }: { siteKey: string; onTok
     };
   }, [siteKey]);
 
-  return <div ref={containerRef} className="flex justify-center" />;
+  return <div ref={containerRef} className="flex justify-center" data-action="turnstile-spin-v2" />;
 }
