@@ -188,7 +188,7 @@ export default function AdminRecruits({ code }: Props) {
     return (
       <div style={cardStyle} className="rounded-2xl p-4">
         <p style={{ color: accent }} className="font-bold text-[15px] leading-snug mb-1.5">{title}</p>
-        <p style={{ color: dark ? '#a59fc0' : 'var(--text-soft)' }} className="text-xs leading-snug mb-2">
+        <p style={{ color: 'var(--accent)', fontWeight: 600 }} className="text-xs leading-snug mb-2">
           {subtitle || '　副标题'}
         </p>
         <p style={{ color: dark ? '#a59fc0' : 'var(--text-soft)' }} className="text-xs leading-snug mb-2.5">
@@ -240,7 +240,7 @@ export default function AdminRecruits({ code }: Props) {
                   <span className="text-xs text-gray-300 dark:text-gray-600">#{r.sort_order}</span>
                 </div>
                 {r.subtitle && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400 break-words">{r.subtitle}</p>
+                  <p className="text-xs text-[var(--accent)] font-semibold break-words">{r.subtitle}</p>
                 )}
                 <p className="text-sm text-gray-600 dark:text-gray-300 break-words">
                   {r.deadline && <span className="text-[var(--accent)] font-semibold">报名截止 {r.deadline.slice(5).replace('-', '.')} · </span>}
