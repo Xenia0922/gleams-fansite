@@ -30,28 +30,24 @@ export default function UpcomingCountdown({ initial = [] }: { initial?: EventRow
   const [loading, setLoading] = useState(true);
   const [empty, setEmpty] = useState(false);
 
-  const apply = (list: EventRow[]) => {
-    const up = firstUpcoming(list);
-    if (up) setEvent(up);
-    else { setEmpty(true); setLoading(false); }
-  };
-
   useEffect(() => {
-    if (ssr?.events && ssr.events.length) {
-      apply(ssr.events);
-      return;
+    // 优先用本地数据源（SSR > initial）找 upcoming；找到立即 setEvent，无 fetch（零二次加载）
+    const localSources = [ssr?.events, initial].filter((s): s is EventRow[] => Array.isArray(s) && s.length > 0);
+    for (const src of localSources) {
+      const up = firstUpcoming(src);
+      if (up) { setEvent(up); return; }
     }
-    if (initial && initial.length > 0) {
-      apply(initial);
-      return;
-    }
+    // 本地数据源都没有 upcoming（D1 偶发失败或 ssr 缺失时的异常恢复，非正常流程）
     let alive = true;
     fetch('/api/events')
       .then((r) => r.json())
       .then((data) => {
         if (!alive) return;
-        if (Array.isArray(data) && data.length) apply(data);
-        else { setEmpty(true); setLoading(false); }
+        if (Array.isArray(data) && data.length) {
+          const up = firstUpcoming(data);
+          if (up) setEvent(up);
+          else { setEmpty(true); setLoading(false); }
+        } else { setEmpty(true); setLoading(false); }
       })
       .catch(() => { if (alive) { setEmpty(true); setLoading(false); } });
     return () => { alive = false; };

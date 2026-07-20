@@ -71,14 +71,23 @@ async function fetchPageData(path, env) {
   // 首页 / 成员页 / 日程页 / 画廊页 都需要 events
   if (path === '/' || path === '/members' || path === '/gallery' || path === '/fans' || path.startsWith('/schedule')) {
     try {
-      let events = await fetchEvents(env);
+      let events = null;
+      try {
+        events = await fetchEvents(env);
+      } catch (e) {
+        // D1 偶发超时/错误，重试一次
+        console.error('[middleware] fetchEvents first try failed:', e.message);
+        events = await fetchEvents(env);
+      }
       // 全新 D1：首次访问时确保已播种真实数据，再取一次
-      if (!events.length) {
+      if (!events || !events.length) {
         await ensureEvents(env);
         events = await fetchEvents(env);
       }
-      data.events = events;
-    } catch {}
+      data.events = events || [];
+    } catch (e) {
+      console.error('[middleware] fetchEvents all retries failed:', e.message);
+    }
   }
 
   // 首页 / 成员页 需要 members
