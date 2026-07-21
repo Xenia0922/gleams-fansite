@@ -191,7 +191,7 @@ export default function GalleryGrid() {
           <button
             key={f.key}
             onClick={() => { setFilter(f.key); setLightboxIdx(null); }}
-            className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${filter === f.key ? 'text-white shadow-md' : 'text-gray-500 bg-gray-100 hover:bg-gray-200'}`}
+            className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${filter === f.key ? 'text-white shadow-md' : 'text-gray-500 bg-gray-100 hover:bg-gray-200'}`}
             style={filter === f.key ? { backgroundColor: f.color } : {}}
             aria-pressed={filter === f.key}
           >

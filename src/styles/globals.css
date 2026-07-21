@@ -249,7 +249,7 @@ body::after {
   .dark .frost-card { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.06); }
 
   .btn-outline { backdrop-filter: none; -webkit-backdrop-filter: none; }
-  .btn-pink, .btn-outline { padding: 0.75rem 1.25rem; font-size: 0.9375rem; }
+  .btn-pink, .btn-outline { padding: 0.875rem 1.25rem; font-size: 0.9375rem; }
 
   body::before { opacity: 0.62; }
   .glass img, .card img, .frost-card img { border-radius: inherit; }

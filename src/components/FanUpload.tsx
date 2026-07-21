@@ -152,7 +152,7 @@ export default function FanUpload() {
                   type="button"
                   onClick={() => removeItem(it.id)}
                   aria-label="移除这张"
-                  className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/50 text-white text-xs leading-none flex items-center justify-center opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                  className="absolute top-1 right-1 w-7 h-7 rounded-full bg-black/55 text-white text-sm leading-none flex items-center justify-center md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 transition-opacity"
                 >×</button>
               </div>
             ))}
