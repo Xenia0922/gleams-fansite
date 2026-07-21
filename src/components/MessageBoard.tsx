@@ -195,7 +195,7 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
   const messageListEl = (
     <div className="space-y-3">
       {visibleMessages.map(msg => (
-        <div key={msg.id} className="frost-card p-4">
+        <div key={msg.id} className="frost-card p-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-sm">
           <div className="flex items-center gap-2 mb-1.5">
             <span className="text-sm font-bold text-gray-800 dark:text-gray-200">{msg.name}</span>
             {msg.member && metaMap.has(msg.member) && (() => {

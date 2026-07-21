@@ -178,7 +178,7 @@ export default function FanGallery() {
             const r = reactionsMap[p.key];
             const activeReactions = (r?.reactions || []).filter(x => x.count > 0);
             return (
-              <div key={p.key} className="frost-card overflow-hidden group relative">
+              <div key={p.key} className="frost-card overflow-hidden group relative transition-all duration-500 hover:-translate-y-1 hover:shadow-md">
                 <div className="cursor-pointer" onClick={() => setLightboxIdx(i)}>
                   <img src={p.thumbUrl || p.url} alt="" className="w-full aspect-[4/5] object-cover group-hover:scale-105 transition-transform duration-500 lazy-blur" loading="lazy" decoding="async" onError={(e) => handleImgError(e, p.url)} />
                 </div>
