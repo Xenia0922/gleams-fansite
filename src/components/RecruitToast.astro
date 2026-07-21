@@ -188,19 +188,28 @@ const FALLBACK = {
       deadline: el.dataset.deadline || null,
     };
 
-    // 按本地时间判定：deadline 为 'YYYY-MM-DD'，视为该日北京时间 23:59:59 前有效
+    // 按本地时间判定：deadline 可为 'YYYY-MM-DD'（当天 23:59:59 过期）或 'YYYY-MM-DDTHH:MM'（具体时刻过期）
     function isActive(deadline) {
       if (!deadline) return true;
-      var end = new Date(deadline + 'T23:59:59+08:00');
+      var end;
+      if (deadline.length > 10) {
+        // 带时间（YYYY-MM-DDTHH:MM），补秒和时区
+        end = new Date(deadline + ':00+08:00');
+      } else {
+        // 仅日期，当天 23:59:59 过期
+        end = new Date(deadline + 'T23:59:59+08:00');
+      }
       return Date.now() <= end.getTime();
     }
 
-    // 截止日格式化为「M.DD」（如 2026-08-10 → 8.10）
+    // 截止时间格式化：「M.DD」或「M.DD HH:MM」
     function fmtDeadline(d) {
       if (!d) return '';
-      var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d);
+      var m = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/.exec(d);
       if (!m) return d;
-      return parseInt(m[2], 10) + '.' + m[3];
+      var base = parseInt(m[2], 10) + '.' + m[3];
+      if (m[4] && m[5]) return base + ' ' + m[4] + ':' + m[5];
+      return base;
     }
 
     // 以安全方式重建 meta 行：强调色片段 + 普通正文（避免 innerHTML 注入）

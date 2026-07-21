@@ -82,12 +82,12 @@ async function listRecruits(request, env) {
     return json(results);
   }
 
-  // 公开：有效且未过期（按北京时间粗筛，前端再做精确判定）
+  // 公开：启用中的广告（deadline 精确判定交给前端 isActive，支持具体时刻）
   const { results } = await env.DB
     .prepare(
       `SELECT id, title, subtitle, body, cta_text, cta_url, deadline
        FROM recruits
-       WHERE enabled = 1 AND (deadline IS NULL OR deadline >= date('now', '+8 hours'))
+       WHERE enabled = 1
        ORDER BY sort_order ASC, id DESC LIMIT 10`
     )
     .all();
@@ -103,7 +103,7 @@ async function createRecruit(request, env) {
     const body = String(b.body || '').trim().slice(0, 200);
     const cta_text = String(b.cta_text || '查看详情 →').trim().slice(0, 40);
     const cta_url = String(b.cta_url || '').trim().slice(0, 500);
-    const deadline = b.deadline ? String(b.deadline).slice(0, 10) : null;
+    const deadline = b.deadline ? String(b.deadline).slice(0, 16) : null;
     const enabled = b.enabled === false || b.enabled === 0 ? 0 : 1;
     let sort_order = Number.isFinite(+b.sort_order) ? +b.sort_order : 0;
     // 未指定或 <=0 时自动排到已有广告之后
@@ -169,7 +169,7 @@ async function updateRecruit(b, env) {
       if (u && !/^https?:\/\//.test(u)) return json({ error: '链接需以 http(s):// 开头' }, 400);
       sets.push('cta_url = ?'); binds.push(u);
     }
-    if (b.deadline !== undefined) { sets.push('deadline = ?'); binds.push(b.deadline ? String(b.deadline).slice(0, 10) : null); }
+    if (b.deadline !== undefined) { sets.push('deadline = ?'); binds.push(b.deadline ? String(b.deadline).slice(0, 16) : null); }
     if (b.enabled !== undefined) { sets.push('enabled = ?'); binds.push(b.enabled === false || b.enabled === 0 ? 0 : 1); }
     if (b.sort_order !== undefined) { sets.push('sort_order = ?'); binds.push(Number.isFinite(+b.sort_order) ? +b.sort_order : 0); }
 

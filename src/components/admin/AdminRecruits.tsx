@@ -37,9 +37,11 @@ const EMPTY_FORM: RecruitForm = {
 
 const fmtDeadline = (d: string) => {
   if (!d) return '';
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d);
+  const m = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/.exec(d);
   if (!m) return d;
-  return parseInt(m[2], 10) + '.' + m[3];
+  const base = parseInt(m[2], 10) + '.' + m[3];
+  if (m[4] && m[5]) return base + ' ' + m[4] + ':' + m[5];
+  return base;
 };
 
 interface Props {
@@ -232,7 +234,7 @@ export default function AdminRecruits({ code }: Props) {
                   ) : (
                     <span className="text-[10px] bg-gray-200 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full">已停投</span>
                   )}
-                  {r.deadline && <span className="text-xs text-gray-400">截止 {r.deadline}</span>}
+                  {r.deadline && <span className="text-xs text-gray-400">截止 {fmtDeadline(r.deadline)}</span>}
                   <span className="text-xs text-gray-300 dark:text-gray-600">#{r.sort_order}</span>
                 </div>
                 {r.subtitle && (
@@ -307,9 +309,9 @@ export default function AdminRecruits({ code }: Props) {
           />
           <div className="flex gap-3 flex-wrap items-center">
             <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-              截止日
+              截止时间
               <input
-                type="date" value={form.deadline}
+                type="datetime-local" value={form.deadline}
                 onChange={e => setForm({ ...form, deadline: e.target.value })}
                 className={`${INPUT_CLS} w-auto`}
               />
