@@ -108,14 +108,18 @@ async function fetchPageData(path, env) {
     } catch {}
   }
 
-  // 画廊页需要 gallery photos + 成员 meta（分组显示）+ 骑士团精选（已解析 url，免二次 fetch）
-  if (path === '/gallery') {
+  // 画廊页 / 粉丝广场页需要成员 meta（分组显示/筛选）
+  if (path === '/gallery' || path === '/fans') {
     try {
       const { results } = await env.DB
         .prepare("SELECT id,name,emoji,color FROM members WHERE status='active' ORDER BY sort_order ASC, id ASC")
         .all();
       data.membersMeta = results || [];
     } catch {}
+  }
+
+  // 画廊页需要 gallery photos + 骑士团精选（已解析 url，免二次 fetch）
+  if (path === '/gallery') {
     try {
       const { results } = await env.DB
         .prepare('SELECT id,url,member FROM gallery_photos ORDER BY sort ASC, created_at ASC')

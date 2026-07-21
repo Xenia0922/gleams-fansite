@@ -6,7 +6,7 @@ import FanGallery from '../components/FanGallery';
 ---
 
 <BaseLayout title="骑士团广场">
-  <section class="max-w-3xl mx-auto px-4 py-12 md:py-20">
+  <section class="max-w-4xl mx-auto px-4 py-12 md:py-20">
     <div class="text-center mb-10" data-reveal>
       <p class="section-title-en">✦</p>
       <h1 class="section-title">骑士团广场</h1>
@@ -21,13 +21,9 @@ import FanGallery from '../components/FanGallery';
 
     <!-- 浏览模式（默认） -->
     <div id="tab-browse">
-      <!-- 成员筛选 -->
+      <!-- 成员筛选（动态生成，来自 middleware 注入的 membersMeta） -->
       <div id="fan-member-filter" class="flex flex-wrap justify-center gap-2 mb-10">
         <button class="fan-filter-btn active" data-member="" style="--c: var(--accent)">全部</button>
-        <button class="fan-filter-btn" data-member="hakusai" style="--c: #C99A00">💛 白菜</button>
-        <button class="fan-filter-btn" data-member="kumo" style="--c: #2F6FED">💙 云团</button>
-        <button class="fan-filter-btn" data-member="yuzi" style="--c: #1E9E6A">💚 柚子</button>
-        <button class="fan-filter-btn" data-member="other" style="--c: #C2417A">⭐ 多人·其他</button>
       </div>
       <!-- 场次筛选 -->
       <div class="flex justify-center mb-10">
@@ -85,15 +81,54 @@ import FanGallery from '../components/FanGallery';
     });
   });
 
-  // 成员筛选：广播给 MessageBoard / FanGallery 两个孤岛
-  const filterBtns = document.querySelectorAll('#fan-member-filter button');
-  filterBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      filterBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      window.dispatchEvent(new CustomEvent('fan-member-filter', { detail: btn.dataset.member }));
-    });
-  });
+  // 成员筛选：动态生成按钮（来自 SSR membersMeta，无则 fetch 兜底）
+  const filterContainer = document.getElementById('fan-member-filter');
+  if (filterContainer) {
+    function buildMemberButtons(list: any[]) {
+      if (!Array.isArray(list) || !list.length) return;
+      // 清空除"全部"外的按钮
+      const allBtn = filterContainer.querySelector('[data-member=""]');
+      filterContainer.innerHTML = '';
+      if (allBtn) filterContainer.appendChild(allBtn);
+      for (const m of list) {
+        const btn = document.createElement('button');
+        btn.className = 'fan-filter-btn';
+        btn.dataset.member = m.id;
+        btn.style.setProperty('--c', m.color || 'var(--accent)');
+        btn.textContent = `${m.emoji || '⭐'} ${m.name}`;
+        filterContainer.appendChild(btn);
+      }
+      // "其他"按钮（多人/未分类）
+      const otherBtn = document.createElement('button');
+      otherBtn.className = 'fan-filter-btn';
+      otherBtn.dataset.member = 'other';
+      otherBtn.style.setProperty('--c', '#C2417A');
+      otherBtn.textContent = '⭐ 多人·其他';
+      filterContainer.appendChild(otherBtn);
+      // 重新绑定点击事件
+      bindFilterButtons();
+    }
+    function bindFilterButtons() {
+      const btns = filterContainer.querySelectorAll('button');
+      btns.forEach(btn => {
+        btn.onclick = () => {
+          btns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          window.dispatchEvent(new CustomEvent('fan-member-filter', { detail: btn.dataset.member }));
+        };
+      });
+    }
+    const ssrMeta = (window as any).__SSR_DATA__?.membersMeta;
+    if (ssrMeta && ssrMeta.length) {
+      buildMemberButtons(ssrMeta);
+    } else {
+      fetch('/api/members')
+        .then(r => r.json())
+        .then(d => { if (Array.isArray(d)) buildMemberButtons(d.filter((m: any) => m.status !== 'graduated')); })
+        .catch(() => {});
+    }
+    bindFilterButtons();
+  }
 
   // 场次筛选：优先读 SSR 注入，无则 fetch 兜底
   const evSel = document.getElementById('fan-event-filter');

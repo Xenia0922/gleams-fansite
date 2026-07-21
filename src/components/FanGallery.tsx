@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import ImageLightboxOverlay from './ImageLightboxOverlay';
 import { useEvents } from './useEvents';
-import { MEMBER_META, tint } from '../utils/members';
+import { MEMBER_META } from '../utils/members';
 import Skeleton from './Skeleton';
 import SkeletonSwap from './SkeletonSwap';
 
@@ -16,6 +16,7 @@ interface Photo {
 
 export default function FanGallery() {
   const { map } = useEvents();
+  const ssr = typeof window !== 'undefined' ? (window as any).__SSR_DATA__ : null;
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -23,9 +24,27 @@ export default function FanGallery() {
   const [eventFilter, setEventFilter] = useState<string | null>(null);
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
   const hasCached = useRef(false);
-  const NAMED = ['hakusai', 'kumo', 'yuzi'];
+
+  // 动态成员 meta：优先 SSR 注入，fallback 硬编码 MEMBER_META（向后兼容）
+  const metaMap = useMemo(() => {
+    const m = new Map<string, { emoji: string; name: string; color: string }>();
+    if (ssr?.membersMeta && ssr.membersMeta.length) {
+      for (const mm of ssr.membersMeta) {
+        m.set(mm.id, { emoji: mm.emoji || '⭐', name: mm.name, color: mm.color || '#C2417A' });
+      }
+    } else {
+      for (const [id, meta] of Object.entries(MEMBER_META)) {
+        if (id !== 'other') m.set(id, meta);
+      }
+    }
+    m.set('other', { emoji: '⭐', name: '多人·其他', color: '#C2417A' });
+    return m;
+  }, [ssr]);
+
+  const namedIds = useMemo(() => Array.from(metaMap.keys()).filter(k => k !== 'other'), [metaMap]);
+
   const visiblePhotos = photos.filter(p =>
-    (!filter || (filter === 'other' ? !NAMED.includes(p.member ?? '') : p.member === filter)) &&
+    (!filter || (filter === 'other' ? !namedIds.includes(p.member ?? '') : p.member === filter)) &&
     (!eventFilter || p.event === eventFilter)
   );
   const lightboxImages = useMemo(() => visiblePhotos.map(p => ({ src: p.url })), [visiblePhotos]);
@@ -111,12 +130,12 @@ export default function FanGallery() {
           {visiblePhotos.map((p, i) => (
             <div key={p.key} className="frost-card overflow-hidden cursor-pointer group relative" onClick={() => setLightboxIdx(i)}>
               <img src={p.thumbUrl || p.url} alt="" className="w-full aspect-[4/5] object-cover group-hover:scale-105 transition-transform duration-500 lazy-blur" loading="lazy" decoding="async" onError={(e) => handleImgError(e, p.url)} />
-              {p.member && MEMBER_META[p.member] && (
+              {p.member && metaMap.has(p.member) && (
                 <span
                   className="absolute bottom-2 left-2 inline-flex items-center gap-1 text-[12px] font-semibold px-2 py-0.5 rounded-full backdrop-blur"
-                  style={{ color: MEMBER_META[p.member].color, backgroundColor: 'rgba(255,255,255,0.72)' }}
+                  style={{ color: metaMap.get(p.member)!.color, backgroundColor: 'rgba(255,255,255,0.72)' }}
                 >
-                  {MEMBER_META[p.member].emoji} {MEMBER_META[p.member].name}
+                  {metaMap.get(p.member)!.emoji} {metaMap.get(p.member)!.name}
                 </span>
               )}
               {p.event && map[p.event] && (

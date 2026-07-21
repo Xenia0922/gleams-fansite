@@ -1,15 +1,16 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useEvents } from './useEvents';
-import { MEMBER_META, tint } from '../utils/members';
+import { tint } from '../utils/members';
 import Skeleton from './Skeleton';
 import SkeletonSwap from './SkeletonSwap';
 import Turnstile from './Turnstile';
 
-const MEMBERS = [
-  { id: 'hakusai', emoji: '💛', name: '白菜' },
-  { id: 'kumo', emoji: '💙', name: '云团' },
-  { id: 'yuzi', emoji: '💚', name: '柚子' },
-  { id: null, emoji: '⭐', name: '全员' },
+// 默认成员列表（SSR 未注入时的 fallback）
+const FALLBACK_MEMBERS = [
+  { id: 'hakusai', emoji: '💛', name: '白菜', color: '#C99A00' },
+  { id: 'kumo', emoji: '💙', name: '云团', color: '#2F6FED' },
+  { id: 'yuzi', emoji: '💚', name: '柚子', color: '#1E9E6A' },
+  { id: null as string | null, emoji: '⭐', name: '全员', color: '#e83e8c' },
 ];
 
 // 与返图发布页（FanUpload）同款下拉/输入框样式，保证两套表单视觉一致
@@ -26,6 +27,27 @@ interface Message {
 
 export default function MessageBoard({ readonly }: { readonly?: boolean }) {
   const { events, map } = useEvents();
+  const ssr = typeof window !== 'undefined' ? (window as any).__SSR_DATA__ : null;
+
+  // 动态成员列表 + metaMap：优先 SSR 注入，fallback 硬编码
+  const members = useMemo(() => {
+    if (ssr?.membersMeta && ssr.membersMeta.length) {
+      return [
+        ...ssr.membersMeta.map((m: any) => ({ id: m.id, emoji: m.emoji || '⭐', name: m.name, color: m.color || '#e83e8c' })),
+        { id: null as string | null, emoji: '⭐', name: '全员', color: '#e83e8c' },
+      ];
+    }
+    return FALLBACK_MEMBERS;
+  }, [ssr]);
+
+  const metaMap = useMemo(() => {
+    const m = new Map<string, { emoji: string; name: string; color: string }>();
+    for (const mm of members) {
+      if (mm.id) m.set(mm.id, { emoji: mm.emoji, name: mm.name, color: mm.color });
+    }
+    return m;
+  }, [members]);
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [name, setName] = useState('');
   const [text, setText] = useState('');
@@ -127,8 +149,8 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
         <div key={msg.id} className="frost-card p-4">
           <div className="flex items-center gap-2 mb-1.5">
             <span className="text-sm font-bold text-gray-800 dark:text-gray-200">{msg.name}</span>
-            {msg.member && MEMBER_META[msg.member] && (() => {
-              const m = MEMBER_META[msg.member];
+            {msg.member && metaMap.has(msg.member) && (() => {
+              const m = metaMap.get(msg.member)!;
               return (
                 <span
                   className="inline-flex items-center gap-1 text-[13px] font-semibold px-2 py-0.5 rounded-full"
@@ -183,14 +205,14 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
     <div className="w-full">
       {/* 成员选择 + 关联场次 — 与返图发布页一致，置于白框外 */}
       <div className="flex flex-wrap gap-2 mb-4 justify-center">
-        {MEMBERS.map(m => (
+        {members.map(m => (
           <button
             key={String(m.id)}
             onClick={() => setMember(m.id)}
             className={`inline-flex items-center gap-1 px-4 py-2 rounded-full text-sm font-medium transition-all ${
               member === m.id ? 'text-white shadow-md' : 'text-gray-500 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10'
             }`}
-            style={member === m.id ? { backgroundColor: m.id === 'hakusai' ? '#FFD700' : m.id === 'kumo' ? '#4DA6FF' : m.id === 'yuzi' ? '#48D1A0' : '#e83e8c' } : {}}
+            style={member === m.id ? { backgroundColor: m.color } : {}}
           >
             {m.emoji} {m.name}
           </button>

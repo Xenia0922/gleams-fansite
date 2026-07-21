@@ -1,12 +1,13 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useEvents } from './useEvents';
 import Turnstile from './Turnstile';
 
-const MEMBERS = [
-  { id: 'hakusai', emoji: '💛', name: '白菜' },
-  { id: 'kumo', emoji: '💙', name: '云团' },
-  { id: 'yuzi', emoji: '💚', name: '柚子' },
-  { id: 'other', emoji: '⭐', name: '多人/其他' },
+// 默认成员列表（SSR 未注入时的 fallback）
+const FALLBACK_MEMBERS = [
+  { id: 'hakusai', emoji: '💛', name: '白菜', color: '#C99A00' },
+  { id: 'kumo', emoji: '💙', name: '云团', color: '#2F6FED' },
+  { id: 'yuzi', emoji: '💚', name: '柚子', color: '#1E9E6A' },
+  { id: 'other', emoji: '⭐', name: '多人/其他', color: '#e83e8c' },
 ];
 
 const MAX_FILES = 9;
@@ -17,6 +18,19 @@ interface Item { id: string; file: File; preview: string; }
 
 export default function FanUpload() {
   const { events, loading: evLoading } = useEvents();
+  const ssr = typeof window !== 'undefined' ? (window as any).__SSR_DATA__ : null;
+
+  // 动态成员列表：优先 SSR 注入，fallback 硬编码
+  const members = useMemo(() => {
+    if (ssr?.membersMeta && ssr.membersMeta.length) {
+      return [
+        ...ssr.membersMeta.map((m: any) => ({ id: m.id, emoji: m.emoji || '⭐', name: m.name, color: m.color || '#e83e8c' })),
+        { id: 'other', emoji: '⭐', name: '多人/其他', color: '#e83e8c' },
+      ];
+    }
+    return FALLBACK_MEMBERS;
+  }, [ssr]);
+
   const [member, setMember] = useState('other');
   const [event, setEvent] = useState('');
   const [nickname, setNickname] = useState('');
@@ -106,14 +120,14 @@ export default function FanUpload() {
   return (
     <div className="w-full">
       <div className="flex flex-wrap gap-2 mb-4 justify-center">
-        {MEMBERS.map(m => (
+        {members.map(m => (
           <button
             key={m.id}
             onClick={() => setMember(m.id)}
             className={`inline-flex items-center gap-1 px-4 py-2 rounded-full text-sm font-medium transition-all ${
               member === m.id ? 'text-white shadow-md' : 'text-gray-500 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10'
             }`}
-            style={member === m.id ? { backgroundColor: m.id === 'hakusai' ? '#FFD700' : m.id === 'kumo' ? '#4DA6FF' : m.id === 'yuzi' ? '#48D1A0' : '#e83e8c' } : {}}
+            style={member === m.id ? { backgroundColor: m.color } : {}}
           >
             {m.emoji} {m.name}
           </button>
