@@ -290,7 +290,12 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
                   <Skeleton className="h-3 w-14 rounded-full ml-auto" />
                 </div>
                 <Skeleton className="h-3 rounded-full w-full mb-1.5" />
-                <Skeleton className="h-3 rounded-full w-2/3" />
+                <Skeleton className="h-3 rounded-full w-2/3 mb-2.5" />
+                {/* 反应栏占位（与实际留言的反应栏高度一致） */}
+                <div className="flex items-center justify-between mt-2.5">
+                  <Skeleton className="h-6 w-16 rounded-full" />
+                  <Skeleton className="h-7 w-7 rounded-full" />
+                </div>
               </div>
             ))}
           </div>
