@@ -85,11 +85,12 @@ npm run build     # 构建到 dist/
 2. 框架预设 Astro，构建命令 `npm run build`，输出目录 `dist`
 3. 环境变量：
    - `ADMIN_CODE`（后台管理 / 删除 / 上传）
-   - `TURNSTILE_SECRET_KEY`（Turnstile 人机验证 secret，私密）
+   - `TURNSTILE_SITE_KEY`（Turnstile widget site key，前端渲染用）
+   - `TURNSTILE_SECRET_KEY`（Turnstile siteverify secret，私密）
 4. 绑定：`DB`（D1 数据库）、`PHOTOS`（R2 存储桶）
 5. 部署——所有表首次 API 请求时自动创建，无需手动 migration
 
-> Turnstile site key 已硬编码在 `src/components/Turnstile.tsx`（公开值）。`TURNSTILE_SECRET_KEY` 配置后强制 siteverify 验证；未配置时 fail-open，靠限流 + 屏蔽词 + 图片审核兜底。
+> Turnstile site key 与 secret 均通过环境变量配置，不硬编码在源码中。未配置时 widget 不渲染、后端 fail-open，靠限流 + 屏蔽词 + 图片审核兜底。
 
 ---
 
