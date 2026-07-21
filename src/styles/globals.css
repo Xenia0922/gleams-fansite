@@ -473,3 +473,26 @@ body::after {
   border-radius: 0.4rem;
   font-size: 0.85em;
 }
+
+/* ===== Emoji 选择器 ===== */
+.emoji-picker-enter {
+  animation: emoji-pop 0.22s var(--ease) both;
+  transform-origin: bottom left;
+}
+@keyframes emoji-pop {
+  from { opacity: 0; transform: scale(0.92) translateY(4px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .emoji-picker-enter { animation: none; }
+}
+
+/* 隐藏滚动条（分类 tab 横向滚动） */
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+
+/* 细滚动条（emoji 网格） */
+.scrollbar-thin { scrollbar-width: thin; scrollbar-color: rgba(140, 132, 170, 0.3) transparent; }
+.scrollbar-thin::-webkit-scrollbar { width: 4px; }
+.scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+.scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(140, 132, 170, 0.3); border-radius: 9999px; }

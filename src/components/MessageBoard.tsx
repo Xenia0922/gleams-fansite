@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useEvents } from './useEvents';
 import { tint } from '../utils/members';
 import Skeleton from './Skeleton';
 import SkeletonSwap from './SkeletonSwap';
 import Turnstile from './Turnstile';
+import EmojiPicker from './EmojiPicker';
 
 // 默认成员列表（SSR 未注入时的 fallback）
 const FALLBACK_MEMBERS = [
@@ -58,6 +59,27 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
   const [msg, setMsg] = useState('');
   const [filter, setFilter] = useState<string | null>(null);
   const [eventFilter, setEventFilter] = useState<string | null>(null);
+  const [emojiOpen, setEmojiOpen] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // 在 textarea 光标处插入 emoji
+  const insertEmoji = useCallback((emoji: string) => {
+    const ta = textareaRef.current;
+    if (!ta) {
+      setText(prev => prev + emoji);
+      return;
+    }
+    const start = ta.selectionStart ?? text.length;
+    const end = ta.selectionEnd ?? text.length;
+    const newText = text.slice(0, start) + emoji + text.slice(end);
+    setText(newText);
+    // 恢复光标到 emoji 后
+    requestAnimationFrame(() => {
+      ta.focus();
+      const pos = start + emoji.length;
+      ta.setSelectionRange(pos, pos);
+    });
+  }, [text]);
 
   // Turnstile：site key 硬编码在组件内（公开值），未配置 secret 时后端 fail-open
   const [turnstileToken, setTurnstileToken] = useState('');
@@ -232,14 +254,29 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
 
       {/* 白框内只放正文 + 底部昵称 + 验证 + 发送 */}
       <div className="frost-card p-6 text-center">
-        <textarea
-          value={text}
-          onChange={e => setText(e.target.value)}
-          placeholder="写下你想对 Gleams 说的话..."
-          maxLength={500}
-          rows={3}
-          className="w-full px-4 py-3 rounded-3xl text-sm text-left bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 outline-none focus:border-[var(--accent)] transition-colors resize-none"
-        />
+        <div className="relative">
+          <textarea
+            ref={textareaRef}
+            value={text}
+            onChange={e => setText(e.target.value)}
+            placeholder="写下你想对 Gleams 说的话..."
+            maxLength={500}
+            rows={3}
+            className="w-full px-4 py-3 pr-12 rounded-3xl text-sm text-left bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 outline-none focus:border-[var(--accent)] transition-colors resize-none"
+          />
+          <button
+            type="button"
+            onClick={() => setEmojiOpen(v => !v)}
+            className="absolute right-3 bottom-3 w-8 h-8 rounded-full flex items-center justify-center text-lg hover:bg-[var(--accent-soft)] hover:scale-110 active:scale-95 transition-all"
+            aria-label="插入 emoji"
+            aria-expanded={emojiOpen}
+          >
+            😊
+          </button>
+          {emojiOpen && (
+            <EmojiPicker onPick={insertEmoji} onClose={() => setEmojiOpen(false)} />
+          )}
+        </div>
 
         <input
           type="text"
