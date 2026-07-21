@@ -82,7 +82,31 @@ async function listRecruits(request, env) {
     return json(results);
   }
 
-  // 公开：启用中的广告（deadline 精确判定交给前端 isActive，支持具体时刻）
+  // 公开：启用中的广告（自动清理过期广告 + 返回有效广告）
+  // deadline 可为 'YYYY-MM-DD'（当天 23:59:59 过期）或 'YYYY-MM-DDTHH:MM'（具体时刻过期）
+  try {
+    const { results: all } = await env.DB
+      .prepare('SELECT id, deadline FROM recruits WHERE enabled = 1')
+      .all();
+    const now = Date.now();
+    const expiredIds = (all || []).filter(r => {
+      if (!r.deadline) return false;
+      let end;
+      if (r.deadline.length > 10) {
+        end = new Date(r.deadline + ':00+08:00');
+      } else {
+        end = new Date(r.deadline + 'T23:59:59+08:00');
+      }
+      return now > end.getTime();
+    }).map(r => r.id);
+    // 批量删除过期广告
+    for (const id of expiredIds) {
+      await env.DB.prepare('DELETE FROM recruits WHERE id = ?').bind(id).run();
+    }
+  } catch (e) {
+    console.error('[recruits] cleanup failed:', e.message);
+  }
+
   const { results } = await env.DB
     .prepare(
       `SELECT id, title, subtitle, body, cta_text, cta_url, deadline
