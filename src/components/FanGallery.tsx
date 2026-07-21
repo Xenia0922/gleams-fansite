@@ -25,6 +25,10 @@ export default function FanGallery() {
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
   const hasCached = useRef(false);
 
+  // Emoji 反应
+  const [reactionsMap, setReactionsMap] = useState<Record<string, { reactions: { emoji: string; count: number }[]; mine: string[] }>>({});
+  const REACTION_EMOJIS = ['👍', '❤️', '😂', '🥰', '😢', '👏'];
+
   // 动态成员 meta：优先 SSR 注入，fallback 硬编码 MEMBER_META（向后兼容）
   const metaMap = useMemo(() => {
     const m = new Map<string, { emoji: string; name: string; color: string }>();
@@ -58,11 +62,48 @@ export default function FanGallery() {
         setPhotos(data);
         setError('');
         hasCached.current = true;
+        // 批量获取反应统计
+        if (data.length) {
+          const ids = data.map((p: Photo) => p.key).join(',');
+          fetch(`/api/reactions?type=photo&ids=${encodeURIComponent(ids)}`)
+            .then(r => r.json())
+            .then(map => { if (map && typeof map === 'object') setReactionsMap(map); })
+            .catch(() => {});
+        }
       }
     } catch {
       if (!hasCached.current) setError('加载失败');
     }
     setLoading(false);
+  }, []);
+
+  const toggleReaction = useCallback(async (photoKey: string, emoji: string) => {
+    try {
+      const res = await fetch('/api/reactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'photo', id: photoKey, emoji }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setReactionsMap(prev => {
+          const cur = prev[photoKey] || { reactions: [], mine: [] };
+          let reactions = [...cur.reactions];
+          let mine = [...cur.mine];
+          const idx = reactions.findIndex(r => r.emoji === emoji);
+          if (data.action === 'added') {
+            if (!mine.includes(emoji)) mine.push(emoji);
+            if (idx >= 0) reactions[idx] = { emoji, count: data.count };
+            else reactions.push({ emoji, count: data.count });
+          } else {
+            mine = mine.filter(e => e !== emoji);
+            if (data.count === 0) reactions = reactions.filter(r => r.emoji !== emoji);
+            else if (idx >= 0) reactions[idx] = { emoji, count: data.count };
+          }
+          return { ...prev, [photoKey]: { reactions, mine } };
+        });
+      }
+    } catch { /* ignore */ }
   }, []);
 
   useEffect(() => { fetchPhotos(); }, [fetchPhotos]);
@@ -128,21 +169,48 @@ export default function FanGallery() {
       <>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {visiblePhotos.map((p, i) => (
-            <div key={p.key} className="frost-card overflow-hidden cursor-pointer group relative" onClick={() => setLightboxIdx(i)}>
-              <img src={p.thumbUrl || p.url} alt="" className="w-full aspect-[4/5] object-cover group-hover:scale-105 transition-transform duration-500 lazy-blur" loading="lazy" decoding="async" onError={(e) => handleImgError(e, p.url)} />
-              {p.member && metaMap.has(p.member) && (
-                <span
-                  className="absolute bottom-2 left-2 inline-flex items-center gap-1 text-[12px] font-semibold px-2 py-0.5 rounded-full backdrop-blur"
-                  style={{ color: metaMap.get(p.member)!.color, backgroundColor: 'rgba(255,255,255,0.72)' }}
-                >
-                  {metaMap.get(p.member)!.emoji} {metaMap.get(p.member)!.name}
-                </span>
-              )}
-              {p.event && map[p.event] && (
-                <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full backdrop-blur bg-white/75 text-gray-600">
-                  🎫 {map[p.event].date}
-                </span>
-              )}
+            <div key={p.key} className="frost-card overflow-hidden group relative">
+              <div className="cursor-pointer" onClick={() => setLightboxIdx(i)}>
+                <img src={p.thumbUrl || p.url} alt="" className="w-full aspect-[4/5] object-cover group-hover:scale-105 transition-transform duration-500 lazy-blur" loading="lazy" decoding="async" onError={(e) => handleImgError(e, p.url)} />
+                {p.member && metaMap.has(p.member) && (
+                  <span
+                    className="absolute top-2 left-2 inline-flex items-center gap-1 text-[12px] font-semibold px-2 py-0.5 rounded-full backdrop-blur"
+                    style={{ color: metaMap.get(p.member)!.color, backgroundColor: 'rgba(255,255,255,0.72)' }}
+                  >
+                    {metaMap.get(p.member)!.emoji} {metaMap.get(p.member)!.name}
+                  </span>
+                )}
+                {p.event && map[p.event] && (
+                  <span className="absolute top-2 right-2 inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full backdrop-blur bg-white/75 text-gray-600">
+                    🎫 {map[p.event].date}
+                  </span>
+                )}
+              </div>
+              {/* Emoji 反应栏 */}
+              <div className="flex flex-wrap gap-1 px-2 py-1.5">
+                {REACTION_EMOJIS.map(emoji => {
+                  const r = reactionsMap[p.key];
+                  const reaction = r?.reactions.find(x => x.emoji === emoji);
+                  const isMine = r?.mine.includes(emoji);
+                  const count = reaction?.count || 0;
+                  return (
+                    <button
+                      key={emoji}
+                      onClick={(e) => { e.stopPropagation(); toggleReaction(p.key, emoji); }}
+                      className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[11px] transition-all active:scale-90 ${
+                        isMine
+                          ? 'bg-[var(--accent-soft)] ring-1 ring-[var(--accent)]/30'
+                          : 'bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10'
+                      }`}
+                      aria-label={`${isMine ? '取消' : '贴'} ${emoji} 反应`}
+                      aria-pressed={isMine}
+                    >
+                      <span className="text-xs">{emoji}</span>
+                      {count > 0 && <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 tabular-nums">{count}</span>}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           ))}
         </div>

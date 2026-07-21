@@ -85,11 +85,25 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
   const [turnstileToken, setTurnstileToken] = useState('');
   const [turnstileReady, setTurnstileReady] = useState(false);
 
+  // Emoji 反应：reactionsMap[msgId] = { reactions: [{emoji,count}], mine: [emoji] }
+  const [reactionsMap, setReactionsMap] = useState<Record<string, { reactions: { emoji: string; count: number }[]; mine: string[] }>>({});
+  const REACTION_EMOJIS = ['👍', '❤️', '😂', '🥰', '😢', '👏'];
+
   const fetchMessages = useCallback(async () => {
     try {
       const res = await fetch('/api/messages');
       const data = await res.json();
-      if (Array.isArray(data)) setMessages(data);
+      if (Array.isArray(data)) {
+        setMessages(data);
+        // 批量获取反应统计
+        if (data.length) {
+          const ids = data.map((m: Message) => m.id).join(',');
+          fetch(`/api/reactions?type=message&ids=${encodeURIComponent(ids)}`)
+            .then(r => r.json())
+            .then(map => { if (map && typeof map === 'object') setReactionsMap(map); })
+            .catch(() => {});
+        }
+      }
     } catch { /* ignore */ }
     setLoading(false);
   }, []);
@@ -165,6 +179,35 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
     (!eventFilter || m.event === eventFilter)
   );
 
+  const toggleReaction = useCallback(async (msgId: string, emoji: string) => {
+    try {
+      const res = await fetch('/api/reactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'message', id: msgId, emoji }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setReactionsMap(prev => {
+          const cur = prev[msgId] || { reactions: [], mine: [] };
+          let reactions = [...cur.reactions];
+          let mine = [...cur.mine];
+          const idx = reactions.findIndex(r => r.emoji === emoji);
+          if (data.action === 'added') {
+            if (!mine.includes(emoji)) mine.push(emoji);
+            if (idx >= 0) reactions[idx] = { emoji, count: data.count };
+            else reactions.push({ emoji, count: data.count });
+          } else {
+            mine = mine.filter(e => e !== emoji);
+            if (data.count === 0) reactions = reactions.filter(r => r.emoji !== emoji);
+            else if (idx >= 0) reactions[idx] = { emoji, count: data.count };
+          }
+          return { ...prev, [msgId]: { reactions, mine } };
+        });
+      }
+    } catch { /* ignore */ }
+  }, []);
+
   const messageListEl = (
     <div className="space-y-3">
       {visibleMessages.map(msg => (
@@ -190,6 +233,31 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
             <span className="text-xs text-gray-400 ml-auto">{formatTime(msg.created_at)}</span>
           </div>
           <p className="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-wrap break-words">{msg.message}</p>
+          {/* Emoji 反应栏 */}
+          <div className="flex flex-wrap gap-1.5 mt-2.5">
+            {REACTION_EMOJIS.map(emoji => {
+              const r = reactionsMap[msg.id];
+              const reaction = r?.reactions.find(x => x.emoji === emoji);
+              const isMine = r?.mine.includes(emoji);
+              const count = reaction?.count || 0;
+              return (
+                <button
+                  key={emoji}
+                  onClick={() => toggleReaction(msg.id, emoji)}
+                  className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs transition-all active:scale-90 ${
+                    isMine
+                      ? 'bg-[var(--accent-soft)] ring-1 ring-[var(--accent)]/30'
+                      : 'bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10'
+                  }`}
+                  aria-label={`${isMine ? '取消' : '贴'} ${emoji} 反应`}
+                  aria-pressed={isMine}
+                >
+                  <span className="text-sm">{emoji}</span>
+                  {count > 0 && <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 tabular-nums">{count}</span>}
+                </button>
+              );
+            })}
+          </div>
         </div>
       ))}
       {visibleMessages.length === 0 && (
