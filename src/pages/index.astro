@@ -91,3 +91,17 @@ const initialEvents = scheduleData.events as any[];
     <SiteSocial client:load variant="buttons" initial={{ weibo: site.weibo, xiaohongshu: site.xiaohongshu, douyin: site.douyin }} />
   </section>
 </BaseLayout>
+
+<script is:inline>
+  // Hero 背景图淡入：加载完后加 loaded class 触发 opacity 过渡（避免突兀跳变）
+  (function () {
+    var bg = document.querySelector('.hero-bg-img');
+    if (!bg) return;
+    if (bg.complete && bg.naturalWidth > 0) {
+      bg.classList.add('loaded');
+    } else {
+      bg.addEventListener('load', function () { bg.classList.add('loaded'); });
+      bg.addEventListener('error', function () { bg.classList.add('loaded'); });
+    }
+  })();
+</script>

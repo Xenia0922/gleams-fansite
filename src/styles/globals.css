@@ -339,10 +339,14 @@ body::after {
   .rise { animation: none; opacity: 1; transform: none; filter: none; }
 }
 
-/* Hero 背景图：透明度由 CSS 变量 --bg-opacity 控制（admin 可调），
-   暗色模式按 0.55 比例自动降低（保持原 0.22/0.12 的明暗比例）。 */
-.hero-bg-img { opacity: var(--bg-opacity, 0.22); }
-.dark .hero-bg-img { opacity: calc(var(--bg-opacity, 0.22) * 0.55); }
+/* Hero 背景图：加载完后淡入到目标透明度（避免突兀跳变）。
+   --bg-opacity 由 admin 可调，暗色模式按 0.55 比例自动降低。 */
+.hero-bg-img { opacity: 0; transition: opacity 0.8s var(--ease); }
+.hero-bg-img.loaded { opacity: var(--bg-opacity, 0.22); }
+.dark .hero-bg-img.loaded { opacity: calc(var(--bg-opacity, 0.22) * 0.55); }
+@media (prefers-reduced-motion: reduce) {
+  .hero-bg-img { transition: opacity 0.2s ease; }
+}
 
 /* ===== 统一骨架屏（加载占位） ===== */
 .skeleton {
