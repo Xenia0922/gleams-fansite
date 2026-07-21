@@ -93,14 +93,21 @@ const initialEvents = scheduleData.events as any[];
 </BaseLayout>
 
 <script is:inline>
-  // Hero 背景图淡入：加载完后加 loaded class 触发 opacity 过渡（避免突兀跳变）
+  // Hero 背景图淡入：加载完后加 loaded class 触发 opacity 过渡
+  // 双 rAF 确保元素先以 opacity:0 渲染一帧，下一帧才加 class 触发 transition
+  // （否则有缓存时 complete=true 立即 addClass，transition 不触发，图片瞬间出现）
   (function () {
     var bg = document.querySelector('.hero-bg-img');
     if (!bg) return;
+    function reveal() {
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () { bg.classList.add('loaded'); });
+      });
+    }
     if (bg.complete && bg.naturalWidth > 0) {
-      bg.classList.add('loaded');
+      reveal();
     } else {
-      bg.addEventListener('load', function () { bg.classList.add('loaded'); });
+      bg.addEventListener('load', reveal);
       bg.addEventListener('error', function () { bg.classList.add('loaded'); });
     }
   })();

@@ -341,7 +341,7 @@ body::after {
 
 /* Hero 背景图：加载完后淡入到目标透明度（避免突兀跳变）。
    --bg-opacity 由 admin 可调，暗色模式按 0.55 比例自动降低。 */
-.hero-bg-img { opacity: 0; transition: opacity 0.8s var(--ease); }
+.hero-bg-img { opacity: 0; transition: opacity 1.2s var(--ease); }
 .hero-bg-img.loaded { opacity: var(--bg-opacity, 0.22); }
 .dark .hero-bg-img.loaded { opacity: calc(var(--bg-opacity, 0.22) * 0.55); }
 @media (prefers-reduced-motion: reduce) {
