@@ -1,7 +1,6 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useEvents } from './useEvents';
 import Turnstile from './Turnstile';
-import EmojiPicker from './EmojiPicker';
 
 // 默认成员列表（SSR 未注入时的 fallback）
 const FALLBACK_MEMBERS = [
@@ -41,26 +40,6 @@ export default function FanUpload() {
   const fileRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mountedRef = useRef(true);
-  const [emojiOpen, setEmojiOpen] = useState(false);
-  const nickRef = useRef<HTMLInputElement>(null);
-
-  // 在昵称输入框光标处插入 emoji
-  const insertEmoji = useCallback((emoji: string) => {
-    const inp = nickRef.current;
-    if (!inp) {
-      setNickname(prev => prev + emoji);
-      return;
-    }
-    const start = inp.selectionStart ?? nickname.length;
-    const end = inp.selectionEnd ?? nickname.length;
-    const newText = nickname.slice(0, start) + emoji + nickname.slice(end);
-    setNickname(newText);
-    requestAnimationFrame(() => {
-      inp.focus();
-      const pos = start + emoji.length;
-      inp.setSelectionRange(pos, pos);
-    });
-  }, [nickname]);
 
   // Turnstile：site key 硬编码在组件内（公开值），未配置 secret 时后端 fail-open
   const [turnstileToken, setTurnstileToken] = useState('');
@@ -194,29 +173,14 @@ export default function FanUpload() {
           </div>
         )}
 
-        <div className="relative mt-4 mx-auto w-full max-w-xs">
-          <input
-            ref={nickRef}
-            type="text"
-            value={nickname}
-            onChange={e => setNickname(e.target.value)}
-            placeholder="你的昵称（选填）"
-            maxLength={20}
-            className={`${selCls} pr-10`}
-          />
-          <button
-            type="button"
-            onClick={() => setEmojiOpen(v => !v)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full flex items-center justify-center text-base hover:bg-[var(--accent-soft)] hover:scale-110 active:scale-95 transition-all"
-            aria-label="插入 emoji"
-            aria-expanded={emojiOpen}
-          >
-            😊
-          </button>
-          {emojiOpen && (
-            <EmojiPicker onPick={insertEmoji} onClose={() => setEmojiOpen(false)} />
-          )}
-        </div>
+        <input
+          type="text"
+          value={nickname}
+          onChange={e => setNickname(e.target.value)}
+          placeholder="你的昵称（选填）"
+          maxLength={20}
+          className={`${selCls} mt-4 block mx-auto w-full max-w-xs`}
+        />
 
         <div className="mt-4">
           <Turnstile onToken={setTurnstileToken} onReady={() => setTurnstileReady(true)} />

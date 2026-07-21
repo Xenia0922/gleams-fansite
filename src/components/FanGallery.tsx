@@ -106,6 +106,12 @@ export default function FanGallery() {
     } catch { /* ignore */ }
   }, []);
 
+  const [popoverPhotoKey, setPopoverPhotoKey] = useState<string | null>(null);
+  const handlePickEmoji = useCallback((photoKey: string, emoji: string) => {
+    toggleReaction(photoKey, emoji);
+    setPopoverPhotoKey(null);
+  }, [toggleReaction]);
+
   useEffect(() => { fetchPhotos(); }, [fetchPhotos]);
   useEffect(() => {
     window.addEventListener('tab-browse-visible', fetchPhotos);
@@ -168,51 +174,84 @@ export default function FanGallery() {
     >
       <>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {visiblePhotos.map((p, i) => (
-            <div key={p.key} className="frost-card overflow-hidden group relative">
-              <div className="cursor-pointer" onClick={() => setLightboxIdx(i)}>
-                <img src={p.thumbUrl || p.url} alt="" className="w-full aspect-[4/5] object-cover group-hover:scale-105 transition-transform duration-500 lazy-blur" loading="lazy" decoding="async" onError={(e) => handleImgError(e, p.url)} />
+          {visiblePhotos.map((p, i) => {
+            const r = reactionsMap[p.key];
+            const activeReactions = (r?.reactions || []).filter(x => x.count > 0);
+            return (
+              <div key={p.key} className="frost-card overflow-hidden group relative">
+                <div className="cursor-pointer" onClick={() => setLightboxIdx(i)}>
+                  <img src={p.thumbUrl || p.url} alt="" className="w-full aspect-[4/5] object-cover group-hover:scale-105 transition-transform duration-500 lazy-blur" loading="lazy" decoding="async" onError={(e) => handleImgError(e, p.url)} />
+                </div>
+                {/* 成员标识（左上，小） */}
                 {p.member && metaMap.has(p.member) && (
                   <span
-                    className="absolute top-2 left-2 inline-flex items-center gap-1 text-[12px] font-semibold px-2 py-0.5 rounded-full backdrop-blur"
-                    style={{ color: metaMap.get(p.member)!.color, backgroundColor: 'rgba(255,255,255,0.72)' }}
+                    className="absolute top-1.5 left-1.5 inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full backdrop-blur-md"
+                    style={{ color: metaMap.get(p.member)!.color, backgroundColor: 'rgba(255,255,255,0.8)' }}
                   >
                     {metaMap.get(p.member)!.emoji} {metaMap.get(p.member)!.name}
                   </span>
                 )}
+                {/* 场次标识（右上，小） */}
                 {p.event && map[p.event] && (
-                  <span className="absolute top-2 right-2 inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full backdrop-blur bg-white/75 text-gray-600">
+                  <span className="absolute top-1.5 right-1.5 inline-flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded-full backdrop-blur-md bg-white/80 text-gray-600">
                     🎫 {map[p.event].date}
                   </span>
                 )}
+                {/* 已贴反应（左下，悬浮在图片上） */}
+                {activeReactions.length > 0 && (
+                  <div className="absolute bottom-1.5 left-1.5 flex flex-wrap gap-1">
+                    {activeReactions.map(r => {
+                      const isMine = reactionsMap[p.key]?.mine.includes(r.emoji);
+                      return (
+                        <button
+                          key={r.emoji}
+                          onClick={(e) => { e.stopPropagation(); toggleReaction(p.key, r.emoji); }}
+                          className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] backdrop-blur-md transition-all active:scale-90 ${
+                            isMine
+                              ? 'bg-white/90 ring-1 ring-[var(--accent)]/40'
+                              : 'bg-white/75 hover:bg-white/90'
+                          }`}
+                          aria-label={`${isMine ? '取消' : '贴'} ${r.emoji}（${r.count}）`}
+                          aria-pressed={isMine}
+                        >
+                          <span className="text-xs">{r.emoji}</span>
+                          <span className="text-[10px] font-semibold text-gray-600 tabular-nums">{r.count}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+                {/* emoji 按钮（右下，悬浮在图片上） */}
+                <div className="absolute bottom-1.5 right-1.5">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setPopoverPhotoKey(popoverPhotoKey === p.key ? null : p.key); }}
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-sm text-gray-500 bg-white/80 backdrop-blur-md hover:text-[var(--accent)] hover:bg-white hover:scale-110 active:scale-90 transition-all"
+                    aria-label="贴 emoji 反应"
+                    aria-expanded={popoverPhotoKey === p.key}
+                  >
+                    😊
+                  </button>
+                  {popoverPhotoKey === p.key && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setPopoverPhotoKey(null); }} />
+                      <div className="absolute bottom-full mb-1.5 right-0 z-50 flex gap-0.5 p-1.5 rounded-2xl frost-card shadow-lg emoji-picker-enter" onClick={(e) => e.stopPropagation()}>
+                        {REACTION_EMOJIS.map(emoji => (
+                          <button
+                            key={emoji}
+                            onClick={(e) => { e.stopPropagation(); handlePickEmoji(p.key, emoji); }}
+                            className="w-8 h-8 rounded-lg flex items-center justify-center text-lg hover:bg-[var(--accent-soft)] hover:scale-125 active:scale-90 transition-all duration-150"
+                            aria-label={`贴 ${emoji}`}
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
-              {/* Emoji 反应栏 */}
-              <div className="flex flex-wrap gap-1 px-2 py-1.5">
-                {REACTION_EMOJIS.map(emoji => {
-                  const r = reactionsMap[p.key];
-                  const reaction = r?.reactions.find(x => x.emoji === emoji);
-                  const isMine = r?.mine.includes(emoji);
-                  const count = reaction?.count || 0;
-                  return (
-                    <button
-                      key={emoji}
-                      onClick={(e) => { e.stopPropagation(); toggleReaction(p.key, emoji); }}
-                      className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[11px] transition-all active:scale-90 ${
-                        isMine
-                          ? 'bg-[var(--accent-soft)] ring-1 ring-[var(--accent)]/30'
-                          : 'bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10'
-                      }`}
-                      aria-label={`${isMine ? '取消' : '贴'} ${emoji} 反应`}
-                      aria-pressed={isMine}
-                    >
-                      <span className="text-xs">{emoji}</span>
-                      {count > 0 && <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 tabular-nums">{count}</span>}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {lightboxIdx !== null && (

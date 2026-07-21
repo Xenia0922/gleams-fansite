@@ -4,7 +4,6 @@ import { tint } from '../utils/members';
 import Skeleton from './Skeleton';
 import SkeletonSwap from './SkeletonSwap';
 import Turnstile from './Turnstile';
-import EmojiPicker from './EmojiPicker';
 
 // 默认成员列表（SSR 未注入时的 fallback）
 const FALLBACK_MEMBERS = [
@@ -59,27 +58,7 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
   const [msg, setMsg] = useState('');
   const [filter, setFilter] = useState<string | null>(null);
   const [eventFilter, setEventFilter] = useState<string | null>(null);
-  const [emojiOpen, setEmojiOpen] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  // 在 textarea 光标处插入 emoji
-  const insertEmoji = useCallback((emoji: string) => {
-    const ta = textareaRef.current;
-    if (!ta) {
-      setText(prev => prev + emoji);
-      return;
-    }
-    const start = ta.selectionStart ?? text.length;
-    const end = ta.selectionEnd ?? text.length;
-    const newText = text.slice(0, start) + emoji + text.slice(end);
-    setText(newText);
-    // 恢复光标到 emoji 后
-    requestAnimationFrame(() => {
-      ta.focus();
-      const pos = start + emoji.length;
-      ta.setSelectionRange(pos, pos);
-    });
-  }, [text]);
+  const [popoverMsgId, setPopoverMsgId] = useState<string | null>(null);
 
   // Turnstile：site key 硬编码在组件内（公开值），未配置 secret 时后端 fail-open
   const [turnstileToken, setTurnstileToken] = useState('');
@@ -208,6 +187,11 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
     } catch { /* ignore */ }
   }, []);
 
+  const handlePickEmoji = useCallback((msgId: string, emoji: string) => {
+    toggleReaction(msgId, emoji);
+    setPopoverMsgId(null);
+  }, [toggleReaction]);
+
   const messageListEl = (
     <div className="space-y-3">
       {visibleMessages.map(msg => (
@@ -233,30 +217,56 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
             <span className="text-xs text-gray-400 ml-auto">{formatTime(msg.created_at)}</span>
           </div>
           <p className="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-wrap break-words">{msg.message}</p>
-          {/* Emoji 反应栏 */}
-          <div className="flex flex-wrap gap-1.5 mt-2.5">
-            {REACTION_EMOJIS.map(emoji => {
-              const r = reactionsMap[msg.id];
-              const reaction = r?.reactions.find(x => x.emoji === emoji);
-              const isMine = r?.mine.includes(emoji);
-              const count = reaction?.count || 0;
-              return (
-                <button
-                  key={emoji}
-                  onClick={() => toggleReaction(msg.id, emoji)}
-                  className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs transition-all active:scale-90 ${
-                    isMine
-                      ? 'bg-[var(--accent-soft)] ring-1 ring-[var(--accent)]/30'
-                      : 'bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10'
-                  }`}
-                  aria-label={`${isMine ? '取消' : '贴'} ${emoji} 反应`}
-                  aria-pressed={isMine}
-                >
-                  <span className="text-sm">{emoji}</span>
-                  {count > 0 && <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 tabular-nums">{count}</span>}
-                </button>
-              );
-            })}
+          {/* Emoji 反应栏：左已贴 + 右按钮（Telegram 风格） */}
+          <div className="flex items-center justify-between mt-2.5 gap-2">
+            <div className="flex flex-wrap gap-1.5">
+              {(reactionsMap[msg.id]?.reactions || []).filter(r => r.count > 0).map(r => {
+                const isMine = reactionsMap[msg.id]?.mine.includes(r.emoji);
+                return (
+                  <button
+                    key={r.emoji}
+                    onClick={() => toggleReaction(msg.id, r.emoji)}
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs transition-all active:scale-90 ${
+                      isMine
+                        ? 'bg-[var(--accent-soft)] ring-1 ring-[var(--accent)]/30'
+                        : 'bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10'
+                    }`}
+                    aria-label={`${isMine ? '取消' : '贴'} ${r.emoji}（${r.count}）`}
+                    aria-pressed={isMine}
+                  >
+                    <span className="text-sm">{r.emoji}</span>
+                    <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 tabular-nums">{r.count}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="relative flex-shrink-0">
+              <button
+                onClick={() => setPopoverMsgId(popoverMsgId === msg.id ? null : msg.id)}
+                className="w-7 h-7 rounded-full flex items-center justify-center text-base text-gray-400 hover:text-[var(--accent)] hover:bg-[var(--accent-soft)] hover:scale-110 active:scale-90 transition-all"
+                aria-label="贴 emoji 反应"
+                aria-expanded={popoverMsgId === msg.id}
+              >
+                😊
+              </button>
+              {popoverMsgId === msg.id && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setPopoverMsgId(null)} />
+                  <div className="absolute bottom-full mb-2 right-0 z-50 flex gap-0.5 p-1.5 rounded-2xl frost-card shadow-lg emoji-picker-enter">
+                    {REACTION_EMOJIS.map(emoji => (
+                      <button
+                        key={emoji}
+                        onClick={() => handlePickEmoji(msg.id, emoji)}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-lg hover:bg-[var(--accent-soft)] hover:scale-125 active:scale-90 transition-all duration-150"
+                        aria-label={`贴 ${emoji}`}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
       ))}
@@ -322,29 +332,14 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
 
       {/* 白框内只放正文 + 底部昵称 + 验证 + 发送 */}
       <div className="frost-card p-6 text-center">
-        <div className="relative">
-          <textarea
-            ref={textareaRef}
-            value={text}
-            onChange={e => setText(e.target.value)}
-            placeholder="写下你想对 Gleams 说的话..."
-            maxLength={500}
-            rows={3}
-            className="w-full px-4 py-3 pr-12 rounded-3xl text-sm text-left bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 outline-none focus:border-[var(--accent)] transition-colors resize-none"
-          />
-          <button
-            type="button"
-            onClick={() => setEmojiOpen(v => !v)}
-            className="absolute right-3 bottom-3 w-8 h-8 rounded-full flex items-center justify-center text-lg hover:bg-[var(--accent-soft)] hover:scale-110 active:scale-95 transition-all"
-            aria-label="插入 emoji"
-            aria-expanded={emojiOpen}
-          >
-            😊
-          </button>
-          {emojiOpen && (
-            <EmojiPicker onPick={insertEmoji} onClose={() => setEmojiOpen(false)} />
-          )}
-        </div>
+        <textarea
+          value={text}
+          onChange={e => setText(e.target.value)}
+          placeholder="写下你想对 Gleams 说的话..."
+          maxLength={500}
+          rows={3}
+          className="w-full px-4 py-3 rounded-3xl text-sm text-left bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 outline-none focus:border-[var(--accent)] transition-colors resize-none"
+        />
 
         <input
           type="text"
