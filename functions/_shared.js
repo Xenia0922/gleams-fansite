@@ -39,10 +39,15 @@ export function adminOk(request, env) {
  */
 export async function adminGuard(request, env) {
   if (!adminOk(request, env)) return json({ error: '无权限' }, 403);
-  const ip = request.headers.get('cf-connecting-ip') || 'unknown';
-  const allowed = await rateAllow(env, ip, 'admin', 500, 24 * 3600 * 1000);
-  if (!allowed) return json({ error: '操作过于频繁，请稍后再试' }, 429);
-  await rateLog(env, ip, 'admin');
+  try {
+    const ip = request.headers.get('cf-connecting-ip') || 'unknown';
+    const allowed = await rateAllow(env, ip, 'admin', 500, 24 * 3600 * 1000);
+    if (!allowed) return json({ error: '操作过于频繁，请稍后再试' }, 429);
+    await rateLog(env, ip, 'admin');
+  } catch (e) {
+    // rateAllow/rateLog 内部已 try/catch，此处兜底：任何意外异常都 fail-open 放行
+    console.error('[adminGuard] rate check/log failed, fail-open:', e.message);
+  }
   return null;
 }
 
