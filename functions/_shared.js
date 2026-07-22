@@ -40,7 +40,7 @@ export function adminOk(request, env) {
 export async function adminGuard(request, env) {
   if (!adminOk(request, env)) return json({ error: '无权限' }, 403);
   const ip = request.headers.get('cf-connecting-ip') || 'unknown';
-  const allowed = await rateAllow(env, ip, 'admin', 100, 24 * 3600 * 1000);
+  const allowed = await rateAllow(env, ip, 'admin', 500, 24 * 3600 * 1000);
   if (!allowed) return json({ error: '操作过于频繁，请稍后再试' }, 429);
   await rateLog(env, ip, 'admin');
   return null;
