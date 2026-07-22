@@ -260,7 +260,7 @@ export async function onRequest(context) {
     }
 
     const respHeaders = new Headers(response.headers);
-    respHeaders.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+    respHeaders.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
     return new Response(modified, {
       status: response.status,
       statusText: response.statusText,
