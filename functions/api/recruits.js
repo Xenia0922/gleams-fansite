@@ -9,7 +9,7 @@
  * 无需在 Cloudflare 控制台手动执行 migration。
  */
 
-import { adminOk, json, withTable } from '../_shared.js';
+import { adminOk, adminGuard, json, withTable } from '../_shared.js';
 import { rateAllow, rateLog } from './_rate.js';
 
 const DDL = `CREATE TABLE IF NOT EXISTS recruits (
@@ -119,7 +119,7 @@ async function listRecruits(request, env) {
 }
 
 async function createRecruit(request, env) {
-  if (!adminOk(request, env)) return json({ error: '无权限' }, 403);
+  const denied = await adminGuard(request, env); if (denied) return denied;
   try {
     const b = await request.json();
     const title = String(b.title || '').trim().slice(0, 60);
@@ -156,7 +156,7 @@ async function createRecruit(request, env) {
 
 // PUT 入口：body 含 order 数组 → 批量重排；否则单条更新
 async function putRecruit(request, env) {
-  if (!adminOk(request, env)) return json({ error: '无权限' }, 403);
+  const denied = await adminGuard(request, env); if (denied) return denied;
   try {
     const b = await request.json();
     if (Array.isArray(b.order)) return reorderRecruits(b.order, env);
@@ -207,7 +207,7 @@ async function updateRecruit(b, env) {
 }
 
 async function deleteRecruit(request, env) {
-  if (!adminOk(request, env)) return json({ error: '无权限' }, 403);
+  const denied = await adminGuard(request, env); if (denied) return denied;
   try {
     const { id } = await request.json();
     if (!id) return json({ error: '缺少 id' }, 400);

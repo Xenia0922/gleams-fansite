@@ -7,7 +7,7 @@
  */
 
 import { rateAllow, rateLog } from './_rate.js';
-import { adminOk, json, verifyTurnstile } from '../_shared.js';
+import { adminOk, adminGuard, json, verifyTurnstile } from '../_shared.js';
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -195,7 +195,7 @@ async function deletePhoto(request, env) {
 
 // admin 审核：approve（R2 不支持单独更新 metadata，需 get+put 重写）/ reject（删 R2 对象）
 async function moderatePhoto(request, env) {
-  if (!adminOk(request, env)) return json({ error: '无权限' }, 403);
+  const denied = await adminGuard(request, env); if (denied) return denied;
   try {
     const { key, action } = await request.json();
     if (!key || !key.startsWith('uploads/')) return json({ error: '无效 key' }, 400);

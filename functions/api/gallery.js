@@ -16,7 +16,7 @@
  * 表 gallery_photos / gallery_meta 由本接口首次请求时自动创建（无需手动 migration）。
  */
 
-import { adminOk, json } from '../_shared.js';
+import { adminOk, adminGuard, json } from '../_shared.js';
 
 const DDL = `
 CREATE TABLE IF NOT EXISTS gallery_photos (
@@ -142,7 +142,7 @@ export async function onRequest(context) {
 
   // ---- 管理员：新增照片 ----
   if (request.method === 'POST') {
-    if (!adminOk(request, env)) return json({ error: '无权限' }, 403);
+    const denied = await adminGuard(request, env); if (denied) return denied;
     try {
       const b = await request.json().catch(() => ({}));
       const url = String(b.url || '').trim();
@@ -165,7 +165,7 @@ export async function onRequest(context) {
 
   // ---- 管理员：切换精选 ----
   if (request.method === 'PUT') {
-    if (!adminOk(request, env)) return json({ error: '无权限' }, 403);
+    const denied = await adminGuard(request, env); if (denied) return denied;
     try {
       const b = await request.json().catch(() => ({}));
       const id = String(b.id || '').trim();
@@ -192,7 +192,7 @@ export async function onRequest(context) {
 
   // ---- 管理员：排序 ----
   if (request.method === 'PATCH') {
-    if (!adminOk(request, env)) return json({ error: '无权限' }, 403);
+    const denied = await adminGuard(request, env); if (denied) return denied;
     try {
       const b = await request.json().catch(() => ({}));
       // 支持两种格式：
@@ -222,7 +222,7 @@ export async function onRequest(context) {
 
   // ---- 管理员：删除 ----
   if (request.method === 'DELETE') {
-    if (!adminOk(request, env)) return json({ error: '无权限' }, 403);
+    const denied = await adminGuard(request, env); if (denied) return denied;
     try {
       const id = new URL(request.url).searchParams.get('id');
       if (!id) return json({ error: '缺少 id' }, 400);

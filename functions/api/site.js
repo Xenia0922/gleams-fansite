@@ -5,7 +5,7 @@
  * 表 site_config 为 key-value，首次请求自动建表并播种（来自 site.json + 关于/特典 硬编码文案）。
  */
 
-import { adminOk, json, withTable } from '../_shared.js';
+import { adminOk, adminGuard, json, withTable } from '../_shared.js';
 
 const DDL = `CREATE TABLE IF NOT EXISTS site_config (
   key TEXT PRIMARY KEY,
@@ -95,7 +95,7 @@ export async function onRequest(context) {
 }
 
 async function updateConfig(request, env) {
-  if (!adminOk(request, env)) return json({ error: '无权限' }, 403);
+  const denied = await adminGuard(request, env); if (denied) return denied;
   try {
     const b = await request.json();
     const entries = Object.entries(b).filter(([k]) => ALLOWED.includes(k));

@@ -6,6 +6,8 @@
  *   import { adminOk, json, withTable } from '../_shared.js';
  */
 
+import { rateAllow, rateLog } from './api/_rate.js';
+
 /**
  * 返回 JSON Response（含安全头）
  */
@@ -17,6 +19,7 @@ export function json(data, status = 200) {
       'X-Content-Type-Options': 'nosniff',
       'X-Frame-Options': 'DENY',
       'Referrer-Policy': 'strict-origin-when-cross-origin',
+      'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
       'Access-Control-Allow-Origin': '*',
     },
   });
@@ -27,6 +30,20 @@ export function json(data, status = 200) {
  */
 export function adminOk(request, env) {
   return (request.headers.get('x-admin-code') || '') === env.ADMIN_CODE;
+}
+
+/**
+ * admin 操作防护：权限验证 + IP 限流（24h 100 次）。
+ * 通过返回 null（即 undefined）；拒绝返回 json Response 可直接 return。
+ * 用法：const denied = await adminGuard(request, env); if (denied) return denied;
+ */
+export async function adminGuard(request, env) {
+  if (!adminOk(request, env)) return json({ error: '无权限' }, 403);
+  const ip = request.headers.get('cf-connecting-ip') || 'unknown';
+  const allowed = await rateAllow(env, ip, 'admin', 100, 24 * 3600 * 1000);
+  if (!allowed) return json({ error: '操作过于频繁，请稍后再试' }, 429);
+  await rateLog(env, ip, 'admin');
+  return null;
 }
 
 /**

@@ -4,7 +4,7 @@
  * DELETE /api/messages — 删除留言（需 ADMIN_CODE）
  */
 
-import { adminOk, json, verifyTurnstile, containsBlocked } from '../_shared.js';
+import { adminOk, adminGuard, json, verifyTurnstile, containsBlocked } from '../_shared.js';
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -78,7 +78,7 @@ async function postMessage(request, env) {
 
 // 后台编辑：可修改 name / message / member
 async function editMessage(request, env) {
-  if (!adminOk(request, env)) return json({ error: '无权限' }, 403);
+  const denied = await adminGuard(request, env); if (denied) return denied;
   try {
     const b = await request.json();
     const id = String(b.id || '').trim();

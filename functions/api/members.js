@@ -9,7 +9,7 @@
  * 表 members 由本接口首次请求时自动创建并播种（无需手动 migration）。
  */
 
-import { adminOk, json, withTable } from '../_shared.js';
+import { adminOk, adminGuard, json, withTable } from '../_shared.js';
 
 const DDL = `CREATE TABLE IF NOT EXISTS members (
   id TEXT PRIMARY KEY,
@@ -99,7 +99,7 @@ async function listMembers(request, env) {
 }
 
 async function createMember(request, env) {
-  if (!adminOk(request, env)) return json({ error: '无权限' }, 403);
+  const denied = await adminGuard(request, env); if (denied) return denied;
   try {
     const b = await request.json();
     const id = String(b.id || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
@@ -131,7 +131,7 @@ async function createMember(request, env) {
 }
 
 async function putMember(request, env) {
-  if (!adminOk(request, env)) return json({ error: '无权限' }, 403);
+  const denied = await adminGuard(request, env); if (denied) return denied;
   try {
     const b = await request.json();
     const id = String(b.id || '').trim();
@@ -153,7 +153,7 @@ async function putMember(request, env) {
 }
 
 async function deleteMember(request, env) {
-  if (!adminOk(request, env)) return json({ error: '无权限' }, 403);
+  const denied = await adminGuard(request, env); if (denied) return denied;
   try {
     const { id } = await request.json();
     if (!id) return json({ error: '缺少 id' }, 400);

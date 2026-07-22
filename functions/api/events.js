@@ -12,7 +12,7 @@
  * body 字段存「日程详情」Markdown 正文。
  */
 
-import { adminOk, json, withTable } from '../_shared.js';
+import { adminOk, adminGuard, json, withTable } from '../_shared.js';
 import { ensureEvents } from '../_seed.js';
 
 function parseEvent(row) {
@@ -62,7 +62,7 @@ async function listEvents(request, env) {
 }
 
 async function createEvent(request, env) {
-  if (!adminOk(request, env)) return json({ error: '无权限' }, 403);
+  const denied = await adminGuard(request, env); if (denied) return denied;
   try {
     const b = await request.json();
     const id = String(b.id || '').trim();
@@ -96,7 +96,7 @@ async function createEvent(request, env) {
 }
 
 async function putEvent(request, env) {
-  if (!adminOk(request, env)) return json({ error: '无权限' }, 403);
+  const denied = await adminGuard(request, env); if (denied) return denied;
   try {
     const b = await request.json();
     const id = String(b.id || '').trim();
@@ -145,7 +145,7 @@ async function putEvent(request, env) {
 }
 
 async function deleteEvent(request, env) {
-  if (!adminOk(request, env)) return json({ error: '无权限' }, 403);
+  const denied = await adminGuard(request, env); if (denied) return denied;
   try {
     const { id } = await request.json();
     if (!id) return json({ error: '缺少 id' }, 400);

@@ -259,10 +259,12 @@ export async function onRequest(context) {
       modified = applyHero(modified, pageData.siteConfig.hero_config, pageData.siteConfig.weibo_desc);
     }
 
+    const respHeaders = new Headers(response.headers);
+    respHeaders.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
     return new Response(modified, {
       status: response.status,
       statusText: response.statusText,
-      headers: response.headers,
+      headers: respHeaders,
     });
   } catch (e) {
     console.error('[middleware] error:', e.message);
