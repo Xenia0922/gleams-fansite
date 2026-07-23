@@ -7,7 +7,7 @@
  * 预设 emoji 白名单：👍 ❤️ 😂 🥰 😢 👏
  */
 
-import { json } from '../_shared.js';
+import { json, handlePreFlight } from '../_shared.js';
 
 const ALLOWED_EMOJIS = ['👍', '❤️', '😂', '🥰', '😢', '👏'];
 const ALLOWED_TYPES = new Set(['message', 'photo']);
@@ -29,6 +29,8 @@ async function ensureTable(env) {
 }
 
 export async function onRequest(context) {
+  const pre = handlePreFlight(context);
+  if (pre) return pre;
   const { request, env } = context;
   await ensureTable(env);
 
@@ -41,14 +43,14 @@ async function getReactions(request, env) {
   const url = new URL(request.url);
   const type = url.searchParams.get('type');
   if (!type || !ALLOWED_TYPES.has(type)) {
-    return json({ error: '参数无效' }, 400);
+    return json({ error: '参数无效' }, 400, { request, env });
   }
 
   // 批量查询：?type=message&ids=id1,id2,id3 → { id1: { reactions: [{emoji,count}], mine: [emoji] }, ... }
   const idsParam = url.searchParams.get('ids');
   if (idsParam) {
     const ids = idsParam.split(',').filter(Boolean);
-    if (!ids.length) return json({});
+    if (!ids.length) return json({}, 200, { request, env });
     const ip = request.headers.get('cf-connecting-ip') || 'unknown';
     const placeholders = ids.map(() => '?').join(',');
     const { results } = await env.DB
@@ -68,26 +70,26 @@ async function getReactions(request, env) {
       if (!map[m.target_id]) map[m.target_id] = { reactions: [], mine: [] };
       map[m.target_id].mine.push(m.emoji);
     }
-    return json(map);
+    return json(map, 200, { request, env });
   }
 
   // 单条查询：?type=message&id=xxx → [{emoji,count}]
   const id = url.searchParams.get('id');
-  if (!id) return json({ error: '缺少 id 或 ids' }, 400);
+  if (!id) return json({ error: '缺少 id 或 ids' }, 400, { request, env });
   const { results } = await env.DB
     .prepare('SELECT emoji, COUNT(*) as count FROM reactions WHERE target_type = ? AND target_id = ? GROUP BY emoji')
     .bind(type, id)
     .all();
-  return json(results || []);
+  return json(results || [], 200, { request, env });
 }
 
 async function toggleReaction(request, env) {
   try {
     const body = await request.json();
     const { type, id, emoji } = body;
-    if (!type || !id || !emoji) return json({ error: '缺少参数' }, 400);
-    if (!ALLOWED_TYPES.has(type)) return json({ error: '类型无效' }, 400);
-    if (!ALLOWED_EMOJIS.includes(emoji)) return json({ error: 'emoji 不在白名单' }, 400);
+    if (!type || !id || !emoji) return json({ error: '缺少参数' }, 400, { request, env });
+    if (!ALLOWED_TYPES.has(type)) return json({ error: '类型无效' }, 400, { request, env });
+    if (!ALLOWED_EMOJIS.includes(emoji)) return json({ error: 'emoji 不在白名单' }, 400, { request, env });
 
     const ip = request.headers.get('cf-connecting-ip') || 'unknown';
 
@@ -107,7 +109,7 @@ async function toggleReaction(request, env) {
         .prepare('SELECT COUNT(*) as count FROM reactions WHERE target_type = ? AND target_id = ? AND emoji = ?')
         .bind(type, id, emoji)
         .all();
-      return json({ ok: true, action: 'removed', count: results[0]?.count || 0 });
+      return json({ ok: true, action: 'removed', count: results[0]?.count || 0 }, 200, { request, env });
     } else {
       await env.DB
         .prepare('INSERT INTO reactions (target_type, target_id, emoji, ip, created_at) VALUES (?, ?, ?, ?, ?)')
@@ -117,9 +119,9 @@ async function toggleReaction(request, env) {
         .prepare('SELECT COUNT(*) as count FROM reactions WHERE target_type = ? AND target_id = ? AND emoji = ?')
         .bind(type, id, emoji)
         .all();
-      return json({ ok: true, action: 'added', count: results[0]?.count || 1 });
+      return json({ ok: true, action: 'added', count: results[0]?.count || 1 }, 200, { request, env });
     }
   } catch (e) {
-    return json({ error: e.message }, 500);
+    return json({ error: e.message }, 500, { request, env });
   }
 }

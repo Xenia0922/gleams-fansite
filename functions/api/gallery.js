@@ -16,7 +16,7 @@
  * 表 gallery_photos / gallery_meta 由本接口首次请求时自动创建（无需手动 migration）。
  */
 
-import { adminOk, adminGuard, json } from '../_shared.js';
+import { adminOk, adminGuard, json, handlePreFlight } from '../_shared.js';
 
 const DDL = `
 CREATE TABLE IF NOT EXISTS gallery_photos (
@@ -112,6 +112,8 @@ async function seedIfEmpty(env) {
 }
 
 export async function onRequest(context) {
+  const pre = handlePreFlight(context);
+  if (pre) return pre;
   const { request, env } = context;
   try {
     await ensureTable(env);
@@ -134,9 +136,9 @@ export async function onRequest(context) {
       return json({
         photos: all,
         isAdmin: adminOk(request, env),
-      });
+      }, 200, { request, env });
     } catch (e) {
-      return json({ photos: [], featured: [], isAdmin: false, error: e.message }, 500);
+      return json({ photos: [], featured: [], isAdmin: false, error: e.message }, 500, { request, env });
     }
   }
 
@@ -146,9 +148,9 @@ export async function onRequest(context) {
     try {
       const b = await request.json().catch(() => ({}));
       const url = String(b.url || '').trim();
-      if (!url) return json({ error: '缺少图片地址' }, 400);
+      if (!url) return json({ error: '缺少图片地址' }, 400, { request, env });
       if (!/^\/api\/photos|^https?:\/\//.test(url)) {
-        return json({ error: '仅支持本站图片（/api/photos?...）或 http(s) 链接' }, 400);
+        return json({ error: '仅支持本站图片（/api/photos?...）或 http(s) 链接' }, 400, { request, env });
       }
       const max = await env.DB.prepare('SELECT COALESCE(MAX(sort),0) m FROM gallery_photos').first();
       const id = crypto.randomUUID();
@@ -157,9 +159,9 @@ export async function onRequest(context) {
       )
         .bind(id, url, String(b.member || '__extra__'), (max ? max.m : 0) + 1, new Date().toISOString())
         .run();
-      return json({ ok: true, id });
+      return json({ ok: true, id }, 200, { request, env });
     } catch (e) {
-      return json({ error: e.message }, 500);
+      return json({ error: e.message }, 500, { request, env });
     }
   }
 
@@ -169,7 +171,7 @@ export async function onRequest(context) {
     try {
       const b = await request.json().catch(() => ({}));
       const id = String(b.id || '').trim();
-      if (!id) return json({ error: '缺少 id' }, 400);
+      if (!id) return json({ error: '缺少 id' }, 400, { request, env });
       const featured = b.featured === 1 || b.featured === true ? 1 : 0;
       // 尝试更新 featured；若列不存在则重试 ALTER TABLE 后再试
       try {
@@ -184,9 +186,9 @@ export async function onRequest(context) {
           throw colErr;
         }
       }
-      return json({ ok: true, id, featured });
+      return json({ ok: true, id, featured }, 200, { request, env });
     } catch (e) {
-      return json({ error: e.message }, 500);
+      return json({ error: e.message }, 500, { request, env });
     }
   }
 
@@ -210,13 +212,13 @@ export async function onRequest(context) {
       } else if (Array.isArray(b.order)) {
         b.order.forEach((id, i) => assignments.push({ id, sort: i + 1 }));
       }
-      if (!assignments.length) return json({ error: '缺少排序' }, 400);
+      if (!assignments.length) return json({ error: '缺少排序' }, 400, { request, env });
       const stmt = env.DB.prepare('UPDATE gallery_photos SET sort = ? WHERE id = ?');
       const batch = assignments.map((a) => stmt.bind(a.sort, a.id));
       await env.DB.batch(batch);
-      return json({ ok: true });
+      return json({ ok: true }, 200, { request, env });
     } catch (e) {
-      return json({ error: e.message }, 500);
+      return json({ error: e.message }, 500, { request, env });
     }
   }
 
@@ -225,11 +227,11 @@ export async function onRequest(context) {
     const denied = await adminGuard(request, env); if (denied) return denied;
     try {
       const id = new URL(request.url).searchParams.get('id');
-      if (!id) return json({ error: '缺少 id' }, 400);
+      if (!id) return json({ error: '缺少 id' }, 400, { request, env });
       await env.DB.prepare('DELETE FROM gallery_photos WHERE id = ?').bind(id).run();
-      return json({ ok: true });
+      return json({ ok: true }, 200, { request, env });
     } catch (e) {
-      return json({ error: e.message }, 500);
+      return json({ error: e.message }, 500, { request, env });
     }
   }
 

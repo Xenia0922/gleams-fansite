@@ -9,7 +9,7 @@
  * 表 members 由本接口首次请求时自动创建并播种（无需手动 migration）。
  */
 
-import { adminOk, adminGuard, json, withTable } from '../_shared.js';
+import { adminOk, adminGuard, json, withTable, handlePreFlight } from '../_shared.js';
 
 const DDL = `CREATE TABLE IF NOT EXISTS members (
   id TEXT PRIMARY KEY,
@@ -68,6 +68,8 @@ function parseMember(row) {
 }
 
 export async function onRequest(context) {
+  const pre = handlePreFlight(context);
+  if (pre) return pre;
   const { request, env } = context;
   try { await ensureTable(env); } catch (e) { console.error('[members] ensureTable error:', e.message); }
 
@@ -85,17 +87,17 @@ async function listMembers(request, env) {
 
   if (id) {
     const { results } = await env.DB.prepare('SELECT * FROM members WHERE id = ?').bind(id).all();
-    if (!results.length) return json({ error: '未找到成员' }, 404);
-    return json(parseMember(results[0]));
+    if (!results.length) return json({ error: '未找到成员' }, 404, { request, env });
+    return json(parseMember(results[0]), 200, { request, env });
   }
 
   const isAdmin = all && adminOk(request, env);
-  if (all && !isAdmin) return json({ error: '无权限' }, 403);
+  if (all && !isAdmin) return json({ error: '无权限' }, 403, { request, env });
 
   const cols = isAdmin ? '*' : 'id,name,name_jp,color,emoji,birthday,constellation,status,image';
   const { results } = await env.DB.prepare(`SELECT ${cols} FROM members ORDER BY sort_order ASC, id ASC`).all();
   if (isAdmin) results.forEach(parseMember);
-  return json(results);
+  return json(results, 200, { request, env });
 }
 
 async function createMember(request, env) {
@@ -104,9 +106,9 @@ async function createMember(request, env) {
     const b = await request.json();
     const id = String(b.id || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
     const name = String(b.name || '').trim().slice(0, 30);
-    if (!id || !name) return json({ error: 'id 与名称必填' }, 400);
+    if (!id || !name) return json({ error: 'id 与名称必填' }, 400, { request, env });
     if (b.image && !/^https?:\/\//.test(String(b.image).trim()) && !String(b.image).startsWith('/')) {
-      return json({ error: '头像需为图片链接或 / 开头路径' }, 400);
+      return json({ error: '头像需为图片链接或 / 开头路径' }, 400, { request, env });
     }
     const gallery = Array.isArray(b.gallery) ? b.gallery : [];
     await env.DB
@@ -123,10 +125,10 @@ async function createMember(request, env) {
         Number.isFinite(+b.sort_order) ? +b.sort_order : 99, new Date().toISOString()
       )
       .run();
-    return json({ ok: true, id });
+    return json({ ok: true, id }, 200, { request, env });
   } catch (e) {
-    if (/UNIQUE|primary key/i.test(e.message || '')) return json({ error: '该 id 已存在' }, 409);
-    return json({ error: e.message }, 500);
+    if (/UNIQUE|primary key/i.test(e.message || '')) return json({ error: '该 id 已存在' }, 409, { request, env });
+    return json({ error: e.message }, 500, { request, env });
   }
 }
 
@@ -135,7 +137,7 @@ async function putMember(request, env) {
   try {
     const b = await request.json();
     const id = String(b.id || '').trim();
-    if (!id) return json({ error: '缺少 id' }, 400);
+    if (!id) return json({ error: '缺少 id' }, 400, { request, env });
     const sets = [];
     const binds = [];
     const map = { name: 30, nameJP: 30, color: 20, emoji: 8, birthday: 10, constellation: 10, image: 500, weibo: 200, weibo_name: 60, weibo_desc: 120, intro: 10000 };
@@ -145,20 +147,20 @@ async function putMember(request, env) {
     if (b.status !== undefined) { sets.push('status = ?'); binds.push(b.status === 'graduated' ? 'graduated' : 'active'); }
     if (b.gallery !== undefined) { sets.push('gallery = ?'); binds.push(JSON.stringify(Array.isArray(b.gallery) ? b.gallery : [])); }
     if (b.sort_order !== undefined) { sets.push('sort_order = ?'); binds.push(Number.isFinite(+b.sort_order) ? +b.sort_order : 0); }
-    if (sets.length === 0) return json({ ok: true });
+    if (sets.length === 0) return json({ ok: true }, 200, { request, env });
     binds.push(id);
     await env.DB.prepare(`UPDATE members SET ${sets.join(', ')} WHERE id = ?`).bind(...binds).run();
-    return json({ ok: true });
-  } catch (e) { return json({ error: e.message }, 500); }
+    return json({ ok: true }, 200, { request, env });
+  } catch (e) { return json({ error: e.message }, 500, { request, env }); }
 }
 
 async function deleteMember(request, env) {
   const denied = await adminGuard(request, env); if (denied) return denied;
   try {
     const { id } = await request.json();
-    if (!id) return json({ error: '缺少 id' }, 400);
+    if (!id) return json({ error: '缺少 id' }, 400, { request, env });
     await env.DB.prepare('DELETE FROM members WHERE id = ?').bind(id).run();
-    return json({ ok: true });
-  } catch (e) { return json({ error: e.message }, 500); }
+    return json({ ok: true }, 200, { request, env });
+  } catch (e) { return json({ error: e.message }, 500, { request, env }); }
 }
 

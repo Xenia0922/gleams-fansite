@@ -12,7 +12,7 @@
  * body 字段存「日程详情」Markdown 正文。
  */
 
-import { adminOk, adminGuard, json, withTable } from '../_shared.js';
+import { adminOk, adminGuard, json, withTable, handlePreFlight } from '../_shared.js';
 import { ensureEvents } from '../_seed.js';
 
 function parseEvent(row) {
@@ -26,6 +26,8 @@ function parseEvent(row) {
 }
 
 export async function onRequest(context) {
+  const pre = handlePreFlight(context);
+  if (pre) return pre;
   const { request, env } = context;
   try {
     await ensureEvents(env);
@@ -48,17 +50,17 @@ async function listEvents(request, env) {
   const id = url.searchParams.get('id');
   if (id) {
     const { results } = await env.DB.prepare('SELECT * FROM events WHERE id = ?').bind(id).all();
-    if (!results.length) return json({ error: '未找到该日程' }, 404);
-    return json(parseEvent(results[0]));
+    if (!results.length) return json({ error: '未找到该日程' }, 404, { request, env });
+    return json(parseEvent(results[0]), 200, { request, env });
   }
 
-  if (all && !adminOk(request, env)) return json({ error: '无权限' }, 403);
+  if (all && !adminOk(request, env)) return json({ error: '无权限' }, 403, { request, env });
   // 列表接口不查 body（最长 20000 字），节省带宽；单条查询（带 id）才返回 body
   const { results } = await env.DB.prepare(
     'SELECT id,date,time,title,venue,performers,status,image FROM events ORDER BY date DESC, id DESC'
   ).all();
   results.forEach(parseEvent);
-  return json(results);
+  return json(results, 200, { request, env });
 }
 
 async function createEvent(request, env) {
@@ -67,8 +69,8 @@ async function createEvent(request, env) {
     const b = await request.json();
     const id = String(b.id || '').trim();
     const title = String(b.title || '').trim().slice(0, 80);
-    if (!id || !title) return json({ error: 'id 与标题必填' }, 400);
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(b.date || ''))) return json({ error: '日期格式应为 YYYY-MM-DD' }, 400);
+    if (!id || !title) return json({ error: 'id 与标题必填' }, 400, { request, env });
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(b.date || ''))) return json({ error: '日期格式应为 YYYY-MM-DD' }, 400, { request, env });
     const performers = Array.isArray(b.performers) ? b.performers : [];
     await env.DB
       .prepare(
@@ -88,10 +90,10 @@ async function createEvent(request, env) {
         new Date().toISOString()
       )
       .run();
-    return json({ ok: true, id });
+    return json({ ok: true, id }, 200, { request, env });
   } catch (e) {
-    if (/UNIQUE|primary key/i.test(e.message || '')) return json({ error: '该 id 已存在' }, 409);
-    return json({ error: e.message }, 500);
+    if (/UNIQUE|primary key/i.test(e.message || '')) return json({ error: '该 id 已存在' }, 409, { request, env });
+    return json({ error: e.message }, 500, { request, env });
   }
 }
 
@@ -100,7 +102,7 @@ async function putEvent(request, env) {
   try {
     const b = await request.json();
     const id = String(b.id || '').trim();
-    if (!id) return json({ error: '缺少 id' }, 400);
+    if (!id) return json({ error: '缺少 id' }, 400, { request, env });
     const sets = [];
     const binds = [];
     if (b.title !== undefined) {
@@ -135,12 +137,12 @@ async function putEvent(request, env) {
       sets.push('body = ?');
       binds.push(String(b.body || '').slice(0, 20000));
     }
-    if (sets.length === 0) return json({ ok: true });
+    if (sets.length === 0) return json({ ok: true }, 200, { request, env });
     binds.push(id);
     await env.DB.prepare(`UPDATE events SET ${sets.join(', ')} WHERE id = ?`).bind(...binds).run();
-    return json({ ok: true });
+    return json({ ok: true }, 200, { request, env });
   } catch (e) {
-    return json({ error: e.message }, 500);
+    return json({ error: e.message }, 500, { request, env });
   }
 }
 
@@ -148,10 +150,10 @@ async function deleteEvent(request, env) {
   const denied = await adminGuard(request, env); if (denied) return denied;
   try {
     const { id } = await request.json();
-    if (!id) return json({ error: '缺少 id' }, 400);
+    if (!id) return json({ error: '缺少 id' }, 400, { request, env });
     await env.DB.prepare('DELETE FROM events WHERE id = ?').bind(id).run();
-    return json({ ok: true });
+    return json({ ok: true }, 200, { request, env });
   } catch (e) {
-    return json({ error: e.message }, 500);
+    return json({ error: e.message }, 500, { request, env });
   }
 }

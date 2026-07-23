@@ -7,9 +7,11 @@
  */
 
 import { rateAllow, rateLog } from './_rate.js';
-import { adminOk, adminGuard, json, verifyTurnstile } from '../_shared.js';
+import { adminOk, adminGuard, json, verifyTurnstile, handlePreFlight } from '../_shared.js';
 
 export async function onRequest(context) {
+  const pre = handlePreFlight(context);
+  if (pre) return pre;
   const { request, env } = context;
   const url = new URL(request.url);
 
@@ -58,28 +60,28 @@ async function uploadPhoto(request, env) {
     let files = formData.getAll('files').filter(f => f instanceof File);
     const single = formData.get('file');
     if (single && single instanceof File) files.push(single);
-    if (files.length === 0) return json({ error: '请选择图片' }, 400);
-    if (files.length > MAX_FILES) return json({ error: `一次最多上传 ${MAX_FILES} 张` }, 400);
+    if (files.length === 0) return json({ error: '请选择图片' }, 400, { request, env });
+    if (files.length > MAX_FILES) return json({ error: `一次最多上传 ${MAX_FILES} 张` }, 400, { request, env });
 
     // 粉丝走 Turnstile 人机验证（admin 免）
     if (!isAdmin) {
       const token = formData.get('turnstileToken')?.toString() || '';
       const ip = request.headers.get('cf-connecting-ip') || '';
       const ok = await verifyTurnstile(token, ip, env);
-      if (!ok) return json({ error: '人机验证失败，请刷新重试' }, 403);
+      if (!ok) return json({ error: '人机验证失败，请刷新重试' }, 403, { request, env });
     }
 
     // 逐张校验类型与大小
     for (const f of files) {
-      if (!ALLOWED.includes(f.type)) return json({ error: '仅支持 JPG/PNG/WEBP/GIF' }, 400);
-      if (f.size > MAX_SIZE) return json({ error: '单张图片不能超过 23MB' }, 400);
+      if (!ALLOWED.includes(f.type)) return json({ error: '仅支持 JPG/PNG/WEBP/GIF' }, 400, { request, env });
+      if (f.size > MAX_SIZE) return json({ error: '单张图片不能超过 23MB' }, 400, { request, env });
     }
 
     // 限流（粉丝）：5 秒内本 IP 上传图片总数不超过 MAX_FILES
     const ip = request.headers.get('cf-connecting-ip') || 'unknown';
     if (!isAdmin) {
       const allowed = await rateAllow(env, ip, 'photo', MAX_FILES, 5000, files.length);
-      if (!allowed) return json({ error: '操作太频繁，请 5 秒后再试' }, 429);
+      if (!allowed) return json({ error: '操作太频繁，请 5 秒后再试' }, 429, { request, env });
     }
 
     const rawMember = formData.get('member');
@@ -117,9 +119,9 @@ async function uploadPhoto(request, env) {
       key: keys[0] || null,
       // 粉丝上传需审核后才公开（admin 上传直接公开）
       pending: !isAdmin,
-    });
+    }, 200, { request, env });
   } catch (e) {
-    return json({ error: '上传失败: ' + e.message }, 500);
+    return json({ error: '上传失败: ' + e.message }, 500, { request, env });
   }
 }
 
@@ -131,6 +133,7 @@ async function servePhoto(env, key) {
     obj.writeHttpMetadata(headers);
     headers.set('X-Content-Type-Options', 'nosniff');
     headers.set('Cache-Control', 'public, max-age=31536000');
+    // 图片本身是公开资源（同源 + 跨站均可见），保留 * 让 CDN/浏览器缓存协作
     headers.set('Access-Control-Allow-Origin', '*');
     return new Response(obj.body, { headers });
   } catch {
@@ -176,20 +179,20 @@ async function listPhotos(request, env) {
   const all = url.searchParams.get('all') === '1';
   // admin 可看全部（含 pending）；公开只返回 approved
   const approvedOnly = !all || !adminOk(request, env);
-  return json(await listPhotosData(env, approvedOnly));
+  return json(await listPhotosData(env, approvedOnly), 200, { request, env });
 }
 
 async function deletePhoto(request, env) {
   try {
     const admin = request.headers.get('x-admin-code') || '';
-    if (admin !== env.ADMIN_CODE) return json({ error: '无权限' }, 403);
+    if (admin !== env.ADMIN_CODE) return json({ error: '无权限' }, 403, { request, env });
     const { key } = await request.json();
-    if (!key || !key.startsWith('uploads/')) return json({ error: '无效 key' }, 400);
+    if (!key || !key.startsWith('uploads/')) return json({ error: '无效 key' }, 400, { request, env });
     await env.PHOTOS.delete(key);
     await env.PHOTOS.delete(toThumbKey(key)).catch(() => {});
-    return json({ ok: true });
+    return json({ ok: true }, 200, { request, env });
   } catch (e) {
-    return json({ error: e.message }, 500);
+    return json({ error: e.message }, 500, { request, env });
   }
 }
 
@@ -198,18 +201,18 @@ async function moderatePhoto(request, env) {
   const denied = await adminGuard(request, env); if (denied) return denied;
   try {
     const { key, action } = await request.json();
-    if (!key || !key.startsWith('uploads/')) return json({ error: '无效 key' }, 400);
-    if (action !== 'approve' && action !== 'reject') return json({ error: '无效操作' }, 400);
+    if (!key || !key.startsWith('uploads/')) return json({ error: '无效 key' }, 400, { request, env });
+    if (action !== 'approve' && action !== 'reject') return json({ error: '无效操作' }, 400, { request, env });
 
     if (action === 'reject') {
       await env.PHOTOS.delete(key);
       await env.PHOTOS.delete(toThumbKey(key)).catch(() => {});
-      return json({ ok: true, action: 'rejected' });
+      return json({ ok: true, action: 'rejected' }, 200, { request, env });
     }
 
     // approve：从 uploads/pending/{member}/... copy 到 uploads/{member}/...，删 pending key
     const obj = await env.PHOTOS.get(key);
-    if (!obj) return json({ error: '图片不存在' }, 404);
+    if (!obj) return json({ error: '图片不存在' }, 404, { request, env });
     const body = await obj.arrayBuffer();
     const newKey = key.replace('uploads/pending/', 'uploads/');
     await env.PHOTOS.put(newKey, body, {
@@ -220,9 +223,8 @@ async function moderatePhoto(request, env) {
       await env.PHOTOS.delete(key);
       await env.PHOTOS.delete(toThumbKey(key)).catch(() => {});
     }
-    return json({ ok: true, action: 'approved' });
+    return json({ ok: true, action: 'approved' }, 200, { request, env });
   } catch (e) {
-    return json({ error: e.message }, 500);
+    return json({ error: e.message }, 500, { request, env });
   }
 }
-

@@ -4,9 +4,11 @@
  * DELETE /api/messages — 删除留言（需 ADMIN_CODE）
  */
 
-import { adminOk, adminGuard, json, verifyTurnstile, containsBlocked } from '../_shared.js';
+import { adminOk, adminGuard, json, verifyTurnstile, containsBlocked, handlePreFlight } from '../_shared.js';
 
 export async function onRequest(context) {
+  const pre = handlePreFlight(context);
+  if (pre) return pre;
   const { request, env } = context;
   // 旧手动建表补 event 列（幂等，仅首次执行）
   try { await ensureColumns(env); } catch (e) { /* 忽略，交由各 handler 处理 */ }
@@ -33,13 +35,13 @@ async function postMessage(request, env) {
     const member = body.member || null;
     const event = body.event?.trim().slice(0, 40) || null;
 
-    if (!message) return json({ error: '内容不能为空' }, 400);
+    if (!message) return json({ error: '内容不能为空' }, 400, { request, env });
 
     // 粉丝走 Turnstile 人机验证（admin 免）
     if (!isAdmin) {
       const ip = request.headers.get('cf-connecting-ip') || '';
       const ok = await verifyTurnstile(body.turnstileToken, ip, env);
-      if (!ok) return json({ error: '人机验证失败，请刷新重试' }, 403);
+      if (!ok) return json({ error: '人机验证失败，请刷新重试' }, 403, { request, env });
     }
 
     // 屏蔽词检查（admin 免）：从 site_config 读 blocked_words
@@ -50,7 +52,7 @@ async function postMessage(request, env) {
         if (r?.value) blockedWords = JSON.parse(r.value);
       } catch {}
       if (containsBlocked(message + ' ' + name, blockedWords)) {
-        return json({ error: '内容包含敏感词，请修改后重试' }, 400);
+        return json({ error: '内容包含敏感词，请修改后重试' }, 400, { request, env });
       }
     }
 
@@ -61,7 +63,7 @@ async function postMessage(request, env) {
         .prepare('SELECT created_at FROM messages WHERE ip = ? ORDER BY created_at DESC LIMIT 1')
         .bind(ip).all();
       if (recent.length > 0 && Date.now() - new Date(recent[0].created_at + 'Z').getTime() < 30000) {
-        return json({ error: '发太快了，等30秒再试' }, 429);
+        return json({ error: '发太快了，等30秒再试' }, 429, { request, env });
       }
     }
 
@@ -70,9 +72,9 @@ async function postMessage(request, env) {
     await env.DB.prepare('INSERT INTO messages (id, name, message, member, event, ip) VALUES (?,?,?,?,?,?)')
       .bind(id, name, message, member, event, ip).run();
 
-    return json({ ok: true, msg: { id, name, message, member, event } });
+    return json({ ok: true, msg: { id, name, message, member, event } }, 200, { request, env });
   } catch (e) {
-    return json({ error: '留言失败: ' + e.message }, 500);
+    return json({ error: '留言失败: ' + e.message }, 500, { request, env });
   }
 }
 
@@ -82,19 +84,19 @@ async function editMessage(request, env) {
   try {
     const b = await request.json();
     const id = String(b.id || '').trim();
-    if (!id) return json({ error: '缺少 id' }, 400);
+    if (!id) return json({ error: '缺少 id' }, 400, { request, env });
     const sets = [];
     const binds = [];
     if (b.name !== undefined) { sets.push('name = ?'); binds.push(String(b.name).trim().slice(0, 30)); }
     if (b.message !== undefined) { sets.push('message = ?'); binds.push(String(b.message).trim().slice(0, 500)); }
     if (b.member !== undefined) { sets.push('member = ?'); binds.push(b.member || null); }
     if (b.event !== undefined) { sets.push('event = ?'); binds.push(b.event ? String(b.event).slice(0, 40) : null); }
-    if (sets.length === 0) return json({ ok: true });
+    if (sets.length === 0) return json({ ok: true }, 200, { request, env });
     binds.push(id);
     await env.DB.prepare(`UPDATE messages SET ${sets.join(', ')} WHERE id = ?`).bind(...binds).run();
-    return json({ ok: true });
+    return json({ ok: true }, 200, { request, env });
   } catch (e) {
-    return json({ error: '修改失败: ' + e.message }, 500);
+    return json({ error: '修改失败: ' + e.message }, 500, { request, env });
   }
 }
 
@@ -103,22 +105,22 @@ async function listMessages(env) {
     const { results } = await env.DB
       .prepare('SELECT id, name, message, member, event, created_at FROM messages ORDER BY created_at DESC LIMIT 50')
       .all();
-    return json(results);
+    return json(results, 200, { request, env });
   } catch (e) {
-    return json({ error: e.message }, 500);
+    return json({ error: e.message }, 500, { request, env });
   }
 }
 
 async function deleteMessage(request, env) {
   try {
     const admin = request.headers.get('x-admin-code') || '';
-    if (admin !== env.ADMIN_CODE) return json({ error: '无权限' }, 403);
+    if (admin !== env.ADMIN_CODE) return json({ error: '无权限' }, 403, { request, env });
     const { id } = await request.json();
-    if (!id) return json({ error: '缺少 id' }, 400);
+    if (!id) return json({ error: '缺少 id' }, 400, { request, env });
     await env.DB.prepare('DELETE FROM messages WHERE id = ?').bind(id).run();
-    return json({ ok: true });
+    return json({ ok: true }, 200, { request, env });
   } catch (e) {
-    return json({ error: e.message }, 500);
+    return json({ error: e.message }, 500, { request, env });
   }
 }
 

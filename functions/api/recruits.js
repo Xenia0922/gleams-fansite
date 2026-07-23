@@ -9,7 +9,7 @@
  * 无需在 Cloudflare 控制台手动执行 migration。
  */
 
-import { adminOk, adminGuard, json, withTable } from '../_shared.js';
+import { adminOk, adminGuard, json, withTable, handlePreFlight } from '../_shared.js';
 import { rateAllow, rateLog } from './_rate.js';
 
 const DDL = `CREATE TABLE IF NOT EXISTS recruits (
@@ -54,6 +54,8 @@ async function ensureTable(env) {
 }
 
 export async function onRequest(context) {
+  const pre = handlePreFlight(context);
+  if (pre) return pre;
   const { request, env } = context;
   try { await ensureTable(env); } catch (e) { console.error('[recruits] ensureTable error:', e.message); }
   if (request.method === 'GET') return withTable(env, ensureTable, () => listRecruits(request, env));
@@ -71,15 +73,15 @@ async function listRecruits(request, env) {
     // 服务端登录尝试限制：30 分钟 5 次（前端 localStorage 可绕过，这里兜底）
     const ip = request.headers.get('cf-connecting-ip') || 'unknown';
     const allowed = await rateAllow(env, ip, 'admin', 5, 30 * 60 * 1000);
-    if (!allowed) return json({ error: '尝试过多，请30分钟后再试' }, 429);
+    if (!allowed) return json({ error: '尝试过多，请30分钟后再试' }, 429, { request, env });
     if (!adminOk(request, env)) {
       await rateLog(env, ip, 'admin');
-      return json({ error: '无权限' }, 403);
+      return json({ error: '无权限' }, 403, { request, env });
     }
     const { results } = await env.DB
       .prepare('SELECT * FROM recruits ORDER BY sort_order ASC, id DESC')
       .all();
-    return json(results);
+    return json(results, 200, { request, env });
   }
 
   // 公开：启用中的广告（自动清理过期广告 + 返回有效广告）
@@ -115,7 +117,7 @@ async function listRecruits(request, env) {
        ORDER BY sort_order ASC, id DESC LIMIT 10`
     )
     .all();
-  return json(results);
+  return json(results, 200, { request, env });
 }
 
 async function createRecruit(request, env) {
@@ -137,8 +139,8 @@ async function createRecruit(request, env) {
       sort_order = maxSo + 1;
     }
 
-    if (!title || !body || !cta_url) return json({ error: '标题 / 正文 / 链接必填' }, 400);
-    if (!/^https?:\/\//.test(cta_url)) return json({ error: '链接需以 http(s):// 开头' }, 400);
+    if (!title || !body || !cta_url) return json({ error: '标题 / 正文 / 链接必填' }, 400, { request, env });
+    if (!/^https?:\/\//.test(cta_url)) return json({ error: '链接需以 http(s):// 开头' }, 400, { request, env });
 
     const info = await env.DB
       .prepare(
@@ -148,9 +150,9 @@ async function createRecruit(request, env) {
       .bind(title, subtitle, body, cta_text, cta_url, deadline, enabled, sort_order, new Date().toISOString())
       .run();
 
-    return json({ ok: true, id: info.meta ? info.meta.last_row_id : null });
+    return json({ ok: true, id: info.meta ? info.meta.last_row_id : null }, 200, { request, env });
   } catch (e) {
-    return json({ error: e.message }, 500);
+    return json({ error: e.message }, 500, { request, env });
   }
 }
 
@@ -162,7 +164,7 @@ async function putRecruit(request, env) {
     if (Array.isArray(b.order)) return reorderRecruits(b.order, env);
     return updateRecruit(b, env);
   } catch (e) {
-    return json({ error: e.message }, 500);
+    return json({ error: e.message }, 500, { request, env });
   }
 }
 
@@ -174,13 +176,13 @@ async function reorderRecruits(order, env) {
       await env.DB.prepare('UPDATE recruits SET sort_order = ? WHERE id = ?').bind(so, id).run();
     }
   }
-  return json({ ok: true });
+  return json({ ok: true }, 200, { request, env });
 }
 
 async function updateRecruit(b, env) {
   try {
     const id = +b.id;
-    if (!id) return json({ error: '缺少 id' }, 400);
+    if (!id) return json({ error: '缺少 id' }, 400, { request, env });
 
     const sets = [];
     const binds = [];
@@ -190,19 +192,19 @@ async function updateRecruit(b, env) {
     if (b.cta_text !== undefined) { sets.push('cta_text = ?'); binds.push(String(b.cta_text).trim().slice(0, 40)); }
     if (b.cta_url !== undefined) {
       const u = String(b.cta_url).trim().slice(0, 500);
-      if (u && !/^https?:\/\//.test(u)) return json({ error: '链接需以 http(s):// 开头' }, 400);
+      if (u && !/^https?:\/\//.test(u)) return json({ error: '链接需以 http(s):// 开头' }, 400, { request, env });
       sets.push('cta_url = ?'); binds.push(u);
     }
     if (b.deadline !== undefined) { sets.push('deadline = ?'); binds.push(b.deadline ? String(b.deadline).slice(0, 16) : null); }
     if (b.enabled !== undefined) { sets.push('enabled = ?'); binds.push(b.enabled === false || b.enabled === 0 ? 0 : 1); }
     if (b.sort_order !== undefined) { sets.push('sort_order = ?'); binds.push(Number.isFinite(+b.sort_order) ? +b.sort_order : 0); }
 
-    if (sets.length === 0) return json({ ok: true });
+    if (sets.length === 0) return json({ ok: true }, 200, { request, env });
     binds.push(id);
     await env.DB.prepare(`UPDATE recruits SET ${sets.join(', ')} WHERE id = ?`).bind(...binds).run();
-    return json({ ok: true });
+    return json({ ok: true }, 200, { request, env });
   } catch (e) {
-    return json({ error: e.message }, 500);
+    return json({ error: e.message }, 500, { request, env });
   }
 }
 
@@ -210,10 +212,10 @@ async function deleteRecruit(request, env) {
   const denied = await adminGuard(request, env); if (denied) return denied;
   try {
     const { id } = await request.json();
-    if (!id) return json({ error: '缺少 id' }, 400);
+    if (!id) return json({ error: '缺少 id' }, 400, { request, env });
     await env.DB.prepare('DELETE FROM recruits WHERE id = ?').bind(id).run();
-    return json({ ok: true });
+    return json({ ok: true }, 200, { request, env });
   } catch (e) {
-    return json({ error: e.message }, 500);
+    return json({ error: e.message }, 500, { request, env });
   }
 }

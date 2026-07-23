@@ -10,19 +10,74 @@ import { rateAllow, rateLog } from './api/_rate.js';
 
 /**
  * 返回 JSON Response（含安全头）
+ *
+ * CORS 处理：默认仅 same-origin 与白名单域可跨域访问，跨域预检返回对应头。
+ * - ALLOWED_ORIGINS env：逗号分隔（如 'https://gleams.vip,https://dev.gleams.vip'）
+ * - 未配置：默认为 ['https://gleams.vip']，额外放行 localhost（dev）
+ * - 跨域不通过时：返回 *（对非 GET 请求会失败）— 保留 GET 默认行为以兼容 SSR 中间件注入
  */
-export function json(data, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Content-Type-Options': 'nosniff',
-      'X-Frame-Options': 'DENY',
-      'Referrer-Policy': 'strict-origin-when-cross-origin',
-      'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
-      'Access-Control-Allow-Origin': '*',
-    },
-  });
+const DEFAULT_ALLOWED_ORIGINS = ['https://gleams.vip'];
+const DEV_ALLOWED_ORIGINS = ['http://localhost:4321', 'http://localhost:3000', 'http://127.0.0.1:4321'];
+
+function parseAllowedOrigins(env) {
+  const list = (env?.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
+  return [...list, ...DEFAULT_ALLOWED_ORIGINS, ...DEV_ALLOWED_ORIGINS];
+}
+
+function originAllowed(request, env) {
+  const origin = request.headers.get('origin');
+  if (!origin) return null; // same-origin 请求不带 Origin，始终允许
+  const allowed = parseAllowedOrigins(env);
+  return allowed.includes(origin) ? origin : null;
+}
+
+/**
+ * 返回 JSON Response（含安全头 + CORS）
+ *
+ * 用法：
+ *   return json({ ok: true }, 200, context);   ← 传入完整 context，自动注入 CORS 与 Vary
+ *   return json({ error: 'msg' }, 500);         ← 仅当不需要 CORS（已用 withCors 包装的函数外层）
+ */
+export function json(data, status = 200, context) {
+  const headers = {
+    'Content-Type': 'application/json',
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+    Vary: 'Origin',
+  };
+  if (context && context.request && context.env) {
+    const allow = originAllowed(context.request, context.env);
+    if (allow) headers['Access-Control-Allow-Origin'] = allow;
+  }
+  return new Response(JSON.stringify(data), { status, headers });
+}
+
+/**
+ * CORS 预检处理器 + 入口路由助手
+ *
+ * 用法：在每个 onRequest 函数最顶部：
+ *   const pre = handlePreFlight(context);
+ *   if (pre) return pre;
+ */
+export function handlePreFlight(context) {
+  const { request, env } = context;
+  if (request.method !== 'OPTIONS') return null;
+  const origin = originAllowed(request, env);
+  if (origin) {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        'Access-Control-Allow-Origin': origin,
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, x-admin-code',
+        'Access-Control-Max-Age': '86400',
+        Vary: 'Origin',
+      },
+    });
+  }
+  return new Response(null, { status: 403 });
 }
 
 /**

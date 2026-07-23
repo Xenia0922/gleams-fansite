@@ -5,7 +5,7 @@
  * 表 site_config 为 key-value，首次请求自动建表并播种（来自 site.json + 关于/特典 硬编码文案）。
  */
 
-import { adminOk, adminGuard, json, withTable } from '../_shared.js';
+import { adminOk, adminGuard, json, withTable, handlePreFlight } from '../_shared.js';
 
 const DDL = `CREATE TABLE IF NOT EXISTS site_config (
   key TEXT PRIMARY KEY,
@@ -86,10 +86,12 @@ function safeParse(s, fallback) {
 }
 
 export async function onRequest(context) {
+  const pre = handlePreFlight(context);
+  if (pre) return pre;
   const { request, env } = context;
   try { await ensureTable(env); } catch (e) { console.error('[site] ensureTable error:', e.message); }
 
-  if (request.method === 'GET') return withTable(env, ensureTable, async () => json(await loadConfig(env)));
+  if (request.method === 'GET') return withTable(env, ensureTable, async () => json(await loadConfig(env), 200, context));
   if (request.method === 'PUT') return withTable(env, ensureTable, () => updateConfig(request, env));
   return new Response('Method not allowed', { status: 405 });
 }
@@ -99,7 +101,7 @@ async function updateConfig(request, env) {
   try {
     const b = await request.json();
     const entries = Object.entries(b).filter(([k]) => ALLOWED.includes(k));
-    if (entries.length === 0) return json({ error: '无有效字段' }, 400);
+    if (entries.length === 0) return json({ error: '无有效字段' }, 400, { request, env });
     for (const [k, v] of entries) {
       // JSON 字段：tokuten_rules/tokuten_images/featured_square 是数组，hero_config 是对象；
       // 直接 stringify 原值（null 兜底为空数组/空对象），不再强制转数组（否则 hero_config 对象会变成 []）
@@ -109,7 +111,7 @@ async function updateConfig(request, env) {
       await env.DB.prepare('INSERT INTO site_config (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = ?')
         .bind(k, val, val).run();
     }
-    return json({ ok: true, cfg: await loadConfig(env) });
-  } catch (e) { return json({ error: e.message }, 500); }
+    return json({ ok: true, cfg: await loadConfig(env) }, 200, { request, env });
+  } catch (e) { return json({ error: e.message }, 500, { request, env }); }
 }
 
