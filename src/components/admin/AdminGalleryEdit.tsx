@@ -226,7 +226,7 @@ export default function AdminGalleryEdit({ code }: { code: string }) {
                       onDrop={(e) => { e.preventDefault(); setDragId(null); persistOrder(photosRef.current); }}
                       onClick={() => setLightbox({ images: g.items.map((x) => ({ src: x.url })), idx: g.items.indexOf(p) })}
                       className={`relative aspect-[4/5] rounded-3xl overflow-hidden glass cursor-grab active:cursor-grabbing group ${dragId === p.id ? 'ring-2 ring-[var(--accent)] opacity-60' : ''}`}>
-                      <img src={p.url} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" draggable={false} />
+                      <img src={p.url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" draggable={false} />
                       <button onClick={(e) => { e.stopPropagation(); del(p); }}
                         className="absolute top-2 right-2 text-xs bg-red-500/80 hover:bg-red-600 text-white px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">删除</button>
                     </div>
@@ -252,7 +252,7 @@ export default function AdminGalleryEdit({ code }: { code: string }) {
                     onDrop={(e) => { e.preventDefault(); setDragId(null); persistOrder(photosRef.current); }}
                     onClick={() => setLightbox({ images: featured.map((x) => ({ src: x.url })), idx: featured.indexOf(p) })}
                     className={`relative aspect-[4/5] rounded-3xl overflow-hidden glass cursor-grab active:cursor-grabbing group ring-1 ring-[var(--accent)]/30 ${dragId === p.id ? 'ring-2 ring-[var(--accent)] opacity-60' : ''}`}>
-                    <img src={p.url} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" draggable={false} />
+                    <img src={p.url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" draggable={false} />
                     <button onClick={(e) => { e.stopPropagation(); del(p); }}
                       className="absolute top-2 right-2 text-xs bg-red-500/80 hover:bg-red-600 text-white px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">删除</button>
                   </div>
