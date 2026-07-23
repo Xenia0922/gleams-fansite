@@ -206,7 +206,7 @@ export default function FanGallery() {
                         <button
                           key={r.emoji}
                           onClick={(e) => { e.stopPropagation(); toggleReaction(p.key, r.emoji); }}
-                          className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] backdrop-blur-md transition-all active:scale-90 ${
+                          className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] max-sm:text-[11px] backdrop-blur-md transition-all active:scale-90 ${
                             isMine
                               ? 'bg-white/90 ring-1 ring-[var(--accent)]/40'
                               : 'bg-white/75 hover:bg-white/90'
@@ -234,7 +234,7 @@ export default function FanGallery() {
                   {popoverPhotoKey === p.key && (
                     <>
                       <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setPopoverPhotoKey(null); }} />
-                      <div className="absolute bottom-full mb-1.5 right-0 z-50 flex gap-0.5 p-1.5 rounded-2xl frost-card shadow-lg emoji-picker-enter" onClick={(e) => e.stopPropagation()}>
+                      <div className="absolute bottom-full mb-1.5 right-0 max-sm:right-auto max-sm:left-1/2 max-sm:-translate-x-1/2 z-[60] flex gap-0.5 p-1.5 rounded-2xl frost-card shadow-lg emoji-picker-enter" onClick={(e) => e.stopPropagation()}>
                         {REACTION_EMOJIS.map(emoji => (
                           <button
                             key={emoji}

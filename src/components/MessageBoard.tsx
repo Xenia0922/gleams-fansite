@@ -252,7 +252,7 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
               {popoverMsgId === msg.id && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setPopoverMsgId(null)} />
-                  <div className="absolute bottom-full mb-2 right-0 z-50 flex gap-0.5 p-1.5 rounded-2xl frost-card shadow-lg emoji-picker-enter">
+                  <div className="absolute bottom-full mb-2 right-0 max-sm:right-auto max-sm:left-1/2 max-sm:-translate-x-1/2 z-[60] flex gap-0.5 p-1.5 rounded-2xl frost-card shadow-lg emoji-picker-enter">
                     {REACTION_EMOJIS.map(emoji => (
                       <button
                         key={emoji}
