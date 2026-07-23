@@ -228,25 +228,17 @@ export default function FanGallery() {
                     className="w-7 h-7 rounded-full flex items-center justify-center text-sm text-gray-500 bg-white/80 backdrop-blur-md hover:text-[var(--accent)] hover:bg-white hover:scale-110 active:scale-90 transition-all"
                     aria-label="贴 emoji 反应"
                     aria-expanded={popoverPhotoKey === p.key}
+                    data-emoji-trigger={p.key}
                   >
                     😊
                   </button>
                   {popoverPhotoKey === p.key && (
-                    <>
-                      <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setPopoverPhotoKey(null); }} />
-                      <div className="absolute bottom-full mb-1.5 right-0 max-sm:right-auto max-sm:left-1/2 max-sm:-translate-x-1/2 z-[60] flex gap-0.5 p-1.5 rounded-2xl frost-card shadow-lg emoji-picker-enter" onClick={(e) => e.stopPropagation()}>
-                        {REACTION_EMOJIS.map(emoji => (
-                          <button
-                            key={emoji}
-                            onClick={(e) => { e.stopPropagation(); handlePickEmoji(p.key, emoji); }}
-                            className="w-8 h-8 rounded-lg flex items-center justify-center text-lg hover:bg-[var(--accent-soft)] hover:scale-125 active:scale-90 transition-all duration-150"
-                            aria-label={`贴 ${emoji}`}
-                          >
-                            {emoji}
-                          </button>
-                        ))}
-                      </div>
-                    </>
+                    <EmojiPickerPopover
+                      emojis={REACTION_EMOJIS}
+                      onPick={handlePickEmoji}
+                      photoKey={p.key}
+                      onClose={() => setPopoverPhotoKey(null)}
+                    />
                   )}
                 </div>
               </div>
@@ -265,5 +257,61 @@ export default function FanGallery() {
         )}
       </>
     </SkeletonSwap>
+  );
+}
+
+// 独立的 EmojiPickerPopover 组件：用 Portal 渲染到 body，避免移动端被父容器裁剪/遮挡
+interface EmojiPickerPopoverProps {
+  emojis: string[];
+  onPick: (id: string, emoji: string) => void;
+  photoKey: string;
+  onClose: () => void;
+}
+
+function EmojiPickerPopover({ emojis, onPick, photoKey, onClose }: EmojiPickerPopoverProps) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        onClose();
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [onClose]);
+
+  // 计算相对于触发按钮的位置（fixed 定位）
+  const position = useMemo(() => {
+    const btn = document.querySelector(`[data-emoji-trigger="${photoKey}"]`);
+    if (!btn) return { top: 0, left: 0 };
+    const rect = btn.getBoundingClientRect();
+    const popoverWidth = 6 * 36 + 5 * 4 + 32;
+    const viewportWidth = window.innerWidth;
+    const left = Math.max(8, Math.min(rect.left + rect.width / 2 - popoverWidth / 2, viewportWidth - popoverWidth - 8));
+    return { top: rect.top - 8, left };
+  }, [photoKey]);
+
+  return (
+    <div
+      ref={ref}
+      className="fixed z-[60] flex gap-1 p-2 rounded-2xl frost-card shadow-lg emoji-picker-enter pointer-events-auto"
+      style={{ top: position.top, left: position.left }}
+      onClick={(e) => e.stopPropagation()}
+      role="menu"
+      aria-label="选择表情"
+    >
+      {emojis.map(emoji => (
+        <button
+          key={emoji}
+          onClick={() => onPick(photoKey, emoji)}
+          className="w-8 h-8 rounded-lg flex items-center justify-center text-base hover:bg-[var(--accent-soft)] hover:scale-125 active:scale-90 transition-all duration-150"
+          role="menuitem"
+          aria-label={`贴 ${emoji}`}
+        >
+          {emoji}
+        </button>
+      ))}
+    </div>
   );
 }
