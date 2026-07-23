@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useEvents } from './useEvents';
 import { tint } from '../utils/members';
 import Skeleton from './Skeleton';
@@ -250,13 +251,17 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
               >
                 😊
               </button>
-              {popoverMsgId === msg.id && (
-                <EmojiPickerPopover
-                  emojis={REACTION_EMOJIS}
-                  onPick={handlePickEmoji}
-                  photoKey={msg.id}
-                  onClose={() => setPopoverMsgId(null)}
-                />
+              {popoverMsgId === msg.id && createPortal(
+                <>
+                  <div className="fixed inset-0 z-[60] bg-black/5 backdrop-blur-sm" onClick={() => setPopoverMsgId(null)} aria-hidden="true" />
+                  <EmojiPickerPopover
+                    emojis={REACTION_EMOJIS}
+                    onPick={handlePickEmoji}
+                    photoKey={msg.id}
+                    onClose={() => setPopoverMsgId(null)}
+                  />
+                </>,
+                document.body
               )}
             </div>
           </div>
@@ -379,7 +384,43 @@ interface EmojiPickerPopoverProps {
 
 function EmojiPickerPopover({ emojis, onPick, photoKey, onClose }: EmojiPickerPopoverProps) {
   const ref = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState({ top: 0, left: 0 });
 
+  // 计算位置：相对于触发按钮，fixed 定位
+  const calculatePosition = useCallback(() => {
+    const btn = document.querySelector(`[data-emoji-trigger="${photoKey}"]`);
+    if (!btn) return;
+    const rect = btn.getBoundingClientRect();
+    const popoverWidth = 6 * 36 + 5 * 4 + 32; // ~248px
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    // 水平居中于按钮，限制在视口内
+    const left = Math.max(8, Math.min(rect.left + rect.width / 2 - popoverWidth / 2, viewportWidth - popoverWidth - 8));
+
+    // 垂直：按钮上方 8px，但如果顶部空间不足则显示在按钮下方
+    const spaceAbove = rect.top;
+    const spaceBelow = viewportHeight - rect.bottom;
+    const popoverHeight = 44; // 估算高度
+    const top = spaceAbove >= popoverHeight + 16
+      ? rect.top - popoverHeight - 8  // 按钮上方
+      : rect.bottom + 8;              // 按钮下方（兜底）
+
+    setPosition({ top, left });
+  }, [photoKey]);
+
+  // 挂载时计算，滚动/resize 时重新计算
+  useEffect(() => {
+    calculatePosition();
+    window.addEventListener('scroll', calculatePosition, { passive: true });
+    window.addEventListener('resize', calculatePosition);
+    return () => {
+      window.removeEventListener('scroll', calculatePosition);
+      window.removeEventListener('resize', calculatePosition);
+    };
+  }, [calculatePosition]);
+
+  // 点击外部关闭（由 backdrop 处理，这里兜底）
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) {
@@ -390,21 +431,10 @@ function EmojiPickerPopover({ emojis, onPick, photoKey, onClose }: EmojiPickerPo
     return () => document.removeEventListener('mousedown', handler);
   }, [onClose]);
 
-  // 计算相对于触发按钮的位置（fixed 定位）
-  const position = useMemo(() => {
-    const btn = document.querySelector(`[data-emoji-trigger="${photoKey}"]`);
-    if (!btn) return { top: 0, left: 0 };
-    const rect = btn.getBoundingClientRect();
-    const popoverWidth = 6 * 36 + 5 * 4 + 32;
-    const viewportWidth = window.innerWidth;
-    const left = Math.max(8, Math.min(rect.left + rect.width / 2 - popoverWidth / 2, viewportWidth - popoverWidth - 8));
-    return { top: rect.top - 8, left };
-  }, [photoKey]);
-
   return (
     <div
       ref={ref}
-      className="fixed z-[60] flex gap-1 p-2 rounded-2xl frost-card shadow-lg emoji-picker-enter pointer-events-auto"
+      className="fixed z-[61] flex gap-1 p-2 rounded-2xl frost-card shadow-lg emoji-picker-enter pointer-events-auto"
       style={{ top: position.top, left: position.left }}
       onClick={(e) => e.stopPropagation()}
       role="menu"
