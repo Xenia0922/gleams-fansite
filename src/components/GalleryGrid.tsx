@@ -237,7 +237,7 @@ export default function GalleryGrid() {
                         <img
                           src={p.url}
                           alt=""
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 lazy-blur"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           loading="lazy"
                           decoding="async"
                         />
@@ -268,7 +268,7 @@ export default function GalleryGrid() {
                 <img
                   src={p.thumbUrl || p.url}
                   alt=""
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 lazy-blur"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   loading="lazy"
                   decoding="async"
                 />

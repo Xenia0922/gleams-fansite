@@ -181,7 +181,7 @@ export default function FanGallery() {
             return (
               <div key={p.key} className="frost-card overflow-hidden group relative transition-all duration-500 hover:-translate-y-1 hover:shadow-md">
                 <div className="cursor-pointer" onClick={() => setLightboxIdx(i)}>
-                  <img src={p.thumbUrl || p.url} alt="" className="w-full aspect-[4/5] object-cover group-hover:scale-105 transition-transform duration-500 lazy-blur" loading="lazy" decoding="async" onError={(e) => handleImgError(e, p.url)} />
+                  <img src={p.thumbUrl || p.url} alt="" className="w-full aspect-[4/5] object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" onError={(e) => handleImgError(e, p.url)} />
                 </div>
                 {/* 成员标识（左上，小） */}
                 {p.member && metaMap.has(p.member) && (
