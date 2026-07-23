@@ -1,20 +1,9 @@
 import { useState, useEffect } from 'react';
 import Skeleton from './Skeleton';
 import SkeletonSwap from './SkeletonSwap';
+import type { MemberCard } from '../utils/api';
 
-interface Member {
-  id: string;
-  name: string;
-  name_jp?: string;
-  color?: string;
-  emoji?: string;
-  birthday?: string;
-  constellation?: string;
-  status?: string;
-  image?: string;
-}
-
-export default function MembersList({ initial }: { initial: Member[] }) {
+export default function MembersList({ initial }: { initial: MemberCard[] }) {
   const ssr = typeof window !== 'undefined' ? (window as any).__SSR_DATA__ : null;
   // 骨架优先：初始空 + loading，useEffect 按 SSR > 种子 > fetch 填充（含毕业成员）
   const [members, setMembers] = useState<Member[]>([]);
@@ -54,7 +43,7 @@ export default function MembersList({ initial }: { initial: Member[] }) {
   const active = members.filter(m => m.status !== 'graduated');
   const graduated = members.filter(m => m.status === 'graduated');
 
-  const Card = ({ m, index = 0 }: { m: Member; index?: number }) => (
+  const Card = ({ m, index = 0 }: { m: MemberCard; index?: number }) => (
     <a href={`/members/detail?id=${m.id}`} className="group block text-center">
       <div className="aspect-[4/5] rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800 mb-3 shadow-sm group-hover:shadow-md transition-shadow">
         {m.image ? (

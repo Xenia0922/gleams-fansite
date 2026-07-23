@@ -1,33 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
 import ImageUpload from './ImageUpload';
 import MemberGalleryUpload from './MemberGalleryUpload';
-
-interface Member {
-  id: string;
-  name: string;
-  name_jp?: string;
-  color?: string;
-  emoji?: string;
-  birthday?: string;
-  constellation?: string;
-  status?: string;
-  image?: string;
-  gallery?: string[];
-  weibo?: string;
-  weibo_name?: string;
-  weibo_desc?: string;
-  intro?: string;
-  sort_order?: number;
-}
+import type { MemberInfo } from '../../utils/api';
 
 const INPUT =
   'w-full px-3 py-2 rounded-xl text-sm bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 outline-none focus:border-[var(--accent)] transition-colors';
 
 export default function AdminMembers({ code }: { code: string }) {
-  const [list, setList] = useState<Member[]>([]);
+  const [list, setList] = useState<MemberInfo[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState<Member | null>(null); // null=列表, 'new'=新建, Member=编辑
-  const [form, setForm] = useState<Partial<Member>>({});
+  const [editing, setEditing] = useState<MemberInfo | null>(null); // null=列表, 'new'=新建, Member=编辑
+  const [form, setForm] = useState<Partial<MemberInfo>>({});
   const [err, setErr] = useState('');
 
   const load = useCallback(async () => {

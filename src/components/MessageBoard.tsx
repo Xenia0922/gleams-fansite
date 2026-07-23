@@ -1,18 +1,10 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useEvents } from './useEvents';
-import { tint } from '../utils/members';
+import { tint, FALLBACK_MEMBERS } from '../utils/members';
 import Skeleton from './Skeleton';
 import SkeletonSwap from './SkeletonSwap';
 import Turnstile from './Turnstile';
-
-// 默认成员列表（SSR 未注入时的 fallback）
-const FALLBACK_MEMBERS = [
-  { id: 'hakusai', emoji: '💛', name: '白菜', color: '#C99A00' },
-  { id: 'kumo', emoji: '💙', name: '云团', color: '#2F6FED' },
-  { id: 'yuzi', emoji: '💚', name: '柚子', color: '#1E9E6A' },
-  { id: null as string | null, emoji: '⭐', name: '全员', color: '#e83e8c' },
-];
 
 // 与返图发布页（FanUpload）同款下拉/输入框样式，保证两套表单视觉一致
 const selCls = 'w-full px-4 py-2 rounded-full text-sm text-center bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 outline-none focus:border-[var(--accent)] transition-colors';
@@ -30,12 +22,12 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
   const { events, map } = useEvents();
   const ssr = typeof window !== 'undefined' ? (window as any).__SSR_DATA__ : null;
 
-  // 动态成员列表 + metaMap：优先 SSR 注入，fallback 硬编码
+  // 动态成员列表 + metaMap：优先 SSR 注入，fallback 走 utils/members 的 MEMBER_META 派生（单一来源）
   const members = useMemo(() => {
     if (ssr?.membersMeta && ssr.membersMeta.length) {
       return [
         ...ssr.membersMeta.map((m: any) => ({ id: m.id, emoji: m.emoji || '⭐', name: m.name, color: m.color || '#e83e8c' })),
-        { id: null as string | null, emoji: '⭐', name: '全员', color: '#e83e8c' },
+        FALLBACK_MEMBERS[FALLBACK_MEMBERS.length - 1], // "全员" 收尾项
       ];
     }
     return FALLBACK_MEMBERS;

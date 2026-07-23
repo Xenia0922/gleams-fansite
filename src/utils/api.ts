@@ -59,7 +59,11 @@ export function adminHeaders(): Record<string, string> {
 
 // ---------- 类型定义 ----------
 
-export interface MemberInfo {
+/**
+ * 列表/卡片场景用的精简成员类型（卡片不展示微博/详情正文）。
+ * 列表接口 SELECT 不带 gallery/weibo_* / intro。
+ */
+export interface MemberCard {
   id: string;
   name: string;
   name_jp: string;
@@ -69,6 +73,9 @@ export interface MemberInfo {
   constellation: string;
   status: string;
   image: string;
+}
+
+export interface MemberInfo extends MemberCard {
   gallery?: string[];
   weibo?: string;
   weibo_name?: string;

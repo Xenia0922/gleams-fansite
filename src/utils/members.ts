@@ -17,6 +17,15 @@ export const MEMBER_META: Record<string, MemberMeta> = {
 };
 
 /**
+ * 默认成员选项（带"全员"收尾项）：自动从 MEMBER_META 派生，保证单一来源。
+ * 给 MessageBoard 等需要兜底列表的场景使用 —— 新增成员时只需在 MEMBER_META 加一条。
+ */
+export const FALLBACK_MEMBERS: { id: string | null; emoji: string; name: string; color: string }[] = [
+  ...Object.entries(MEMBER_META).map(([id, m]) => ({ id, ...m })),
+  { id: null, emoji: '⭐', name: '全员', color: '#e83e8c' },
+];
+
+/**
  * #RRGGBB 十六进制颜色 → rgba(r, g, b, a)
  */
 export function tint(hex: string, a: number): string {

@@ -1,25 +1,9 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import ImageLightboxOverlay from './ImageLightboxOverlay';
 import Skeleton from './Skeleton';
+import type { MemberInfo } from '../utils/api';
 
-interface Member {
-  id: string;
-  name: string;
-  name_jp?: string;
-  color?: string;
-  emoji?: string;
-  birthday?: string;
-  constellation?: string;
-  status?: string;
-  image?: string;
-  gallery?: string[];
-  weibo?: string;
-  weibo_name?: string;
-  weibo_desc?: string;
-  intro?: string;
-}
-
-export default function MemberDetail({ slug, initial }: { slug?: string; initial?: Member | null }) {
+export default function MemberDetail({ slug, initial }: { slug?: string; initial?: MemberInfo | null }) {
   const id = useMemo(() => {
     if (slug) return slug;
     if (typeof window !== 'undefined') {
@@ -29,7 +13,7 @@ export default function MemberDetail({ slug, initial }: { slug?: string; initial
     return '';
   }, [slug]);
 
-  const [member, setMember] = useState<Member | null>(initial || null);
+  const [member, setMember] = useState<MemberInfo | null>(initial || null);
   const [loading, setLoading] = useState(!initial);
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
   const [activeColor, setActiveColor] = useState('');

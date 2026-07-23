@@ -1,23 +1,12 @@
 import { useState, useEffect } from 'react';
 import Skeleton from './Skeleton';
 import SkeletonSwap from './SkeletonSwap';
+import type { MemberCard } from '../utils/api';
 
-interface Member {
-  id: string;
-  name: string;
-  name_jp?: string;
-  color?: string;
-  emoji?: string;
-  birthday?: string;
-  constellation?: string;
-  status?: string;
-  image?: string;
-}
-
-export default function HomeMembers({ initial }: { initial: Member[] }) {
+export default function HomeMembers({ initial }: { initial: MemberCard[] }) {
   const ssr = typeof window !== 'undefined' ? (window as any).__SSR_DATA__ : null;
   // 骨架优先：初始空 + loading，useEffect 按 SSR > 种子 > fetch 填充
-  const [members, setMembers] = useState<Member[]>([]);
+  const [members, setMembers] = useState<MemberCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeColor, setActiveColor] = useState('');
 

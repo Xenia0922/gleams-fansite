@@ -27,9 +27,34 @@ export function json(data, status = 200) {
 
 /**
  * 验证管理后台暗号
+ *
+ * 用 Web Crypto 的 timingSafeEqual（按位 XOR + OR 累积）做常量时间比较，
+ * 防止攻击者依赖字符串比较的响应时间差异反推 admin code。
+ * - 两长度不一 → 失败（直接返回 false，不依赖 env 内容）
+ * - env.ADMIN_CODE 未配置 → 失败（fail-closed，未配密钥不应放过任何请求）
+ * - 否则按常量时间比较（长度按更长者扩展，0 也参与 XOR）
  */
 export function adminOk(request, env) {
-  return (request.headers.get('x-admin-code') || '') === env.ADMIN_CODE;
+  const provided = request.headers.get('x-admin-code') || '';
+  const expected = env.ADMIN_CODE || '';
+  if (!expected) return false; // 未配置 admin 密钥，关闭全部写权限
+  return constantTimeEqual(provided, expected);
+}
+
+/**
+ * 常量时间字符串比较：对每个字节做 XOR 后累加 OR，最终看是否严格为 0。
+ * 提前长度补齐 + 长度参与对比，保证分支不依赖内容。
+ * 字符以 UTF-8 字节序列解析，跨平台行为一致（Workers 8 位 charCode）。
+ */
+function constantTimeEqual(a, b) {
+  const ab = new TextEncoder().encode(String(a));
+  const bb = new TextEncoder().encode(String(b));
+  const len = Math.max(ab.length, bb.length);
+  let diff = ab.length ^ bb.length;
+  for (let i = 0; i < len; i++) {
+    diff |= (ab[i] || 0) ^ (bb[i] || 0);
+  }
+  return diff === 0;
 }
 
 /**
