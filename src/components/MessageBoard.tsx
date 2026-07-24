@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useEvents } from './useEvents';
 import { tint, FALLBACK_MEMBERS } from '../utils/members';
+import EmojiPickerPopover from './EmojiPickerPopover';
 import Skeleton from './Skeleton';
 import SkeletonSwap from './SkeletonSwap';
 import Turnstile from './Turnstile';
@@ -16,6 +17,13 @@ interface Message {
   member: string | null;
   event?: string | null;
   created_at: string;
+}
+
+function formatTime(ts: string) {
+  if (!ts) return '';
+  const d = new Date(ts.endsWith('Z') ? ts : ts + 'Z');
+  if (isNaN(d.getTime())) return '';
+  return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
 export default function MessageBoard({ readonly }: { readonly?: boolean }) {
@@ -138,18 +146,11 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
     setPosting(false);
   };
 
-  const formatTime = (ts: string) => {
-    if (!ts) return '';
-    const d = new Date(ts.endsWith('Z') ? ts : ts + 'Z');
-    if (isNaN(d.getTime())) return '';
-    return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-  };
-
   const NAMED = ['hakusai', 'kumo', 'yuzi'];
-  const visibleMessages = messages.filter(m =>
+  const visibleMessages = useMemo(() => messages.filter(m =>
     (!filter || (filter === 'other' ? !NAMED.includes(m.member ?? '') : m.member === filter)) &&
     (!eventFilter || m.event === eventFilter)
-  );
+  ), [messages, filter, eventFilter, NAMED]);
 
   const toggleReaction = useCallback(async (msgId: string, emoji: string) => {
     try {
@@ -248,8 +249,8 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
                   <div className="fixed inset-0 z-[60] bg-black/5 backdrop-blur-sm" onClick={() => setPopoverMsgId(null)} aria-hidden="true" />
                   <EmojiPickerPopover
                     emojis={REACTION_EMOJIS}
-                    onPick={handlePickEmoji}
-                    photoKey={msg.id}
+                    triggerId={msg.id}
+                    onPick={(emoji) => handlePickEmoji(msg.id, emoji)}
                     onClose={() => setPopoverMsgId(null)}
                   />
                 </>,
@@ -366,83 +367,4 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
   );
 }
 
-// 共用的 EmojiPickerPopover 组件：用 Portal 渲染到 body，避免移动端被父容器裁剪/遮挡
-interface EmojiPickerPopoverProps {
-  emojis: string[];
-  onPick: (id: string, emoji: string) => void;
-  photoKey: string;
-  onClose: () => void;
-}
-
-function EmojiPickerPopover({ emojis, onPick, photoKey, onClose }: EmojiPickerPopoverProps) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState({ top: 0, left: 0 });
-
-  // 计算位置：相对于触发按钮，fixed 定位
-  const calculatePosition = useCallback(() => {
-    const btn = document.querySelector(`[data-emoji-trigger="${photoKey}"]`);
-    if (!btn) return;
-    const rect = btn.getBoundingClientRect();
-    const popoverWidth = 6 * 36 + 5 * 4 + 32; // ~248px
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-
-    // 水平居中于按钮，限制在视口内
-    const left = Math.max(8, Math.min(rect.left + rect.width / 2 - popoverWidth / 2, viewportWidth - popoverWidth - 8));
-
-    // 垂直：按钮上方 8px，但如果顶部空间不足则显示在按钮下方
-    const spaceAbove = rect.top;
-    const spaceBelow = viewportHeight - rect.bottom;
-    const popoverHeight = 44; // 估算高度
-    const top = spaceAbove >= popoverHeight + 16
-      ? rect.top - popoverHeight - 8  // 按钮上方
-      : rect.bottom + 8;              // 按钮下方（兜底）
-
-    setPosition({ top, left });
-  }, [photoKey]);
-
-  // 挂载时计算，滚动/resize 时重新计算
-  useEffect(() => {
-    calculatePosition();
-    window.addEventListener('scroll', calculatePosition, { passive: true });
-    window.addEventListener('resize', calculatePosition);
-    return () => {
-      window.removeEventListener('scroll', calculatePosition);
-      window.removeEventListener('resize', calculatePosition);
-    };
-  }, [calculatePosition]);
-
-  // 点击外部关闭（由 backdrop 处理，这里兜底）
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        onClose();
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [onClose]);
-
-  return (
-    <div
-      ref={ref}
-      className="fixed z-[61] flex gap-1 p-2 rounded-2xl frost-card shadow-lg emoji-picker-enter pointer-events-auto"
-      style={{ top: position.top, left: position.left }}
-      onClick={(e) => e.stopPropagation()}
-      role="menu"
-      aria-label="选择表情"
-    >
-      {emojis.map(emoji => (
-        <button
-          key={emoji}
-          onClick={() => onPick(photoKey, emoji)}
-          className="w-8 h-8 rounded-lg flex items-center justify-center text-base hover:bg-[var(--accent-soft)] hover:scale-125 active:scale-90 transition-all duration-150"
-          role="menuitem"
-          aria-label={`贴 ${emoji}`}
-        >
-          {emoji}
-        </button>
-      ))}
-    </div>
-  );
-}
+// [/MessageBoard]  —— EmojiPickerPopover 已提取到 ./EmojiPickerPopover.tsx，两组件共享

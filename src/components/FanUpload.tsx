@@ -45,11 +45,15 @@ export default function FanUpload() {
   const [turnstileToken, setTurnstileToken] = useState('');
   const [turnstileReady, setTurnstileReady] = useState(false);
 
+  // 清理：组件卸载时撤销已选择的文件预览对象的 URL 下
+  const itemsRef = useRef(items);
+  itemsRef.current = items; // 始终保持最新引用
+
   useEffect(() => () => {
     if (timerRef.current) clearTimeout(timerRef.current);
-    items.forEach(it => URL.revokeObjectURL(it.preview));
+    itemsRef.current.forEach(it => URL.revokeObjectURL(it.preview));
     mountedRef.current = false;
-  }, []); // eslint-disable-line
+  }, []);
 
   const addFiles = useCallback((list: FileList | null) => {
     if (!list || list.length === 0) return;

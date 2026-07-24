@@ -20,6 +20,12 @@ const DDL = `CREATE TABLE IF NOT EXISTS events (
   created_at TEXT NOT NULL
 );`;
 
+/**
+ * 导出 DDL 给 _middleware.js 和 api/events.js 复用。
+ * 建表语句全仓统一，避免约束不一致。
+ */
+export const EVENTS_DDL_SQL = DDL;
+
 // 真实种子数据（与 src/data/schedule.json 一致）。performers 为数组，写入时 JSON.stringify。
 export const SEED = [
   { id: 'live-2026-01-25', date: '2026-01-25', time: '', title: 'Sunday Candy Vol.03（广州首演）', venue: '广州', performers: ['hakusai', 'kumo', 'yuzi', 'huangyuyu'], status: 'past', image: '/images/events/live-2026-01-25.webp' },

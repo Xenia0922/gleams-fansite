@@ -50,7 +50,10 @@ async function postMessage(request, env) {
       try {
         const r = await env.DB.prepare("SELECT value FROM site_config WHERE key='blocked_words'").first();
         if (r?.value) blockedWords = JSON.parse(r.value);
-      } catch {}
+      } catch {
+        // JSON 损坏或 site_config 不可用时 fail-safe：apply 默认屏蔽词
+        blockedWords = ['加微信', '加qq', 'http://', 'https://'];
+      }
       if (containsBlocked(message + ' ' + name, blockedWords)) {
         return json({ error: '内容包含敏感词，请修改后重试' }, 400, { request, env });
       }
@@ -113,8 +116,7 @@ async function listMessages(env) {
 
 async function deleteMessage(request, env) {
   try {
-    const admin = request.headers.get('x-admin-code') || '';
-    if (admin !== env.ADMIN_CODE) return json({ error: '无权限' }, 403, { request, env });
+    if (!adminOk(request, env)) return json({ error: '无权限' }, 403, { request, env });
     const { id } = await request.json();
     if (!id) return json({ error: '缺少 id' }, 400, { request, env });
     await env.DB.prepare('DELETE FROM messages WHERE id = ?').bind(id).run();

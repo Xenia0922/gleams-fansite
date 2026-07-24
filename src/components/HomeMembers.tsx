@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import Skeleton from './Skeleton';
 import SkeletonSwap from './SkeletonSwap';
 import type { MemberCard } from '../utils/api';
@@ -37,10 +37,11 @@ export default function HomeMembers({ initial }: { initial: MemberCard[] }) {
     return () => window.removeEventListener('gleams:theme', onTheme as EventListener);
   }, []);
 
-  const isActive = (c?: string) =>
-    !!c && !!activeColor && c.toLowerCase() === activeColor.toLowerCase();
+  const isActive = useCallback((c?: string) =>
+    !!c && !!activeColor && c.toLowerCase() === activeColor.toLowerCase(),
+  [activeColor]);
 
-  const active = members.filter(m => m.status !== 'graduated');
+  const active = useMemo(() => members.filter(m => m.status !== 'graduated'), [members]);
 
   return (
     <SkeletonSwap

@@ -10,19 +10,18 @@
  *   - galleryPhotos   画廊（成员分组图）
  *   - featuredFan     画廊「骑士团精选」区（已由 R2 解析出 url，免二次 fetch）
  */
-import { ensureEvents } from './_seed.js';
+import { ensureEvents, EVENTS_DDL_SQL } from './_seed.js';
 import { listPhotosData } from './api/photos.js';
 import { MEMBER_DDL_SQL } from './api/members.js';
 import { marked } from 'marked';
 
-const EVENT_DDL = `CREATE TABLE IF NOT EXISTS events (id TEXT PRIMARY KEY, date TEXT, time TEXT, title TEXT, venue TEXT, performers TEXT, status TEXT, image TEXT, body TEXT, created_at TEXT)`;
 const GALLERY_DDL = `CREATE TABLE IF NOT EXISTS gallery_photos (id TEXT PRIMARY KEY, url TEXT NOT NULL, member TEXT, sort INTEGER NOT NULL DEFAULT 0, featured INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL)`;
 const SITE_DDL = `CREATE TABLE IF NOT EXISTS site_config (key TEXT PRIMARY KEY, value TEXT)`;
 
 async function ensureTables(env) {
   try {
     await env.DB.batch([
-      env.DB.prepare(EVENT_DDL),
+      env.DB.prepare(EVENTS_DDL_SQL),
       env.DB.prepare(MEMBER_DDL_SQL),
       env.DB.prepare(GALLERY_DDL),
       env.DB.prepare(SITE_DDL),
