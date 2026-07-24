@@ -362,13 +362,13 @@ body::after {
   transform: translateX(-100%);
   background: linear-gradient(
     105deg,
-    transparent 30%,
-    rgba(255, 255, 255, 0.35) 48%,
-    rgba(255, 255, 255, 0.55) 50%,
-    rgba(255, 255, 255, 0.35) 52%,
-    transparent 70%
+    transparent 25%,
+    rgba(255, 255, 255, 0.28) 45%,
+    rgba(255, 255, 255, 0.50) 50%,
+    rgba(255, 255, 255, 0.28) 55%,
+    transparent 75%
   );
-  animation: skeleton-shimmer 2s var(--ease) infinite;
+  animation: skeleton-shimmer 3s var(--ease) infinite;
 }
 @keyframes skeleton-shimmer { 100% { transform: translateX(100%); } }
 .dark .skeleton {
@@ -377,56 +377,58 @@ body::after {
 .dark .skeleton::after {
   background: linear-gradient(
     105deg,
-    transparent 30%,
-    rgba(255, 255, 255, 0.08) 48%,
-    rgba(255, 255, 255, 0.16) 50%,
-    rgba(255, 255, 255, 0.08) 52%,
-    transparent 70%
+    transparent 25%,
+    rgba(255, 255, 255, 0.06) 45%,
+    rgba(255, 255, 255, 0.13) 50%,
+    rgba(255, 255, 255, 0.06) 55%,
+    transparent 75%
   );
 }
 @media (prefers-reduced-motion: reduce) {
   .skeleton::after { animation: none; }
 }
 
-/* ===== 骨架 → 内容过渡系统（优雅溶解 + 浮现） =====
+/* ===== 骨架 → 内容过渡系统（溶解浮现 — 慢节奏、肉眼可见） =====
  *
- * 设计理念：
- *   骨架不是"消失"，而是"溶解"——轻微缩放 + 模糊 + 淡出，
- *   内容同时以极轻微的缩放 + 清晰浮现的方式出现。
- *   两条曲线在同一时间窗口内重叠，形成物理上的"蜕变"感，
- *   而非生硬的 A 消失→B 出现。
+ * 节奏哲学：
+ *   骨架屏是"等待"的视觉化——它应该有自己的呼吸节奏，
+ *   然后从容地溶解，让真实内容从下方浮现。
+ *   整个过程约 700-800ms，给眼睛足够时间感知蜕变。
+ *
+ *   关键：骨架溶解幅度加大（scale 0.96 + blur 5px），
+ *   内容浮现与之重叠 ~600ms，形成连贯的 morph 而非切屏。
  *
  *   所有过渡均使用 --ease (cubic-bezier(0.16, 1, 0.3, 1))，
  *   与全站 glass/card/btn 缓动统一。
  */
 
-/* 骨架退出态：溶解（缩放→模糊→透明） */
+/* 骨架退出态：溶解（缩放→模糊→透明，~700ms） */
 .skeleton-exit {
-  transition: opacity 0.4s var(--ease), transform 0.45s var(--ease), filter 0.45s var(--ease);
+  transition: opacity 0.55s var(--ease) 0.05s, transform 0.7s var(--ease), filter 0.7s var(--ease);
 }
 .skeleton-exit.fading {
   opacity: 0;
-  transform: scale(0.975);
-  filter: blur(3px);
+  transform: scale(0.96);
+  filter: blur(5px);
 }
-/* 骨架退出时，子骨架的微光动画渐隐收尾，而不是生硬切断 */
+/* 骨架退出时，子骨架的微光动画渐隐收尾（舒缓） */
 .skeleton-exit.fading .skeleton::after {
-  animation: skeleton-shimmer-fade 0.5s ease-out forwards;
+  animation: skeleton-shimmer-fade 0.8s ease-out forwards;
 }
 @keyframes skeleton-shimmer-fade {
   0%   { opacity: 1; }
   100% { opacity: 0; }
 }
 
-/* 内容入场：极轻的缩放浮现（无位移跳跃，无重模糊） */
+/* 内容入场：温和的缩放浮现（~750ms，100ms 延迟让骨架先开始溶解） */
 .content-enter {
-  animation: content-in 0.52s var(--ease) 0.04s both;
+  animation: content-in 0.75s var(--ease) 0.1s both;
 }
 @keyframes content-in {
   from {
     opacity: 0;
-    transform: scale(0.975);
-    filter: blur(2px);
+    transform: scale(0.97);
+    filter: blur(3px);
   }
   to {
     opacity: 1;
@@ -438,7 +440,7 @@ body::after {
 @media (prefers-reduced-motion: reduce) {
   .skeleton-exit { transition: none; }
   .skeleton-exit.fading { opacity: 0; transform: none; filter: none; }
-  .skeleton-exit.fading::after { animation: none; }
+  .skeleton-exit.fading .skeleton::after { animation: none; }
   .content-enter { animation: none; opacity: 1; transform: none; filter: none; }
 }
 
