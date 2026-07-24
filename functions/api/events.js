@@ -25,6 +25,27 @@ function parseEvent(row) {
   return row;
 }
 
+/**
+ * 后台改 events 后触发 Cloudflare Pages 重新构建，让静态构建种子
+ * （日程详情页 / 首屏）从 D1 拉取最新数据、常新。
+ * 纯 fire-and-forget：未配置 BUILD_HOOK_URL、或 fetch 失败都不影响本次写操作响应，
+ * 绝不抛到边缘（避免 1101/500）。BUILD_HOOK_URL 在 CF Pages 后台「部署钩子」生成并配置。
+ */
+function triggerDeploy(env) {
+  const hook = env && env.BUILD_HOOK_URL;
+  if (!hook) return;
+  try {
+    const p = fetch(hook, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event: 'admin-events-mutation' }),
+    });
+    if (p && typeof p.catch === 'function') p.catch(() => {});
+  } catch (_) {
+    /* 吞掉，不阻塞响应 */
+  }
+}
+
 export async function onRequest(context) {
   const pre = handlePreFlight(context);
   if (pre) return pre;
@@ -90,6 +111,7 @@ async function createEvent(request, env) {
         new Date().toISOString()
       )
       .run();
+    triggerDeploy(env);
     return json({ ok: true, id }, 200, { request, env });
   } catch (e) {
     if (/UNIQUE|primary key/i.test(e.message || '')) return json({ error: '该 id 已存在' }, 409, { request, env });
@@ -140,6 +162,7 @@ async function putEvent(request, env) {
     if (sets.length === 0) return json({ ok: true }, 200, { request, env });
     binds.push(id);
     await env.DB.prepare(`UPDATE events SET ${sets.join(', ')} WHERE id = ?`).bind(...binds).run();
+    triggerDeploy(env);
     return json({ ok: true }, 200, { request, env });
   } catch (e) {
     return json({ error: e.message }, 500, { request, env });
@@ -152,6 +175,7 @@ async function deleteEvent(request, env) {
     const { id } = await request.json();
     if (!id) return json({ error: '缺少 id' }, 400, { request, env });
     await env.DB.prepare('DELETE FROM events WHERE id = ?').bind(id).run();
+    triggerDeploy(env);
     return json({ ok: true }, 200, { request, env });
   } catch (e) {
     return json({ error: e.message }, 500, { request, env });

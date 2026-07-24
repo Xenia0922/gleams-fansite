@@ -22,6 +22,9 @@ Thumbs.db
 .wrangler/
 weibo-crawler/
 
+# 构建期从 D1 拉取的生成种子（prebuild 自动生成，环境相关，不入库）
+src/data/schedule.gen.json
+
 # Agent working memory (not project source)
 .workbuddy/
 .zcode/
