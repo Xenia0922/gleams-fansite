@@ -3,15 +3,16 @@
  * 同时被 functions/api/events.js（数据接口）与 functions/_middleware.js（SSR 数据注入）引用，
  * 确保全站只有一份真实种子数据——杜绝曾经 schedule.js 写入虚构标题的问题。
  *
- * 种子数据来源：src/data/schedule.json（事件元数据）+ src/data/eventBodies.ts（日程详情正文）。
- * 新增/修改事件只需编辑这两个文件，Functions 端通过 esbuild 自动打包同步。
+ * 种子数据来源：functions/data/schedule.json（事件元数据）+ functions/data/eventBodies.js（日程详情正文）。
+ * 这些文件由预构建脚本 scripts/copy-seeds.cjs 从 src/data/ 自动同步生成。
+ * 新增/修改事件只需编辑 src/data/ 下的源文件，预构建自动同步。
  *
  * 注意：Cloudflare Pages Functions 用 esbuild 打包 .js，不做 TS 类型剥离，
  * 所以本文件保持纯 JS（JSDoc 注释即可，不要写 TS 类型注解）。
  */
 
-import scheduleData from '../../src/data/schedule.json';
-import { EVENT_BODIES } from '../../src/data/eventBodies.ts';
+import scheduleData from './data/schedule.json';
+import { EVENT_BODIES } from './data/eventBodies.js';
 
 const DDL = `CREATE TABLE IF NOT EXISTS events (
   id TEXT PRIMARY KEY,

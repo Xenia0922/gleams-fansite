@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
+    "prebuild": "node scripts/copy-seeds.cjs",
     "build": "astro build",
     "preview": "astro preview",
     "test": "vitest run",

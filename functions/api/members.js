@@ -10,7 +10,7 @@
  */
 
 import { adminOk, adminGuard, json, withTable, handlePreFlight } from '../_shared.js';
-import membersData from '../../../src/data/members.json';
+import membersData from '../data/members.json';
 
 const DDL = `CREATE TABLE IF NOT EXISTS members (
   id TEXT PRIMARY KEY,

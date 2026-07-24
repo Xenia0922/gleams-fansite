@@ -1,0 +1,98 @@
+{
+  "members": [
+    {
+      "id": "hakusai",
+      "name": "白菜",
+      "nameJP": "Hakusai",
+      "color": "#C99A00",
+      "emoji": "💛",
+      "birthday": "06-27",
+      "constellation": "巨蟹座",
+      "status": "active",
+      "image": "/images/members/hakusai/hakusai_01.webp",
+      "gallery": [
+        "/images/members/hakusai/hakusai_01.webp",
+        "/images/members/hakusai/hakusai_02.webp",
+        "/images/members/hakusai/hakusai_03.webp",
+        "/images/members/hakusai/hakusai_04.webp",
+        "/images/members/hakusai/hakusai_05.webp",
+        "/images/members/hakusai/hakusai_06.webp",
+        "/images/members/hakusai/hakusai_07.webp",
+        "/images/members/hakusai/hakusai_08.webp",
+        "/images/members/hakusai/hakusai_09.webp"
+      ],
+      "weibo": "https://weibo.com/u/3639876511",
+      "weiboName": "@白菜Hakusai_Gleams",
+      "weiboDesc": "DM🚫但是会看🤲",
+      "intro": "白菜の食用指南🍽️ —— 青菜萝卜各有所爱，今晚上吃小白菜🥬!!! 所属 @Gleams_Official，更多行程在这里w"
+    },
+    {
+      "id": "kumo",
+      "name": "云团",
+      "nameJP": "Kumo",
+      "color": "#2F6FED",
+      "emoji": "💙",
+      "birthday": "02-14",
+      "constellation": "水瓶座",
+      "status": "active",
+      "image": "/images/members/kumo/kumo_01.webp",
+      "gallery": [
+        "/images/members/kumo/kumo_01.webp",
+        "/images/members/kumo/kumo_02.webp",
+        "/images/members/kumo/kumo_03.webp",
+        "/images/members/kumo/kumo_04.webp",
+        "/images/members/kumo/kumo_05.webp",
+        "/images/members/kumo/kumo_06.webp",
+        "/images/members/kumo/kumo_07.webp",
+        "/images/members/kumo/kumo_08.webp",
+        "/images/members/kumo/kumo_09.webp"
+      ],
+      "weibo": "https://weibo.com/u/5432863560",
+      "weiboName": "@云团Kumo_Gleams",
+      "weiboDesc": "Spring Day",
+      "intro": "云大王来袭！大家可以叫我小云哟！☁诞生日02.14 ☁队内蓝色担当💙 ☁代表物是☁也是小黑猫🐈‍⬛ ☁纯社畜宅，休息时最爱在家"
+    },
+    {
+      "id": "yuzi",
+      "name": "柚子",
+      "nameJP": "Yuzi",
+      "color": "#1E9E6A",
+      "emoji": "💚",
+      "birthday": "09-04",
+      "constellation": "处女座",
+      "status": "active",
+      "image": "/images/members/yuzi/yuzi_main.webp",
+      "gallery": [
+        "/images/members/yuzi/yuzi_main.webp",
+        "/images/members/yuzi/yuzi_02.webp",
+        "/images/members/yuzi/yuzi_03.webp",
+        "/images/members/yuzi/yuzi_04.webp",
+        "/images/members/yuzi/yuzi_05.webp",
+        "/images/members/yuzi/yuzi_06.webp",
+        "/images/members/yuzi/yuzi_07.webp",
+        "/images/members/yuzi/yuzi_08.webp",
+        "/images/members/yuzi/yuzi_09.webp"
+      ],
+      "weibo": "https://weibo.com/u/7148114625",
+      "weiboName": "@柚子Yuzi_Gleams",
+      "weiboDesc": "这里只有柚子（ ◜ ω ◝ ） dm只能看不能回复",
+      "intro": "能够与你相见的日子 ⌯>𖥦<⌯ಣ 广西出身的柚子，期待与大家多多见面！"
+    },
+    {
+      "id": "huangyuyu",
+      "name": "黄鱼鱼",
+      "nameJP": "KAZInoko",
+      "color": "#FF69B4",
+      "emoji": "🩷",
+      "birthday": "05-19",
+      "constellation": "金牛座",
+      "status": "graduated",
+      "image": "/images/members/huangyuyu/huangyuyu_01.webp",
+      "gallery": [],
+      "weibo": "",
+      "weiboName": "@黄鱼鱼KAZInoko_Gleams",
+      "weiboDesc": "",
+      "intro": "Gleams飞行成员，诞生日5.19，成员色玫色🩷"
+    }
+  ]
+}
