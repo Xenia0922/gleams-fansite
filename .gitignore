@@ -24,3 +24,4 @@ weibo-crawler/
 
 # Agent working memory (not project source)
 .workbuddy/
+.zcode/

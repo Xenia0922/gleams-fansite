@@ -30,6 +30,12 @@ const DDL = `CREATE TABLE IF NOT EXISTS members (
   created_at TEXT NOT NULL
 );`;
 
+/**
+ * 导出 DDL 给 _middleware.js 复用，确保 Schema 单一来源。
+ * _middleware 的 ensureTables 不再另写 MEMBER_DDL，统一从此处获取。
+ */
+export const MEMBER_DDL_SQL = DDL;
+
 // 种子：来自 src/data/members.json 当前内容
 const SEED = [
   { id: 'hakusai', name: '白菜', nameJP: 'Hakusai', color: '#FFD700', emoji: '💛', birthday: '06-27', constellation: '巨蟹座', status: 'active', image: '/images/members/hakusai/hakusai_01.webp', gallery: ['/images/members/hakusai/hakusai_01.webp','/images/members/hakusai/hakusai_02.webp','/images/members/hakusai/hakusai_03.webp','/images/members/hakusai/hakusai_04.webp','/images/members/hakusai/hakusai_05.webp','/images/members/hakusai/hakusai_06.webp','/images/members/hakusai/hakusai_07.webp','/images/members/hakusai/hakusai_08.webp','/images/members/hakusai/hakusai_09.webp'], weibo: 'https://weibo.com/u/3639876511', weiboName: '@白菜Hakusai_Gleams', weiboDesc: 'DM🚫但是会看🤲', intro: '白菜の食用指南🍽️ —— 青菜萝卜各有所爱，今晚上吃小白菜🥬!!! 所属 @Gleams_Official，更多行程在这里w' },

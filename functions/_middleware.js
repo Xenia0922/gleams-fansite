@@ -12,19 +12,19 @@
  */
 import { ensureEvents } from './_seed.js';
 import { listPhotosData } from './api/photos.js';
+import { MEMBER_DDL_SQL } from './api/members.js';
 import { marked } from 'marked';
 
 const EVENT_DDL = `CREATE TABLE IF NOT EXISTS events (id TEXT PRIMARY KEY, date TEXT, time TEXT, title TEXT, venue TEXT, performers TEXT, status TEXT, image TEXT, body TEXT, created_at TEXT)`;
-const MEMBER_DDL = `CREATE TABLE IF NOT EXISTS members (id TEXT PRIMARY KEY, name TEXT, nameJP TEXT, color TEXT, emoji TEXT, birthday TEXT, constellation TEXT, status TEXT, image TEXT, gallery TEXT, weibo TEXT, weiboName TEXT, weiboDesc TEXT, intro TEXT, sort_order INTEGER DEFAULT 0)`;
-const GALLERY_DDL = `CREATE TABLE IF NOT EXISTS gallery_photos (id TEXT PRIMARY KEY, url TEXT NOT NULL, member TEXT, sort INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL)`;
+const GALLERY_DDL = `CREATE TABLE IF NOT EXISTS gallery_photos (id TEXT PRIMARY KEY, url TEXT NOT NULL, member TEXT, sort INTEGER NOT NULL DEFAULT 0, featured INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL)`;
 const SITE_DDL = `CREATE TABLE IF NOT EXISTS site_config (key TEXT PRIMARY KEY, value TEXT)`;
 
 async function ensureTables(env) {
   try {
     await env.DB.batch([
-      env.DB.prepare(EVENT_DDL),
-      env.DB.prepare(MEMBER_DDL),
-      env.DB.prepare(GALLERY_DDL),
+env.DB.prepare(EVENT_DDL),
+	    env.DB.prepare(MEMBER_DDL_SQL),
+	    env.DB.prepare(GALLERY_DDL),
       env.DB.prepare(SITE_DDL),
     ]);
   } catch (e) {
@@ -98,7 +98,7 @@ async function fetchPageData(path, env) {
     try {
       const { results } = await env.DB
         .prepare(
-          "SELECT id,name,nameJP,color,emoji,birthday,constellation,status,image,gallery,weibo,weiboName,weiboDesc,intro,sort_order FROM members ORDER BY sort_order ASC, id ASC"
+          "SELECT id,name,name_jp,color,emoji,birthday,constellation,status,image,gallery,weibo,weibo_name,weibo_desc,intro,sort_order FROM members ORDER BY sort_order ASC, id ASC"
         )
         .all();
       data.members = (results || []).map((r) => {

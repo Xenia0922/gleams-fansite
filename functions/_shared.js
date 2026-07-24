@@ -93,15 +93,16 @@ export function adminOk(request, env) {
   const provided = request.headers.get('x-admin-code') || '';
   const expected = env.ADMIN_CODE || '';
   if (!expected) return false; // 未配置 admin 密钥，关闭全部写权限
-  return constantTimeEqual(provided, expected);
+  return __constantTimeEqual(provided, expected);
 }
 
 /**
  * 常量时间字符串比较：对每个字节做 XOR 后累加 OR，最终看是否严格为 0。
  * 提前长度补齐 + 长度参与对比，保证分支不依赖内容。
  * 字符以 UTF-8 字节序列解析，跨平台行为一致（Workers 8 位 charCode）。
+ * 测试需要：内部导出 __constantTimeEqual 便于 unit test 直接验。
  */
-function constantTimeEqual(a, b) {
+export function __constantTimeEqual(a, b) {
   const ab = new TextEncoder().encode(String(a));
   const bb = new TextEncoder().encode(String(b));
   const len = Math.max(ab.length, bb.length);
