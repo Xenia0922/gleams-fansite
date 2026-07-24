@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import StaticImageLightbox from './StaticImageLightbox';
 import Skeleton from './Skeleton';
 
@@ -91,6 +91,7 @@ export default function EventDetail({ id, event: eventProp }: EventDetailProps) 
   }
 
   const d = new Date(ev.date);
+  const lightboxImages = useMemo(() => [{ src: ev.image, alt: ev.title }], [ev.image, ev.title]);
 
   return (
     <article className="max-w-3xl mx-auto px-4 py-12 md:py-16 content-enter">
@@ -122,7 +123,7 @@ export default function EventDetail({ id, event: eventProp }: EventDetailProps) 
       {ev.image && (
         <StaticImageLightbox
           mode="single"
-          images={[{ src: ev.image, alt: ev.title }]}
+          images={lightboxImages}
           itemClassName="block w-full mb-8 bg-transparent appearance-none"
           imageClassName="w-full rounded-2xl object-cover max-h-[500px] bg-gray-100 dark:bg-gray-800 cursor-zoom-in hover:opacity-95 transition-opacity"
         />
