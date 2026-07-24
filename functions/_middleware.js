@@ -33,6 +33,58 @@ async function ensureTables(env) {
   }
 }
 
+// ---- 模块级缓存：把「逐请求冷 D1 查询」变成「短 TTL 热缓存」 ----
+// 页面数据仅后台编辑时变动，30s 内复用同一份结果即可；
+// 冷 D1 下每次查询可慢至数百毫秒，串行累加后 TTFB 动辄数秒，
+// 缓存后热流量几乎零 D1 开销，HTML 秒回。
+const PAGE_CACHE_TTL = 30 * 1000;
+const pageCache = new Map(); // path -> { ts, data }
+
+// ensureTables 只需在单个 isolate 生命周期内跑一次（表在 D1 中持久存在）。
+let tablesReady = false;
+let tablesPromise = null;
+async function ensureTablesOnce(env) {
+  if (tablesReady) return;
+  if (!tablesPromise) {
+    tablesPromise = (async () => {
+      try {
+        await ensureTables(env);
+        tablesReady = true;
+      } catch (e) {
+        /* ignore */
+      } finally {
+        tablesPromise = null;
+      }
+    })();
+  }
+  return tablesPromise;
+}
+
+// 读取（命中则用缓存，未命中才真正查 D1）。
+// 仅在「查到了多于 turnstileSiteKey 的数据」时才缓存，避免把 D1 瞬时故障的空结果缓存住。
+async function getPageData(path, env) {
+  const now = Date.now();
+  const hit = pageCache.get(path);
+  if (hit && now - hit.ts < PAGE_CACHE_TTL) return hit.data;
+  const data = await fetchPageData(path, env);
+  if (Object.keys(data).length > 1) {
+    if (pageCache.size > 64) {
+      // 简单淘汰最旧项，避免无限增长
+      let oldestKey = null;
+      let oldestTs = Infinity;
+      for (const [k, v] of pageCache) {
+        if (v.ts < oldestTs) {
+          oldestTs = v.ts;
+          oldestKey = k;
+        }
+      }
+      if (oldestKey) pageCache.delete(oldestKey);
+    }
+    pageCache.set(path, { ts: now, data });
+  }
+  return data;
+}
+
 async function fetchEvents(env) {
   const { results } = await env.DB.prepare(
     'SELECT id,date,time,title,venue,performers,status,image FROM events ORDER BY date DESC'
@@ -48,148 +100,168 @@ async function fetchEvents(env) {
 
 async function fetchPageData(path, env) {
   const data = {};
-
-  // Turnstile site key（从环境变量读取，注入前端 widget 用）
   data.turnstileSiteKey = env.TURNSTILE_SITE_KEY || null;
 
-  // 所有页面都可能需要 site_config (SiteBits 组件)
-  try {
-    const { results } = await env.DB.prepare('SELECT key, value FROM site_config').all();
-    if (results && results.length) {
-      const cfg = {};
-      for (const r of results) {
-        try {
-          cfg[r.key] = ['tokuten_rules', 'tokuten_images', 'featured_square', 'hero_config', 'blocked_words'].includes(r.key)
-            ? JSON.parse(r.value)
-            : r.value;
-          // 防御旧 bug 数据：hero_config 曾被 updateConfig 存为 '[]'，强制转为 {}
-          if (r.key === 'hero_config' && Array.isArray(cfg[r.key])) cfg[r.key] = {};
-        } catch {
-          cfg[r.key] = r.value;
+  // 所有 D1 查询彼此独立，全部并发发起（Promise.all），
+  // 冷 D1 下从「串行 await 累加」变为「取最慢一项」，TTFB 显著下降。
+  const tasks = [];
+
+  // site_config（所有页面都可能用，SiteBits 组件）
+  tasks.push((async () => {
+    try {
+      const { results } = await env.DB.prepare('SELECT key, value FROM site_config').all();
+      if (results && results.length) {
+        const cfg = {};
+        for (const r of results) {
+          try {
+            cfg[r.key] = ['tokuten_rules', 'tokuten_images', 'featured_square', 'hero_config', 'blocked_words'].includes(r.key)
+              ? JSON.parse(r.value)
+              : r.value;
+            // 防御旧 bug 数据：hero_config 曾被 updateConfig 存为 '[]'，强制转为 {}
+            if (r.key === 'hero_config' && Array.isArray(cfg[r.key])) cfg[r.key] = {};
+          } catch {
+            cfg[r.key] = r.value;
+          }
         }
+        data.siteConfig = cfg;
+        // 屏蔽词仅服务端使用，不注入前端 HTML
+        delete data.siteConfig.blocked_words;
       }
-      data.siteConfig = cfg;
-      // 屏蔽词仅服务端使用，不注入前端 HTML
-      delete data.siteConfig.blocked_words;
-    }
-  } catch {}
+    } catch {}
+  })());
 
-  // 首页 / 成员页 / 日程页 / 画廊页 都需要 events
+  // events：首页 / 成员 / 日程 / 画廊 / 粉丝 都需要
   if (path === '/' || path === '/members' || path === '/gallery' || path === '/fans' || path.startsWith('/schedule')) {
-    try {
-      let events = null;
+    tasks.push((async () => {
       try {
-        events = await fetchEvents(env);
-      } catch (e) {
-        // D1 偶发超时/错误，重试一次
-        console.error('[middleware] fetchEvents first try failed:', e.message);
-        events = await fetchEvents(env);
-      }
-      // 全新 D1：首次访问时确保已播种真实数据，再取一次
-      if (!events || !events.length) {
-        await ensureEvents(env);
-        events = await fetchEvents(env);
-      }
-      data.events = events || [];
-    } catch (e) {
-      console.error('[middleware] fetchEvents all retries failed:', e.message);
-    }
-  }
-
-  // 首页 / 成员页 需要 members
-  if (path === '/' || path === '/members' || path.startsWith('/members/')) {
-    try {
-      const { results } = await env.DB
-        .prepare(
-          "SELECT id,name,name_jp,color,emoji,birthday,constellation,status,image,gallery,weibo,weibo_name,weibo_desc,intro,sort_order FROM members ORDER BY sort_order ASC, id ASC"
-        )
-        .all();
-      data.members = (results || []).map((r) => {
-        let gallery = [];
+        let events = null;
         try {
-          gallery = JSON.parse(r.gallery || '[]');
-        } catch {}
-        return { ...r, gallery };
-      });
-    } catch {}
-  }
-
-  // 画廊页 / 粉丝广场页需要成员 meta（分组显示/筛选）
-  if (path === '/gallery' || path === '/fans') {
-    try {
-      const { results } = await env.DB
-        .prepare("SELECT id,name,emoji,color FROM members WHERE status='active' ORDER BY sort_order ASC, id ASC")
-        .all();
-      data.membersMeta = results || [];
-    } catch {}
-  }
-
-  // 粉丝广场页：注入留言 + 返图（由 SSR 直出，消除 MessageBoard/FanGallery 的二次 fetch）
-  if (path === '/fans') {
-    try {
-      const { results: msgRows } = await env.DB
-        .prepare('SELECT id, name, message, member, event, created_at FROM messages ORDER BY created_at DESC LIMIT 50')
-        .all();
-      data.messages = msgRows || [];
-    } catch {}
-    try {
-      data.photos = await listPhotosData(env, true); // 仅已审核（pending 不对外）
-    } catch {}
-  }
-
-  // 画廊页需要 gallery photos + 骑士团精选（已解析 url，免二次 fetch）
-  if (path === '/gallery') {
-    try {
-      const { results } = await env.DB
-        .prepare('SELECT id,url,member FROM gallery_photos ORDER BY sort ASC, created_at ASC')
-        .all();
-      data.galleryPhotos = results || [];
-    } catch {}
-    try {
-      const fs = await env.DB
-        .prepare("SELECT value FROM site_config WHERE key='featured_square'")
-        .first();
-      const featuredSquare = fs?.value ? JSON.parse(fs.value) : [];
-      const featuredKeys = Array.isArray(featuredSquare)
-        ? featuredSquare.map((e) => (typeof e === 'string' ? e : e.key)).filter(Boolean)
-        : [];
-      if (featuredKeys.length) {
-        const photos = await listPhotosData(env);
-        const keySet = new Set(featuredKeys);
-        data.featuredFan = photos.filter((p) => keySet.has(p.key));
-      } else {
-        data.featuredFan = [];
+          events = await fetchEvents(env);
+        } catch (e) {
+          // D1 偶发超时/错误，重试一次
+          console.error('[middleware] fetchEvents first try failed:', e.message);
+          events = await fetchEvents(env);
+        }
+        // 全新 D1：首次访问时确保已播种真实数据，再取一次
+        if (!events || !events.length) {
+          await ensureEvents(env);
+          events = await fetchEvents(env);
+        }
+        data.events = events || [];
+      } catch (e) {
+        console.error('[middleware] fetchEvents all retries failed:', e.message);
       }
-    } catch {}
+    })());
   }
 
-  // 日程详情页：注入单条完整 event（含 body + bodyHtml），EventDetail 直接渲染，无需 fetch、无需客户端异步加载 marked
+  // members：首页 / 成员
+  if (path === '/' || path === '/members' || path.startsWith('/members/')) {
+    tasks.push((async () => {
+      try {
+        const { results } = await env.DB
+          .prepare(
+            "SELECT id,name,name_jp,color,emoji,birthday,constellation,status,image,gallery,weibo,weibo_name,weibo_desc,intro,sort_order FROM members ORDER BY sort_order ASC, id ASC"
+          )
+          .all();
+        data.members = (results || []).map((r) => {
+          let gallery = [];
+          try {
+            gallery = JSON.parse(r.gallery || '[]');
+          } catch {}
+          return { ...r, gallery };
+        });
+      } catch {}
+    })());
+  }
+
+  // membersMeta：画廊 / 粉丝 分组显示
+  if (path === '/gallery' || path === '/fans') {
+    tasks.push((async () => {
+      try {
+        const { results } = await env.DB
+          .prepare("SELECT id,name,emoji,color FROM members WHERE status='active' ORDER BY sort_order ASC, id ASC")
+          .all();
+        data.membersMeta = results || [];
+      } catch {}
+    })());
+  }
+
+  // 粉丝广场：留言 + 返图（SSR 直出，消除 MessageBoard/FanGallery 的二次 fetch）
+  if (path === '/fans') {
+    tasks.push((async () => {
+      try {
+        const { results: msgRows } = await env.DB
+          .prepare('SELECT id, name, message, member, event, created_at FROM messages ORDER BY created_at DESC LIMIT 50')
+          .all();
+        data.messages = msgRows || [];
+      } catch {}
+    })());
+    tasks.push((async () => {
+      try {
+        data.photos = await listPhotosData(env, true); // 仅已审核（pending 不对外）
+      } catch {}
+    })());
+  }
+
+  // 画廊：gallery photos + 骑士团精选（已解析 url，免二次 fetch）
+  if (path === '/gallery') {
+    tasks.push((async () => {
+      try {
+        const { results } = await env.DB
+          .prepare('SELECT id,url,member FROM gallery_photos ORDER BY sort ASC, created_at ASC')
+          .all();
+        data.galleryPhotos = results || [];
+      } catch {}
+    })());
+    tasks.push((async () => {
+      try {
+        const fs = await env.DB
+          .prepare("SELECT value FROM site_config WHERE key='featured_square'")
+          .first();
+        const featuredSquare = fs?.value ? JSON.parse(fs.value) : [];
+        const featuredKeys = Array.isArray(featuredSquare)
+          ? featuredSquare.map((e) => (typeof e === 'string' ? e : e.key)).filter(Boolean)
+          : [];
+        if (featuredKeys.length) {
+          const photos = await listPhotosData(env);
+          const keySet = new Set(featuredKeys);
+          data.featuredFan = photos.filter((p) => keySet.has(p.key));
+        } else {
+          data.featuredFan = [];
+        }
+      } catch {}
+    })());
+  }
+
+  // 日程详情页：单条 event（含 body + bodyHtml），EventDetail 直接渲染，无需 fetch、无需客户端异步加载 marked
   const m = path.match(/^\/schedule\/([\w-]+)$/);
   if (m && m[1] !== 'index') {
-    try {
-      const { results } = await env.DB.prepare('SELECT * FROM events WHERE id = ?').bind(m[1]).all();
-      if (results && results.length) {
-        const row = results[0];
-        try {
-          row.performers = JSON.parse(row.performers || '[]');
-        } catch {
-          row.performers = [];
-        }
-        // 服务端预渲染 body 为 HTML，客户端 Get 到即可直接使用，无需异步加载 marked
-        if (row.body) {
+    tasks.push((async () => {
+      try {
+        const { results } = await env.DB.prepare('SELECT * FROM events WHERE id = ?').bind(m[1]).all();
+        if (results && results.length) {
+          const row = results[0];
           try {
-            row.bodyHtml = marked.parse(row.body, { async: false });
+            row.performers = JSON.parse(row.performers || '[]');
           } catch {
+            row.performers = [];
+          }
+          if (row.body) {
+            try {
+              row.bodyHtml = marked.parse(row.body, { async: false });
+            } catch {
+              row.bodyHtml = '';
+            }
+          } else {
             row.bodyHtml = '';
           }
-        } else {
-          row.bodyHtml = '';
+          data.event = row;
         }
-        data.event = row;
-      }
-    } catch {}
+      } catch {}
+    })());
   }
 
+  await Promise.all(tasks);
   return data;
 }
 
@@ -288,8 +360,8 @@ export async function onRequest(context) {
   if (!ct.includes('text/html')) return response;
 
   try {
-    await ensureTables(env);
-    const pageData = await fetchPageData(path, env);
+    await ensureTablesOnce(env);
+    const pageData = await getPageData(path, env);
 
     if (Object.keys(pageData).length === 0) return response;
 
@@ -312,6 +384,12 @@ export async function onRequest(context) {
 
     const respHeaders = new Headers(response.headers);
     respHeaders.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    // CDN 边缘缓存「注入后的 HTML」30s：热流量直接命中边缘，函数不再每次执行，TTFB 接近静态资源。
+    // 后台编辑后最多 30s 自然生效，对粉丝站完全可接受；admin 路径已被中间件排除，不受影响。
+    const cc = respHeaders.get('Cache-Control') || '';
+    if (!/s-maxage/i.test(cc)) {
+      respHeaders.set('Cache-Control', (cc ? cc + ', ' : '') + 's-maxage=30');
+    }
     return new Response(modified, {
       status: response.status,
       statusText: response.statusText,
