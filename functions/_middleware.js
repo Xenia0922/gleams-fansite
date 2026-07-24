@@ -22,13 +22,24 @@ const SITE_DDL = `CREATE TABLE IF NOT EXISTS site_config (key TEXT PRIMARY KEY, 
 async function ensureTables(env) {
   try {
     await env.DB.batch([
-env.DB.prepare(EVENT_DDL),
-	    env.DB.prepare(MEMBER_DDL_SQL),
-	    env.DB.prepare(GALLERY_DDL),
+      env.DB.prepare(EVENT_DDL),
+      env.DB.prepare(MEMBER_DDL_SQL),
+      env.DB.prepare(GALLERY_DDL),
       env.DB.prepare(SITE_DDL),
     ]);
   } catch (e) {
     /* ignore */
+  }
+  // 迁移旧表：早期 middleware 建表用了驼峰列名(nameJP/weiboName/weiboDesc)，
+  // 与 members.js 的蛇形(name_jp/weibo_name/weibo_desc)不一致。幂等重命名，旧列不存在则跳过。
+  try {
+    await env.DB.batch([
+      env.DB.prepare("ALTER TABLE members RENAME COLUMN nameJP TO name_jp"),
+      env.DB.prepare("ALTER TABLE members RENAME COLUMN weiboName TO weibo_name"),
+      env.DB.prepare("ALTER TABLE members RENAME COLUMN weiboDesc TO weibo_desc"),
+    ]);
+  } catch (e2) {
+    /* 列已重命名或不存在，忽略 */
   }
 }
 
