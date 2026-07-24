@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import ImageLightboxOverlay from './ImageLightboxOverlay';
+import { useState, useEffect, useMemo } from 'react';
+import StaticImageLightbox from './StaticImageLightbox';
 import Skeleton from './Skeleton';
 
 interface EventDetailProps {
@@ -18,7 +18,6 @@ export default function EventDetail({ id, event: eventProp }: EventDetailProps) 
   const [ev, setEv] = useState<any>(initialEvent);
   const [loading, setLoading] = useState(!initialEvent);
   const [bodyHtml, setBodyHtml] = useState<string>(initialEvent?.bodyHtml || '');
-  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   // 更新浏览器标题——覆盖 404 页继承的「404 | 页面未找到」
   useEffect(() => {
@@ -92,9 +91,7 @@ export default function EventDetail({ id, event: eventProp }: EventDetailProps) 
   }
 
   const d = new Date(ev.date);
-  const lightboxImages = useMemo(() => ev.image ? [{ src: ev.image, alt: ev.title }] : [], [ev.image, ev.title]);
-  const openLightbox = useCallback(() => setLightboxOpen(true), []);
-  const closeLightbox = useCallback(() => setLightboxOpen(false), []);
+  const lightboxImages = useMemo(() => [{ src: ev.image, alt: ev.title }], [ev.image, ev.title]);
 
   return (
     <article className="max-w-3xl mx-auto px-4 py-12 md:py-16 content-enter">
@@ -124,23 +121,12 @@ export default function EventDetail({ id, event: eventProp }: EventDetailProps) 
       <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-gray-100 mb-2">{ev.title}</h1>
 
       {ev.image && (
-        <>
-          <img
-            src={ev.image}
-            alt={ev.title}
-            onClick={openLightbox}
-            className="w-full rounded-2xl object-cover max-h-[500px] bg-gray-100 dark:bg-gray-800 cursor-zoom-in hover:opacity-95 transition-opacity mb-8"
-          />
-          {lightboxOpen && (
-            <ImageLightboxOverlay
-              images={lightboxImages}
-              currentIndex={0}
-              onClose={closeLightbox}
-              onPrev={closeLightbox}
-              onNext={closeLightbox}
-            />
-          )}
-        </>
+        <StaticImageLightbox
+          mode="single"
+          images={lightboxImages}
+          itemClassName="block w-full mb-8 bg-transparent appearance-none"
+          imageClassName="w-full rounded-2xl object-cover max-h-[500px] bg-gray-100 dark:bg-gray-800 cursor-zoom-in hover:opacity-95 transition-opacity"
+        />
       )}
 
       <div className="event-detail" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
