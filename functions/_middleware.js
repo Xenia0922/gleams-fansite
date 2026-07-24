@@ -352,6 +352,19 @@ export async function onRequest(context) {
 
   if (!isPage) return next();
 
+  // 边缘缓存（Cache API）：命中则直接返回「注入后的 HTML」——不碰 D1、不重解析响应体，TTFB ≈ 静态资源。
+  // 关键：Cloudflare 不会缓存 Pages *Function* 自身响应（cf-cache-status 恒为 DYNAMIC，仅靠 Cache-Control
+  // 的 s-maxage 无效），故用 caches.default 显式缓存。它跨 isolate / 跨 PoP 生效，冷数据中心也只需每 TTL
+  // 付一次 D1。全站数据一致（无用户态），按 path 缓存安全；admin 路径已被上面的 isPage 排除，不受影响。
+  const canCache = request.method === 'GET' && typeof caches !== 'undefined' && caches.default;
+  const cacheKey = canCache ? new Request(new URL(path, url.origin)) : null;
+  if (cacheKey) {
+    try {
+      const hit = await caches.default.match(cacheKey);
+      if (hit) return hit;
+    } catch {}
+  }
+
   // 获取原始响应
   const response = await next();
 
@@ -384,17 +397,21 @@ export async function onRequest(context) {
 
     const respHeaders = new Headers(response.headers);
     respHeaders.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-    // CDN 边缘缓存「注入后的 HTML」30s：热流量直接命中边缘，函数不再每次执行，TTFB 接近静态资源。
-    // 后台编辑后最多 30s 自然生效，对粉丝站完全可接受；admin 路径已被中间件排除，不受影响。
-    const cc = respHeaders.get('Cache-Control') || '';
-    if (!/s-maxage/i.test(cc)) {
-      respHeaders.set('Cache-Control', (cc ? cc + ', ' : '') + 's-maxage=30');
-    }
-    return new Response(modified, {
+    // 注入后 HTML 边缘缓存 60s：后台编辑后最多 60s 自然生效；s-maxage 同时供 CF/CDN 在支持时缓存。
+    respHeaders.set('Cache-Control', 'public, max-age=0, s-maxage=60');
+
+    const finalResp = new Response(modified, {
       status: response.status,
       statusText: response.statusText,
       headers: respHeaders,
     });
+    // 存入 Cache API（TTL 由上面的 s-maxage=60 控制），供后续同 path 请求毫秒级命中
+    if (cacheKey) {
+      try {
+        await caches.default.put(cacheKey, finalResp.clone());
+      } catch {}
+    }
+    return finalResp;
   } catch (e) {
     console.error('[middleware] error:', e.message);
     return response;
