@@ -190,7 +190,8 @@ export default function FanGallery() {
       loading={loading}
       skeleton={
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3" aria-hidden="true">
-          {Array.from({ length: 6 }).map((_, i) => (
+          {/* 数量对齐内容：优先 SSR 注入的 photos 真实张数，消除“骨架 6 张 / 内容 N 张”的回抽 */}
+          {Array.from({ length: (ssr?.photos?.length) || 6 }).map((_, i) => (
             <Skeleton key={i} className="aspect-[4/5] rounded-3xl border border-white/55 dark:border-white/6" />
           ))}
         </div>

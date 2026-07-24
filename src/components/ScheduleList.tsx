@@ -113,13 +113,15 @@ export default function ScheduleList({ initial }: { initial?: ScheduleEvent[] })
 
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6" aria-hidden="true">
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: initial?.length || 6 }).map((_, i) => (
             <div key={i} className="card overflow-hidden">
               <Skeleton className="aspect-[16/9] rounded-none" />
               <div className="p-4 space-y-2">
-                <Skeleton className="h-3 w-16 rounded-full" />
-                <Skeleton className="h-4 w-3/4 rounded-full" />
-                <Skeleton className="h-3 w-1/2 rounded-full" />
+                {/* 行高对齐内容：日期行 text-xs≈h-4、标题 text-sm line-clamp-2≈h-5、场馆 text-xs mt-1≈h-4、出演者 chips 行≈h-3 mt-2 */}
+                <Skeleton className="h-4 w-16 rounded-full" />
+                <Skeleton className="h-5 w-3/4 rounded-full" />
+                <Skeleton className="h-4 w-1/2 rounded-full" />
+                <Skeleton className="h-3 w-3/4 mt-2 rounded-full" />
               </div>
             </div>
           ))}

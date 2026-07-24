@@ -70,15 +70,37 @@ export default function MembersList({ initial }: { initial: MemberCard[] }) {
     <SkeletonSwap
       loading={loading}
       skeleton={
-        <div className="grid grid-cols-3 gap-4 sm:gap-6 mb-16" aria-hidden="true">
-          {Array.from({ length: initial?.length || 6 }).map((_, i) => (
-            <div key={i} className="text-center">
-              <Skeleton className="aspect-[4/5] rounded-2xl mb-3" />
-              <Skeleton className="h-4 w-16 mx-auto rounded-full mb-2" />
-              <Skeleton className="h-3 w-12 mx-auto rounded-full mb-2" />
-              <Skeleton className="h-3 w-20 mx-auto rounded-full" />
+        <div aria-hidden="true">
+          {/* 镜像内容结构：正在活动标签 + 活动成员网格 + （毕业成员时）已毕业分区，消除标签/分隔带来的回抽 */}
+          <p className="text-xs font-bold text-pink-500 tracking-widest text-center mb-5">正在活动</p>
+          <div className="grid grid-cols-3 gap-4 sm:gap-6 mb-16">
+            {Array.from({ length: (initial || []).filter(m => m.status !== 'graduated').length || 3 }).map((_, i) => (
+              <div key={i} className="text-center">
+                {/* 行高对齐内容：emoji text-xl≈h-5、name text-base≈h-5、name_jp text-xs≈h-4、星座 tag 行≈h-3 mt-1 */}
+                <Skeleton className="aspect-[4/5] rounded-2xl mb-3" />
+                <Skeleton className="h-5 w-16 mx-auto rounded-full mb-2" />
+                <Skeleton className="h-5 w-12 mx-auto rounded-full mb-2" />
+                <Skeleton className="h-4 w-20 mx-auto rounded-full mb-2" />
+                <Skeleton className="h-3 w-24 mx-auto rounded-full mt-1" />
+              </div>
+            ))}
+          </div>
+          {(initial || []).some(m => m.status === 'graduated') && (
+            <div className="border-t border-gray-100 dark:border-gray-800 pt-10">
+              <p className="text-xs font-bold text-gray-400 tracking-widest text-center mb-5">已毕业</p>
+              <div className="grid grid-cols-3 gap-4 sm:gap-6">
+                {Array.from({ length: (initial || []).filter(m => m.status === 'graduated').length }).map((_, i) => (
+                  <div key={i} className="text-center">
+                    <Skeleton className="aspect-[4/5] rounded-2xl mb-3" />
+                    <Skeleton className="h-5 w-16 mx-auto rounded-full mb-2" />
+                    <Skeleton className="h-5 w-12 mx-auto rounded-full mb-2" />
+                    <Skeleton className="h-4 w-20 mx-auto rounded-full mb-2" />
+                    <Skeleton className="h-3 w-24 mx-auto rounded-full mt-1" />
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
+          )}
         </div>
       }
     >

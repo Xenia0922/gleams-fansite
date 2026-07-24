@@ -31,12 +31,14 @@ export default function HomeMembers({ initial }: { initial: MemberCard[] }) {
       loading={loading}
       skeleton={
         <div className="grid grid-cols-3 gap-4 sm:gap-6" aria-hidden="true">
-          {Array.from({ length: initial?.length || 3 }).map((_, i) => (
+          {Array.from({ length: (initial || []).filter(m => m.status !== 'graduated').length || 3 }).map((_, i) => (
             <div key={i} className="text-center">
               <Skeleton className="aspect-[4/5] rounded-3xl mb-3" />
-              <Skeleton className="h-4 w-16 mx-auto rounded-full mb-2" />
-              <Skeleton className="h-3 w-12 mx-auto rounded-full mb-2" />
-              <Skeleton className="h-3 w-20 mx-auto rounded-full" />
+              {/* 行高对齐内容：emoji text-xl≈h-5、name text-base≈h-5、name_jp text-xs≈h-4、星座 tag 行≈h-3 mt-1 */}
+              <Skeleton className="h-5 w-16 mx-auto rounded-full mb-2" />
+              <Skeleton className="h-5 w-12 mx-auto rounded-full mb-2" />
+              <Skeleton className="h-4 w-20 mx-auto rounded-full mb-2" />
+              <Skeleton className="h-3 w-24 mx-auto rounded-full mt-1" />
             </div>
           ))}
         </div>

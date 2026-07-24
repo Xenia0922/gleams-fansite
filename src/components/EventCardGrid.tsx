@@ -39,9 +39,10 @@ function EventSkeleton({ count = 4 }: { count?: number }) {
         <div key={i} className="card overflow-hidden">
           <Skeleton className="aspect-[16/9] rounded-none" />
           <div className="p-4 space-y-2">
-            <Skeleton className="h-3 w-16 rounded-full" />
-            <Skeleton className="h-4 w-3/4 rounded-full" />
-            <Skeleton className="h-3 w-1/2 rounded-full" />
+            {/* 行高对齐内容：日期 text-xs≈h-4、标题 text-sm line-clamp-2≈h-5、场馆 text-xs mt-1≈h-4 */}
+            <Skeleton className="h-4 w-16 rounded-full" />
+            <Skeleton className="h-5 w-3/4 rounded-full" />
+            <Skeleton className="h-4 w-1/2 mt-1 rounded-full" />
           </div>
         </div>
       ))}
@@ -71,6 +72,9 @@ export default function EventCardGrid({
     fetchFn: () => fetch('/api/events').then(r => r.json()),
   });
 
+  // 骨架数量与内容一致：按 initial 同口径过滤 + limit，避免“骨架 N 行 / 内容 M 行”的回抽
+  const skeletonCount = Math.min((initial || []).filter(e => e.status === filter).length || limit, limit);
+
   const filtered = useMemo(() => {
     const list = [...events]
       .filter((e) => e.status === filter)
@@ -88,7 +92,7 @@ export default function EventCardGrid({
   if (!loading && filtered.length === 0) return <EventEmpty filter={filter} />;
 
   return (
-    <SkeletonSwap loading={loading} skeleton={<EventSkeleton count={limit} />}>
+    <SkeletonSwap loading={loading} skeleton={<EventSkeleton count={skeletonCount} />}>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
       {filtered.map((evt, i) => {
         const d = new Date(evt.date);

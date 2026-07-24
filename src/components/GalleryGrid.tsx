@@ -202,7 +202,8 @@ export default function GalleryGrid() {
         loading={loading}
         skeleton={
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3" aria-hidden="true">
-            {Array.from({ length: 8 }).map((_, i) => (
+            {/* 数量对齐内容：优先 SSR 注入的 galleryPhotos 真实张数，消除“骨架 8 张 / 内容 N 张”的回抽 */}
+            {Array.from({ length: (ssr?.galleryPhotos?.length) || 8 }).map((_, i) => (
               <Skeleton key={i} className="aspect-[4/5] rounded-3xl" />
             ))}
           </div>
