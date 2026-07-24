@@ -13,19 +13,19 @@ import FanGallery from '../components/FanGallery';
       <p class="text-gray-400 mt-2">分享你拍到的 Gleams 瞬间，为公主们应援打 call</p>
     </div>
 
-    <!-- 标签切换 -->
+    
     <div class="flex justify-center gap-3 mb-8" id="fan-tabs" role="tablist">
       <button class="btn-pink text-sm !px-5 !py-2" data-tab="browse" role="tab" aria-selected="true">💬 浏览</button>
       <button class="btn-outline text-sm !px-5 !py-2" data-tab="post" role="tab" aria-selected="false">✏️ 发布</button>
     </div>
 
-    <!-- 浏览模式（默认） -->
+    
     <div id="tab-browse">
-      <!-- 成员筛选（动态生成，来自 middleware 注入的 membersMeta） -->
+      
       <div id="fan-member-filter" class="flex flex-wrap justify-center gap-2 mb-10">
         <button class="fan-filter-btn active" data-member="" style="--c: var(--accent)">全部</button>
       </div>
-      <!-- 场次筛选 -->
+      
       <div class="flex justify-center mb-10">
         <select id="fan-event-filter" class="fan-filter-select" aria-label="按场次筛选">
           <option value="">🎫 全部场次</option>
@@ -41,7 +41,7 @@ import FanGallery from '../components/FanGallery';
       </div>
     </div>
 
-    <!-- 发布模式（隐藏） -->
+    
     <div id="tab-post" class="hidden">
       <div class="mb-12" data-reveal>
         <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">✏️ 发留言</h2>

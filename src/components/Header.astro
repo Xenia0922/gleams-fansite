@@ -25,7 +25,8 @@ const navLinks = [
           <span class="hidden sm:inline text-[8px] sm:text-[10px] text-gray-400 tracking-widest">Fansite</span>
         </a>
 
-        <!-- Desktop Nav — centered with absolute -->
+        
+
         <nav class="hidden md:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
           {navLinks.map(link => {
             const isActive = currentPath === link.href || (link.href !== '/' && currentPath.startsWith(link.href));
@@ -40,7 +41,8 @@ const navLinks = [
           })}
         </nav>
 
-        <!-- SNS Icons + Dark Mode -->
+        
+
         <div class="hidden md:flex items-center gap-3">
           <SiteSocial client:load variant="icons" initial={{ weibo: site.weibo, xiaohongshu: site.xiaohongshu, douyin: site.douyin }} />
           <span class="text-gray-300 dark:text-gray-600">|</span>
@@ -52,7 +54,8 @@ const navLinks = [
           </button>
         </div>
 
-        <!-- Mobile: dark toggle + hamburger -->
+        
+
         <div class="flex md:hidden items-center gap-0.5">
           <button id="dark-toggle-m" class="p-2.5 -mr-1 text-gray-400 z-10 relative" aria-label="切换深色模式" aria-pressed="false">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -70,7 +73,8 @@ const navLinks = [
     </div>
   </div>
 
-  <!-- Mobile Menu -->
+  
+
   <div id="mobile-menu" class="md:hidden closed frost border-b border-pink-100/40 dark:border-white/[0.04] shadow-lg rounded-b-3xl" role="region" aria-label="主导航">
     <div class="px-4 py-2 space-y-0">
       {navLinks.map(link => {
@@ -97,7 +101,8 @@ const navLinks = [
   }
 </style>
 
-<!-- Spacer -->
+
+
 <div class="h-12 sm:h-14 md:h-16"></div>
 
 <script>
