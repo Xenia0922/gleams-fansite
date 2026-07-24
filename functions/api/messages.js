@@ -108,9 +108,9 @@ async function listMessages(env) {
     const { results } = await env.DB
       .prepare('SELECT id, name, message, member, event, created_at FROM messages ORDER BY created_at DESC LIMIT 50')
       .all();
-    return json(results, 200, { request, env });
+    return json(results);
   } catch (e) {
-    return json({ error: e.message }, 500, { request, env });
+    return json({ error: e.message }, 500);
   }
 }
 
