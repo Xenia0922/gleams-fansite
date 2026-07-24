@@ -124,6 +124,19 @@ async function fetchPageData(path, env) {
     } catch {}
   }
 
+  // 粉丝广场页：注入留言 + 返图（由 SSR 直出，消除 MessageBoard/FanGallery 的二次 fetch）
+  if (path === '/fans') {
+    try {
+      const { results: msgRows } = await env.DB
+        .prepare('SELECT id, name, message, member, event, created_at FROM messages ORDER BY created_at DESC LIMIT 50')
+        .all();
+      data.messages = msgRows || [];
+    } catch {}
+    try {
+      data.photos = await listPhotosData(env, true); // 仅已审核（pending 不对外）
+    } catch {}
+  }
+
   // 画廊页需要 gallery photos + 骑士团精选（已解析 url，免二次 fetch）
   if (path === '/gallery') {
     try {

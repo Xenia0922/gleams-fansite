@@ -1,6 +1,8 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { getEventImage } from '../utils/eventImages';
 import Skeleton from './Skeleton';
+import { useIslandData } from '../utils/useIslandData';
+import { PERFORMER_META } from '../utils/members';
 
 interface ScheduleEvent {
   id: string;
@@ -13,13 +15,6 @@ interface ScheduleEvent {
   image?: string;
 }
 
-const MEMBER_MAP: Record<string, { name: string; emoji: string }> = {
-  hakusai: { name: '白菜', emoji: '💛' },
-  kumo: { name: '云团', emoji: '💙' },
-  yuzi: { name: '柚子', emoji: '💚' },
-  huangyuyu: { name: '黄鱼鱼', emoji: '🩷' },
-};
-
 /**
  * 日程列表（/schedule）。优先顺序：
  *   1. 构建期 initial（来自 schedule.json）—— 静态 HTML 直接含完整列表，无占位、无布局跳动；
@@ -27,37 +22,12 @@ const MEMBER_MAP: Record<string, { name: string; emoji: string }> = {
  *   3. 以上皆无才回退一次 fetch（极少见：全新 D1 且中间件尚未播种）。
  */
 export default function ScheduleList({ initial }: { initial?: ScheduleEvent[] }) {
-  const ssr = typeof window !== 'undefined' ? (window as any).__SSR_DATA__ : null;
-  // 骨架优先：初始空 + loading，useEffect 按 SSR > 种子 > fetch 填充（消除写死种子先出的闪动）
-  const [events, setEvents] = useState<ScheduleEvent[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (ssr?.events && ssr.events.length) {
-      setEvents(ssr.events);
-      setLoading(false);
-      return;
-    }
-    if (initial && initial.length) {
-      setEvents(initial);
-      setLoading(false);
-      return;
-    }
-    // 兜底：无 SSR 也无 initial（极少见），回退一次 fetch
-    let alive = true;
-    fetch('/api/events')
-      .then((r) => r.json())
-      .then((d) => {
-        if (alive && Array.isArray(d) && d.length) setEvents(d);
-      })
-      .catch(() => {})
-      .finally(() => {
-        if (alive) setLoading(false);
-      });
-    return () => {
-      alive = false;
-    };
-  }, []);
+  // 骨架优先：初始空 + loading，useIslandData 按 SSR > 种子 > fetch 填充（消除写死种子先出的闪动）
+  const { data: events, loading } = useIslandData<ScheduleEvent>({
+    ssrKey: 'events',
+    initial,
+    fetchFn: () => fetch('/api/events').then(r => r.json()),
+  });
 
   const groups = useMemo(() => {
     const sorted = [...events].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -77,7 +47,7 @@ export default function ScheduleList({ initial }: { initial?: ScheduleEvent[] })
     const isPast = evt.status === 'past';
     const chips = (evt.performers || [])
       .map((pid: string) => {
-        const m = MEMBER_MAP[pid];
+        const m = PERFORMER_META[pid];
         return m ? `${m.emoji}${m.name}` : '';
       })
       .filter(Boolean);

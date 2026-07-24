@@ -17,6 +17,18 @@ export const MEMBER_META: Record<string, MemberMeta> = {
 };
 
 /**
+ * 表演者映射（日程/返图里展示出演成员用），含毕业成员 huangyuyu。
+ * 与 MEMBER_META 同源，消除 ScheduleList 内重复硬编码的 MEMBER_MAP。
+ * 新增/调整成员时只改此处即可。
+ */
+export const PERFORMER_META: Record<string, { name: string; emoji: string; color: string }> = {
+  hakusai:  { name: '白菜', emoji: '💛', color: '#C99A00' },
+  kumo:     { name: '云团', emoji: '💙', color: '#2F6FED' },
+  yuzi:     { name: '柚子', emoji: '💚', color: '#1E9E6A' },
+  huangyuyu: { name: '黄鱼鱼', emoji: '🩷', color: '#E879B9' },
+};
+
+/**
  * 默认成员选项（带"全员"收尾项）：自动从 MEMBER_META 派生，保证单一来源。
  * 给 MessageBoard 等需要兜底列表的场景使用 —— 新增成员时只需在 MEMBER_META 加一条。
  */

@@ -27,6 +27,16 @@ export default function MemberDetail({ slug, initial }: { slug?: string; initial
 
   useEffect(() => {
     if (!id) return;
+    // 优先用 middleware 注入的 SSR members（/members/* 已注入），免二次 fetch 与骨架闪烁
+    const ssrMembers = typeof window !== 'undefined' ? (window as any).__SSR_DATA__?.members : null;
+    if (Array.isArray(ssrMembers) && ssrMembers.length) {
+      const found = ssrMembers.find((m: any) => m.id === id);
+      if (found) {
+        setMember(found);
+        setLoading(false);
+        return;
+      }
+    }
     let alive = true;
     setLoading(true);
     fetch('/api/members?id=' + encodeURIComponent(id))

@@ -49,29 +49,12 @@ export default function GalleryGrid() {
         if (Array.isArray(md)) setMembersMeta(md.map((m: any) => ({ id: m.id, name: m.name, emoji: m.emoji || '', color: m.color || '' })));
       } catch {}
     }
+    // SSR 已注入画廊图 + 骑士团精选（middleware 为 /gallery 注入 galleryPhotos 与 featuredFan），免二次 fetch
     if (ssr?.galleryPhotos) {
       if (!ok()) return;
-      setPhotos(ssr.galleryPhotos); // SSR 已注入画廊图
-      // 精选区若也已注入则直接采用，免二次 fetch（无布局跳动）
-      if (ssr?.featuredFan && ssr.featuredFan.length) {
-        if (ok()) setFeaturedFan(ssr.featuredFan);
-        if (ok()) setLoading(false);
-        return;
-      }
-      // 兼容旧部署：SSR 仅有 galleryPhotos，未注入 featuredFan，回退补拉
-      try {
-        const photosRes = await fetch('/api/photos');
-        const photosData = await photosRes.json();
-        if (!ok()) return;
-        const raw = ssr.featuredSquare || [];
-        const featuredKeys: string[] = Array.isArray(raw)
-          ? raw.map((e: string | { key: string }) => (typeof e === 'string' ? e : e.key))
-          : [];
-        if (Array.isArray(photosData) && featuredKeys.length > 0) {
-          const keySet = new Set(featuredKeys);
-          setFeaturedFan(photosData.filter((p: FanPhoto) => keySet.has(p.key)));
-        }
-      } catch {}
+      setPhotos(ssr.galleryPhotos);
+      // featuredFan 始终由 SSR 注入（可能为空数组），直接采用，丢弃已失效的 featuredSquare 兜底
+      setFeaturedFan(Array.isArray(ssr.featuredFan) ? ssr.featuredFan : []);
       if (ok()) setLoading(false);
       return;
     }

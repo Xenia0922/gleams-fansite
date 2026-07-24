@@ -56,7 +56,22 @@ export default function FanGallery() {
   );
   const lightboxImages = useMemo(() => visiblePhotos.map(p => ({ src: p.url })), [visiblePhotos]);
 
-  const fetchPhotos = useCallback(async () => {
+  const fetchPhotos = useCallback(async (forceNetwork = false) => {
+    // 首屏优先用 middleware 注入的 SSR 返图（/fans 已注入 ssr.photos），免二次 fetch
+    const ssrData = typeof window !== 'undefined' ? (window as any).__SSR_DATA__ : null;
+    if (!forceNetwork && Array.isArray(ssrData?.photos) && ssrData.photos.length) {
+      if (!mountedRef.current) return;
+      setPhotos(ssrData.photos as Photo[]);
+      setError('');
+      hasCached.current = true;
+      setLoading(false);
+      const ids = ssrData.photos.map((p: Photo) => p.key).join(',');
+      fetch(`/api/reactions?type=photo&ids=${encodeURIComponent(ids)}`)
+        .then(r => r.json())
+        .then(map => { if (mountedRef.current && map && typeof map === 'object') setReactionsMap(map); })
+        .catch(() => {});
+      return;
+    }
     try {
       const res = await fetch('/api/photos');
       if (!res.ok) throw new Error('加载失败');
@@ -66,7 +81,6 @@ export default function FanGallery() {
         setPhotos(data);
         setError('');
         hasCached.current = true;
-        // 批量获取反应统计
         if (data.length) {
           const ids = data.map((p: Photo) => p.key).join(',');
           fetch(`/api/reactions?type=photo&ids=${encodeURIComponent(ids)}`)
@@ -123,8 +137,9 @@ export default function FanGallery() {
 
   useEffect(() => { fetchPhotos(); }, [fetchPhotos]);
   useEffect(() => {
-    window.addEventListener('tab-browse-visible', fetchPhotos);
-    return () => window.removeEventListener('tab-browse-visible', fetchPhotos);
+    const onVisible = () => fetchPhotos(true);
+    window.addEventListener('tab-browse-visible', onVisible);
+    return () => window.removeEventListener('tab-browse-visible', onVisible);
   }, [fetchPhotos]);
   useEffect(() => {
     const onFilter = (e: Event) => {

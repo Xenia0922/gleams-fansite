@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useEvents } from './useEvents';
-import { tint, FALLBACK_MEMBERS } from '../utils/members';
+import { tint, FALLBACK_MEMBERS, PERFORMER_META } from '../utils/members';
 import EmojiPickerPopover from './EmojiPickerPopover';
 import Skeleton from './Skeleton';
 import SkeletonSwap from './SkeletonSwap';
@@ -57,6 +57,7 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
   const [posting, setPosting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState('');
+  const [loadError, setLoadError] = useState('');
   const [filter, setFilter] = useState<string | null>(null);
   const [eventFilter, setEventFilter] = useState<string | null>(null);
   const [popoverMsgId, setPopoverMsgId] = useState<string | null>(null);
@@ -70,14 +71,31 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
   const REACTION_EMOJIS = ['👍', '❤️', '😂', '🥰', '😢', '👏'];
   const mountedRef = useRef(true);
 
-  const fetchMessages = useCallback(async () => {
+  const messagesLoadedRef = useRef(false);
+  const fetchMessages = useCallback(async (forceNetwork = false) => {
+    // 首屏优先用 middleware 注入的 SSR 留言（/fans 已注入 ssr.messages），免二次 fetch
+    const ssrData = typeof window !== 'undefined' ? (window as any).__SSR_DATA__ : null;
+    if (!forceNetwork && Array.isArray(ssrData?.messages) && ssrData.messages.length) {
+      if (!mountedRef.current) return;
+      setMessages(ssrData.messages as Message[]);
+      messagesLoadedRef.current = true;
+      setLoadError('');
+      setLoading(false);
+      const ids = ssrData.messages.map((m: Message) => m.id).join(',');
+      fetch(`/api/reactions?type=message&ids=${encodeURIComponent(ids)}`)
+        .then(r => r.json())
+        .then(map => { if (mountedRef.current && map && typeof map === 'object') setReactionsMap(map); })
+        .catch(() => {});
+      return;
+    }
     try {
       const res = await fetch('/api/messages');
       const data = await res.json();
       if (!mountedRef.current) return;
       if (Array.isArray(data)) {
         setMessages(data);
-        // 批量获取反应统计
+        messagesLoadedRef.current = true;
+        setLoadError('');
         if (data.length) {
           const ids = data.map((m: Message) => m.id).join(',');
           fetch(`/api/reactions?type=message&ids=${encodeURIComponent(ids)}`)
@@ -86,7 +104,9 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
             .catch(() => {});
         }
       }
-    } catch { /* ignore */ }
+    } catch {
+      if (mountedRef.current && !messagesLoadedRef.current) setLoadError('留言加载失败，请稍后重试');
+    }
     if (mountedRef.current) setLoading(false);
   }, []);
 
@@ -98,8 +118,9 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
   useEffect(() => { fetchMessages(); }, [fetchMessages]);
 
   useEffect(() => {
-    window.addEventListener('tab-browse-visible', fetchMessages);
-    return () => window.removeEventListener('tab-browse-visible', fetchMessages);
+    const onVisible = () => fetchMessages(true);
+    window.addEventListener('tab-browse-visible', onVisible);
+    return () => window.removeEventListener('tab-browse-visible', onVisible);
   }, [fetchMessages]);
 
   useEffect(() => {
@@ -153,7 +174,8 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
     setPosting(false);
   };
 
-  const NAMED = ['hakusai', 'kumo', 'yuzi'];
+  // 与 PERFORMER_META 同源，含毕业成员 huangyuyu，避免其留言被错误归入"其他"
+  const NAMED = Object.keys(PERFORMER_META);
   const visibleMessages = useMemo(() => messages.filter(m =>
     (!filter || (filter === 'other' ? !NAMED.includes(m.member ?? '') : m.member === filter)) &&
     (!eventFilter || m.event === eventFilter)
@@ -274,6 +296,7 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
   );
 
   if (readonly) {
+    if (!loading && loadError && visibleMessages.length === 0) return <p className="text-center text-red-400 py-8">留言加载失败，请稍后重试</p>;
     if (!loading && visibleMessages.length === 0) return <p className="text-center text-gray-400 py-8">{(filter || eventFilter) ? '该筛选下还没有留言 ✨' : '还没有留言 ✨'}</p>;
     return (
       <SkeletonSwap

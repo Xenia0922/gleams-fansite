@@ -2,33 +2,16 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import Skeleton from './Skeleton';
 import SkeletonSwap from './SkeletonSwap';
 import type { MemberCard } from '../utils/api';
+import { useIslandData } from '../utils/useIslandData';
 
 export default function HomeMembers({ initial }: { initial: MemberCard[] }) {
-  const ssr = typeof window !== 'undefined' ? (window as any).__SSR_DATA__ : null;
-  // 骨架优先：初始空 + loading，useEffect 按 SSR > 种子 > fetch 填充
-  const [members, setMembers] = useState<MemberCard[]>([]);
-  const [loading, setLoading] = useState(true);
+  // 骨架优先：初始空 + loading，useIslandData 按 SSR > 种子 > fetch 填充
+  const { data: members, loading } = useIslandData<MemberCard>({
+    ssrKey: 'members',
+    initial,
+    fetchFn: () => fetch('/api/members').then(r => r.json()),
+  });
   const [activeColor, setActiveColor] = useState('');
-
-  useEffect(() => {
-    if (ssr?.members && ssr.members.length) {
-      setMembers(ssr.members);
-      setLoading(false);
-      return;
-    }
-    if (initial && initial.length) {
-      setMembers(initial);
-      setLoading(false);
-      return;
-    }
-    let alive = true;
-    fetch('/api/members')
-      .then(r => r.json())
-      .then(d => { if (alive && Array.isArray(d) && d.length) setMembers(d); })
-      .catch(() => {})
-      .finally(() => { if (alive) setLoading(false); });
-    return () => { alive = false; };
-  }, []);
 
   useEffect(() => {
     setActiveColor(typeof window !== 'undefined' ? (localStorage.getItem('gleams-accent') || '') : '');

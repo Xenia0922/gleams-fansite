@@ -134,13 +134,16 @@ export async function adminGuard(request, env) {
 
 /**
  * 验证 Cloudflare Turnstile token（canonical siteverify）。
- * - 未配置 TURNSTILE_SECRET_KEY：fail-open（返回 true）
- * - token 空（Turnstile 脚本加载失败，国内常见）：fail-open（返回 true，靠限流+屏蔽词+审核兜底）
- * - token 非空：siteverify 验证，success===true 放行，否则拒绝
+ * - 未配置 TURNSTILE_SECRET_KEY：fail-open（返回 true）—— 仅本地/dev 无密钥时放行，便于开发。
+ * - 已配置 secret 但 token 空：fail-closed（返回 false）—— 前端 widget 正常情况下必有 token，
+ *   空 token 说明请求绕过了前端（或 widget 未加载），production 必须拒绝，让第一层人机验证真正生效。
+ *   前端 Turnstile 组件在 widget 加载失败时会禁用提交按钮，因此正常用户不会被误伤；
+ *   若 production 下 Cloudflare 可达性导致大面积失败，撤销 TURNSTILE_SECRET_KEY 配置即可退回 fail-open。
+ * - token 非空：siteverify 验证，success===true 放行，否则拒绝。
  */
 export async function verifyTurnstile(token, ip, env) {
-  if (!env.TURNSTILE_SECRET_KEY) return true; // 未配置，fail-open
-  if (!token) return true; // token 空（Turnstile 脚本加载失败），fail-open
+  if (!env.TURNSTILE_SECRET_KEY) return true; // 未配置密钥（dev/local），fail-open
+  if (!token) return false; // 已配置但无 token，fail-closed（挡住绕过前端的请求）
   try {
     const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
       method: 'POST',

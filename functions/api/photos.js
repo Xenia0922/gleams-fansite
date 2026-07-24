@@ -126,6 +126,11 @@ async function uploadPhoto(request, env) {
 }
 
 async function servePhoto(env, key) {
+  // 审核防护：待审图片（uploads/pending/ 前缀）即使拿到了直链 URL，也未通过管理员审核，
+  // 不应被公开访问。列表接口已排除 pending，这里再兜底拦一次直链，避免"审核只挡列表不挡直链"。
+  if (typeof key === 'string' && key.startsWith('uploads/pending/')) {
+    return new Response('Forbidden', { status: 403 });
+  }
   try {
     const obj = await env.PHOTOS.get(key);
     if (!obj) return new Response('Not found', { status: 404 });
