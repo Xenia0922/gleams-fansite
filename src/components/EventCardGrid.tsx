@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { getEventImage } from '../utils/eventImages';
+import { getEventImage, getEventSrcSet } from '../utils/eventImages';
 import Skeleton from './Skeleton';
 import SkeletonSwap from './SkeletonSwap';
 import { useIslandData } from '../utils/useIslandData';
@@ -93,6 +93,7 @@ export default function EventCardGrid({
       {filtered.map((evt, i) => {
         const d = new Date(evt.date);
         const img = evt.image || getEventImage(evt.id, fallbackImg);
+        const srcSet = getEventSrcSet(img);
         return (
           <a
             key={evt.id}
@@ -102,6 +103,8 @@ export default function EventCardGrid({
             <div className="aspect-[16/9] overflow-hidden bg-gray-100 dark:bg-gray-800">
               <img
                 src={img}
+                srcSet={srcSet}
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 alt={evt.title}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 loading="lazy"

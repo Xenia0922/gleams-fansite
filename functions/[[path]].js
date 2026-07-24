@@ -79,6 +79,18 @@ function notFound() {
   });
 }
 
+/**
+ * 本地最小 HTML 外壳（兜底用）：不再向自身域名发起外网请求取壳，
+ * 直接构造含 <main> 与 <title> 的合法骨架，供注入详情内容后返回 200。
+ */
+function localShell(title) {
+  return (
+    '<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">' +
+    '<title>' + escapeHtml(title || 'Gleams') + '</title></head>' +
+    '<body><main></main></body></html>'
+  );
+}
+
 export async function onRequest(context) {
   const { request, env, next } = context;
   try {
@@ -113,7 +125,8 @@ export async function onRequest(context) {
       return resp || notFound();
     }
 
-    // 取外壳：优先复用 next() 的响应（404 壳最轻量）；若 next() 异常/返回 500 则回退 fetch('/') 取站点外壳
+    // 取外壳：优先复用 next() 的响应（404 壳最轻量）；若 next() 异常/返回 500 则回退本地最小外壳
+    // （不再向自身域名发起外网 fetch 取壳，避免无谓的自请求与潜在循环）。
     let shellText = null;
     if (resp && resp.status < 500) {
       try {
@@ -121,10 +134,7 @@ export async function onRequest(context) {
       } catch (_) {}
     }
     if (!shellText) {
-      try {
-        const home = await fetch(new URL('/', request.url));
-        shellText = await home.text();
-      } catch (_) {}
+      shellText = localShell(row.title || id);
     }
     if (!shellText) return resp || notFound();
 

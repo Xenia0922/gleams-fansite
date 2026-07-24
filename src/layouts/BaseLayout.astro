@@ -12,15 +12,26 @@ interface Props {
   title?: string;
   description?: string;
   image?: string;
+  /** 页面级结构化数据（如活动详情页的 Event schema），与站点级 WebSite JSON-LD 一并注入 */
+  jsonLd?: Record<string, unknown>;
 }
 
 const {
   title,
   description = site.description,
   image = site.ogImage,
+  jsonLd,
 } = Astro.props;
 
 const pageTitle = title ? `${title} | ${site.name}` : `${site.name} - 偶像应援站`;
+
+const siteJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: site.name,
+  url: Astro.site?.href || 'https://gleams.vip',
+  description: site.description,
+};
 ---
 
 <!doctype html>
@@ -46,6 +57,9 @@ const pageTitle = title ? `${title} | ${site.name}` : `${site.name} - 偶像应�
     <meta property="og:image" content={new URL(image, Astro.site).href} />
     <meta property="og:site_name" content={site.name} />
     <meta name="twitter:card" content="summary_large_image" />
+
+    <script type="application/ld+json" set:html={JSON.stringify(siteJsonLd)} />
+    {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
 
     
 

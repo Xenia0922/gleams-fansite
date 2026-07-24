@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { getEventImage } from '../utils/eventImages';
+import { getEventImage, getEventSrcSet } from '../utils/eventImages';
 import Skeleton from './Skeleton';
 import { useIslandData } from '../utils/useIslandData';
 import { PERFORMER_META } from '../utils/members';
@@ -44,6 +44,7 @@ export default function ScheduleList({ initial }: { initial?: ScheduleEvent[] })
   const card = (evt: ScheduleEvent, i: number) => {
     const d = new Date(evt.date);
     const img = evt.image || getEventImage(evt.id);
+    const srcSet = getEventSrcSet(img);
     const isPast = evt.status === 'past';
     const chips = (evt.performers || [])
       .map((pid: string) => {
@@ -60,6 +61,8 @@ export default function ScheduleList({ initial }: { initial?: ScheduleEvent[] })
         <div className="aspect-[16/9] overflow-hidden bg-gray-100 dark:bg-gray-800">
           <img
             src={img}
+            srcSet={srcSet}
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             alt={evt.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             loading="lazy"

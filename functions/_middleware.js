@@ -198,6 +198,34 @@ function escapeHtml(s) {
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+// 倒计时卡片：对 `/` 路径，按 D1 events 中「最近 upcoming」直填 data-countdown 元素
+// （首屏 pre-JS 即见真实场次/日期/场馆，无「空白 → 填充」闪动，与 applyHero 同模式）。
+// 替换失败（匹配不到钩子）则保留原样，不影响渲染。
+function applyCountdown(html, ev) {
+  if (!ev) return html;
+  const d = new Date(ev.date + 'T00:00:00');
+  const ds = isNaN(d.getTime())
+    ? ''
+    : String(d.getMonth() + 1).padStart(2, '0') +
+      '-' +
+      String(d.getDate()).padStart(2, '0') +
+      ' 周' +
+      ['日', '一', '二', '三', '四', '五', '六'][d.getDay()];
+  html = html.replace(
+    /(<[^>]*data-countdown="title"[^>]*>)([\s\S]*?)(<\/[^>]+>)/i,
+    (m, a, _c, b) => a + escapeHtml(ev.title || '') + b
+  );
+  html = html.replace(
+    /(<[^>]*data-countdown="date"[^>]*>)([\s\S]*?)(<\/[^>]+>)/i,
+    (m, a, _c, b) => a + escapeHtml(ds) + b
+  );
+  html = html.replace(
+    /(<[^>]*data-countdown="venue"[^>]*>)([\s\S]*?)(<\/[^>]+>)/i,
+    (m, a, _c, b) => a + escapeHtml(ev.venue || '') + b
+  );
+  return html;
+}
+
 // hero 栏可自定义：对 `/` 路径，按 D1 hero_config 替换 data-hero 元素（首屏直出最新值，无闪烁）。
 // 替换失败（匹配不到）则保留原样，不影响渲染。
 function applyHero(html, hero, weiboDesc) {
@@ -273,6 +301,13 @@ export async function onRequest(context) {
     // hero 栏可自定义：对 `/` 路径替换 data-hero 元素（首屏直出 D1 最新值，无闪烁）
     if (path === '/' && pageData.siteConfig && pageData.siteConfig.hero_config) {
       modified = applyHero(modified, pageData.siteConfig.hero_config, pageData.siteConfig.weibo_desc);
+    }
+    // 倒计时卡片：对 `/` 路径按 D1 最近 upcoming 直填 data-countdown（首屏 pre-JS 即真实场次，无闪动）
+    if (path === '/' && Array.isArray(pageData.events) && pageData.events.length) {
+      const up = pageData.events
+        .filter((e) => e && e.status === 'upcoming')
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0];
+      if (up) modified = applyCountdown(modified, up);
     }
 
     const respHeaders = new Headers(response.headers);

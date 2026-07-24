@@ -13,3 +13,15 @@ const eventImages: Record<string, string> = {
 export function getEventImage(eventId: string, fallback = '/images/events/live-2026-07-04.webp') {
   return eventImages[eventId] || fallback;
 }
+
+/**
+ * 生成事件图的响应式 srcset（仅对本地 /images/events/*.webp 生效）。
+ * 配合构建期预生成的 -640 变体：卡片在小屏/中屏用 640w，大屏用 1280w，
+ * 避免用 1280px 大图喂 400px 卡片造成的带宽浪费。
+ * 非本地事件图（如 R2 上传图）返回 undefined，组件不输出 srcset。
+ */
+export function getEventSrcSet(url?: string): string | undefined {
+  if (!url || !url.startsWith('/images/events/') || !url.endsWith('.webp')) return undefined;
+  const base = url.slice(0, -5); // 去掉 .webp
+  return `${base}-640.webp 640w, ${url} 1280w`;
+}

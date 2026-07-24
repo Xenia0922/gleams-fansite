@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import scheduleData from '../../data/schedule.json';
+import site from '../../data/site.json';
 import { EVENT_BODIES } from '../../data/eventBodies';
 import { getEventImage } from '../../utils/eventImages';
 import { marked } from 'marked';
@@ -24,8 +25,30 @@ export async function getStaticPaths() {
 
 const id = Astro.params.id;
 const { event } = Astro.props;
+
+// 活动详情页结构化数据（Event schema），提升搜索结果富媒体展现
+const eventJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Event',
+  name: event.title,
+  startDate: event.time ? `${event.date}T${event.time}:00` : event.date,
+  eventStatus: 'https://schema.org/EventScheduled',
+  eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+  image: new URL(event.image, Astro.site).href,
+  description: event.title,
+  location: {
+    '@type': 'Place',
+    name: event.venue || '待定',
+    address: event.venue || '',
+  },
+  organizer: {
+    '@type': 'Organization',
+    name: site.name,
+    url: Astro.site?.href || 'https://gleams.vip',
+  },
+};
 ---
 
-<BaseLayout title={event.title}>
+<BaseLayout title={event.title} image={event.image} jsonLd={eventJsonLd}>
   <EventDetail client:load id={id} event={event} />
 </BaseLayout>
