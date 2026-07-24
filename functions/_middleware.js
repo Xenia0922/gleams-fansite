@@ -78,6 +78,8 @@ async function fetchPageData(path, env) {
         }
       }
       data.siteConfig = cfg;
+      // 屏蔽词仅服务端使用，不注入前端 HTML
+      delete data.siteConfig.blocked_words;
     }
   } catch {}
 
