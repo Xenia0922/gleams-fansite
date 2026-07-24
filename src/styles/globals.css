@@ -349,39 +349,42 @@ body::after {
 }
 
 /* ===== 统一骨架屏（加载占位） ===== */
+/* 骨架底色 + 连续流光（shimmer）。
+   改用 background-position 匀速循环（linear），而非单条光带扫过即停，
+   使光带在加载期间持续、顺滑地流动，消除“偶尔扫一下后长时间静止”的观感。 */
 .skeleton {
   position: relative;
   overflow: hidden;
-  background: color-mix(in srgb, var(--accent) 9%, rgba(140, 132, 170, 0.13));
+  background-color: color-mix(in srgb, var(--accent) 9%, rgba(140, 132, 170, 0.13));
   border-radius: var(--radius-sm);
 }
 .skeleton::after {
   content: '';
   position: absolute;
   inset: 0;
-  transform: translateX(-100%);
-  background: linear-gradient(
-    105deg,
-    transparent 25%,
-    rgba(255, 255, 255, 0.28) 45%,
-    rgba(255, 255, 255, 0.50) 50%,
-    rgba(255, 255, 255, 0.28) 55%,
-    transparent 75%
+  background-image: linear-gradient(
+    100deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.62) 50%,
+    transparent 70%
   );
-  animation: skeleton-shimmer 3s var(--ease) infinite;
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: skeleton-shimmer 1.5s linear infinite;
 }
-@keyframes skeleton-shimmer { 100% { transform: translateX(100%); } }
+@keyframes skeleton-shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
 .dark .skeleton {
-  background: color-mix(in srgb, var(--accent) 14%, rgba(255, 255, 255, 0.05));
+  background-color: color-mix(in srgb, var(--accent) 14%, rgba(255, 255, 255, 0.05));
 }
 .dark .skeleton::after {
-  background: linear-gradient(
-    105deg,
-    transparent 25%,
-    rgba(255, 255, 255, 0.06) 45%,
-    rgba(255, 255, 255, 0.13) 50%,
-    rgba(255, 255, 255, 0.06) 55%,
-    transparent 75%
+  background-image: linear-gradient(
+    100deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.22) 50%,
+    transparent 70%
   );
 }
 @media (prefers-reduced-motion: reduce) {
