@@ -35,23 +35,28 @@ export default function StaticImageLightbox({
 
   if (images.length === 0) return null;
 
+  // 直接用 <img onClick> 而非 <button> 包裹——避免 Astro SSG 下 button 事件丢失
   const imageNodes = images.map((image, i) => (
-    <button
+    <img
       key={`${image.src}-${i}`}
-      type="button"
-      className={`${itemClassName} cursor-pointer group border-0 p-0`}
+      src={image.src}
+      alt={image.alt || ''}
+      className={`${imageClassName} cursor-zoom-in`}
+      loading="lazy"
       onClick={() => setLightboxIdx(i)}
-    >
-      <img src={image.src} alt={image.alt || ''} className={imageClassName} loading="lazy" />
-    </button>
+    />
   ));
 
   return (
     <>
       {mode === 'grid' ? (
-        <div className={gridClassName}>{imageNodes}</div>
+        <div className={`${gridClassName} ${itemClassName}`}>
+          {imageNodes.map((node, i) => (
+            <div key={i} className={itemClassName}>{node}</div>
+          ))}
+        </div>
       ) : (
-        imageNodes[0]
+        <div className={itemClassName}>{imageNodes[0]}</div>
       )}
 
       {lightboxIdx !== null && (
