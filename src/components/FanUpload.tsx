@@ -1,14 +1,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useEvents } from './useEvents';
 import Turnstile from './Turnstile';
-
-// 默认成员列表（SSR 未注入时的 fallback）
-const FALLBACK_MEMBERS = [
-  { id: 'hakusai', emoji: '💛', name: '白菜', color: '#C99A00' },
-  { id: 'kumo', emoji: '💙', name: '云团', color: '#2F6FED' },
-  { id: 'yuzi', emoji: '💚', name: '柚子', color: '#1E9E6A' },
-  { id: 'other', emoji: '⭐', name: '多人/其他', color: '#e83e8c' },
-];
+import { FALLBACK_MEMBERS, tint } from '../utils/members';
 
 const MAX_FILES = 9;
 const MAX_SIZE = 23 * 1024 * 1024;

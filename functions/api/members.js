@@ -10,6 +10,7 @@
  */
 
 import { adminOk, adminGuard, json, withTable, handlePreFlight } from '../_shared.js';
+import membersData from '../../../src/data/members.json';
 
 const DDL = `CREATE TABLE IF NOT EXISTS members (
   id TEXT PRIMARY KEY,
@@ -36,28 +37,25 @@ const DDL = `CREATE TABLE IF NOT EXISTS members (
  */
 export const MEMBER_DDL_SQL = DDL;
 
-// 种子：来自 src/data/members.json 当前内容
-const SEED = [
-  { id: 'hakusai', name: '白菜', nameJP: 'Hakusai', color: '#FFD700', emoji: '💛', birthday: '06-27', constellation: '巨蟹座', status: 'active', image: '/images/members/hakusai/hakusai_01.webp', gallery: ['/images/members/hakusai/hakusai_01.webp','/images/members/hakusai/hakusai_02.webp','/images/members/hakusai/hakusai_03.webp','/images/members/hakusai/hakusai_04.webp','/images/members/hakusai/hakusai_05.webp','/images/members/hakusai/hakusai_06.webp','/images/members/hakusai/hakusai_07.webp','/images/members/hakusai/hakusai_08.webp','/images/members/hakusai/hakusai_09.webp'], weibo: 'https://weibo.com/u/3639876511', weiboName: '@白菜Hakusai_Gleams', weiboDesc: 'DM🚫但是会看🤲', intro: '白菜の食用指南🍽️ —— 青菜萝卜各有所爱，今晚上吃小白菜🥬!!! 所属 @Gleams_Official，更多行程在这里w' },
-  { id: 'kumo', name: '云团', nameJP: 'Kumo', color: '#4DA6FF', emoji: '💙', birthday: '02-14', constellation: '水瓶座', status: 'active', image: '/images/members/kumo/kumo_01.webp', gallery: ['/images/members/kumo/kumo_01.webp','/images/members/kumo/kumo_02.webp','/images/members/kumo/kumo_03.webp','/images/members/kumo/kumo_04.webp','/images/members/kumo/kumo_05.webp','/images/members/kumo/kumo_06.webp','/images/members/kumo/kumo_07.webp','/images/members/kumo/kumo_08.webp','/images/members/kumo/kumo_09.webp'], weibo: 'https://weibo.com/u/5432863560', weiboName: '@云团Kumo_Gleams', weiboDesc: 'Spring Day', intro: '云大王来袭！大家可以叫我小云哟！☁诞生日02.14 ☁队内蓝色担当💙 ☁代表物是☁也是小黑猫🐈‍⬛ ☁纯社畜宅，休息时最爱在家' },
-  { id: 'yuzi', name: '柚子', nameJP: 'Yuzi', color: '#48D1A0', emoji: '💚', birthday: '09-04', constellation: '处女座', status: 'active', image: '/images/members/yuzi/yuzi_main.webp', gallery: ['/images/members/yuzi/yuzi_main.webp','/images/members/yuzi/yuzi_02.webp','/images/members/yuzi/yuzi_03.webp','/images/members/yuzi/yuzi_04.webp','/images/members/yuzi/yuzi_05.webp','/images/members/yuzi/yuzi_06.webp','/images/members/yuzi/yuzi_07.webp','/images/members/yuzi/yuzi_08.webp','/images/members/yuzi/yuzi_09.webp'], weibo: 'https://weibo.com/u/7148114625', weiboName: '@柚子Yuzi_Gleams', weiboDesc: '这里只有柚子（ ◜ ω ◝ ） dm只能看不能回复', intro: '能够与你相见的日子 ⌯>𖥦<⌯ಣ 广西出身的柚子，期待与大家多多见面！' },
-  { id: 'huangyuyu', name: '黄鱼鱼', nameJP: 'KAZInoco', color: '#FF69B4', emoji: '🩷', birthday: '05-19', constellation: '金牛座', status: 'graduated', image: '/images/members/huangyuyu/huangyuyu_01.webp', gallery: [], weibo: '', weiboName: '@黄鱼鱼KAZInoco_Gleams', weiboDesc: '', intro: 'Gleams飞行成员，诞生日5.19，成员色玫色🩷' },
-];
-
+/**
+ * 种子数据来源：src/data/members.json。
+ * 新增/修改成员只需编辑该 JSON 文件，Functions 端通过 esbuild 自动打包同步。
+ */
 async function ensureTable(env) {
   await env.DB.prepare(DDL).run();
   try {
     const { results } = await env.DB.prepare('SELECT COUNT(*) AS c FROM members').all();
     if (results[0] && results[0].c === 0) {
-      for (let i = 0; i < SEED.length; i++) {
-        const m = SEED[i];
+      const seed = membersData.members || [];
+      for (let i = 0; i < seed.length; i++) {
+        const m = seed[i];
         await env.DB
           .prepare(
             `INSERT INTO members (id,name,name_jp,color,emoji,birthday,constellation,status,image,gallery,weibo,weibo_name,weibo_desc,intro,sort_order,created_at)
              VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
           )
           .bind(
-            m.id, m.name, m.nameJP, m.color, m.emoji, m.birthday, m.constellation, m.status, m.image,
+            m.id, m.name, m.nameJP || '', m.color, m.emoji, m.birthday, m.constellation, m.status, m.image,
             JSON.stringify(m.gallery || []), m.weibo, m.weiboName, m.weiboDesc, m.intro,
             i + 1, new Date().toISOString()
           )
@@ -100,7 +98,7 @@ async function listMembers(request, env) {
   const isAdmin = all && adminOk(request, env);
   if (all && !isAdmin) return json({ error: '无权限' }, 403, { request, env });
 
-  const cols = isAdmin ? '*' : 'id,name,name_jp,color,emoji,birthday,constellation,status,image';
+  const cols = isAdmin ? '*' : 'id,name,name_jp,color,emoji,birthday,constellation,status,image,sort_order';
   const { results } = await env.DB.prepare(`SELECT ${cols} FROM members ORDER BY sort_order ASC, id ASC`).all();
   if (isAdmin) results.forEach(parseMember);
   return json(results, 200, { request, env });

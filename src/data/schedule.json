@@ -12,7 +12,8 @@
         "yuzi",
         "huangyuyu"
       ],
-      "status": "past"
+      "status": "past",
+      "image": "/images/events/live-2026-01-25.webp"
     },
     {
       "id": "live-2026-01-31",
@@ -25,7 +26,8 @@
         "kumo",
         "yuzi"
       ],
-      "status": "past"
+      "status": "past",
+      "image": "/images/events/live-2026-01-31.webp"
     },
     {
       "id": "live-2026-02-15",
@@ -39,7 +41,8 @@
         "yuzi",
         "huangyuyu"
       ],
-      "status": "past"
+      "status": "past",
+      "image": "/images/events/live-2026-02-15.webp"
     },
     {
       "id": "live-2026-02-23",
@@ -52,7 +55,8 @@
         "kumo",
         "yuzi"
       ],
-      "status": "past"
+      "status": "past",
+      "image": "/images/events/live-2026-02-23.webp"
     },
     {
       "id": "live-2026-03-14",
@@ -65,7 +69,8 @@
         "kumo",
         "yuzi"
       ],
-      "status": "past"
+      "status": "past",
+      "image": "/images/events/live-2026-03-14.webp"
     },
     {
       "id": "live-2026-03-28",
@@ -78,7 +83,8 @@
         "kumo",
         "yuzi"
       ],
-      "status": "past"
+      "status": "past",
+      "image": "/images/events/live-2026-03-28.webp"
     },
     {
       "id": "live-2026-04-26",
@@ -91,7 +97,8 @@
         "kumo",
         "yuzi"
       ],
-      "status": "past"
+      "status": "past",
+      "image": "/images/events/live-2026-04-26.webp"
     },
     {
       "id": "live-2026-05-16",
@@ -104,7 +111,8 @@
         "kumo",
         "yuzi"
       ],
-      "status": "past"
+      "status": "past",
+      "image": "/images/events/live-2026-05-16.webp"
     },
     {
       "id": "live-2026-07-04",
@@ -117,7 +125,8 @@
         "kumo",
         "yuzi"
       ],
-      "status": "past"
+      "status": "past",
+      "image": "/images/events/live-2026-07-04.webp"
     }
   ]
 }

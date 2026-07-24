@@ -94,6 +94,7 @@ export interface EventData {
   status: string;
   image: string;
   body?: string;
+  created_at?: string;
 }
 
 export interface SiteConfig {

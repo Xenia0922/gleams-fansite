@@ -13,6 +13,7 @@
 import { ensureEvents, EVENTS_DDL_SQL } from './_seed.js';
 import { listPhotosData } from './api/photos.js';
 import { MEMBER_DDL_SQL } from './api/members.js';
+import { MESSAGES_DDL_SQL } from './api/messages.js';
 import { marked } from 'marked';
 
 const GALLERY_DDL = `CREATE TABLE IF NOT EXISTS gallery_photos (id TEXT PRIMARY KEY, url TEXT NOT NULL, member TEXT, sort INTEGER NOT NULL DEFAULT 0, featured INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL)`;
@@ -23,22 +24,12 @@ async function ensureTables(env) {
     await env.DB.batch([
       env.DB.prepare(EVENTS_DDL_SQL),
       env.DB.prepare(MEMBER_DDL_SQL),
+      env.DB.prepare(MESSAGES_DDL_SQL),
       env.DB.prepare(GALLERY_DDL),
       env.DB.prepare(SITE_DDL),
     ]);
   } catch (e) {
     /* ignore */
-  }
-  // 迁移旧表：早期 middleware 建表用了驼峰列名(nameJP/weiboName/weiboDesc)，
-  // 与 members.js 的蛇形(name_jp/weibo_name/weibo_desc)不一致。幂等重命名，旧列不存在则跳过。
-  try {
-    await env.DB.batch([
-      env.DB.prepare("ALTER TABLE members RENAME COLUMN nameJP TO name_jp"),
-      env.DB.prepare("ALTER TABLE members RENAME COLUMN weiboName TO weibo_name"),
-      env.DB.prepare("ALTER TABLE members RENAME COLUMN weiboDesc TO weibo_desc"),
-    ]);
-  } catch (e2) {
-    /* 列已重命名或不存在，忽略 */
   }
 }
 

@@ -126,15 +126,17 @@ export async function onRequest(context) {
     try {
       await seedIfEmpty(env);
       const { results } = await env.DB.prepare(
-        'SELECT id,url,member FROM gallery_photos ORDER BY sort ASC, created_at ASC'
+        'SELECT id,url,member,featured FROM gallery_photos ORDER BY sort ASC, created_at ASC'
       ).all();
       const all = (results || []).map((r) => ({
         id: r.id,
         url: r.url,
         member: r.member || '__extra__',
+        featured: r.featured || 0,
       }));
       return json({
         photos: all,
+        featured: all.filter(p => p.featured === 1),
         isAdmin: adminOk(request, env),
       }, 200, { request, env });
     } catch (e) {

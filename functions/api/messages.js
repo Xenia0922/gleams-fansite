@@ -1,29 +1,49 @@
 /**
  * POST /api/messages — 提交留言 → D1（需暗号）
  * GET  /api/messages — 获取最近留言 ← D1
+ * PUT  /api/messages — 编辑留言（需 ADMIN_CODE）
  * DELETE /api/messages — 删除留言（需 ADMIN_CODE）
+ *
+ * 表 messages 由本接口首次请求时自动创建（无需手动 migration）。
+ * DDL 为全仓唯一来源，_middleware.js 也复用此处导出的 MESSAGES_DDL_SQL。
  */
 
-import { adminOk, adminGuard, json, verifyTurnstile, containsBlocked, handlePreFlight } from '../_shared.js';
+import { adminOk, adminGuard, json, verifyTurnstile, containsBlocked, withTable, handlePreFlight } from '../_shared.js';
+
+const DDL = `CREATE TABLE IF NOT EXISTS messages (
+  id TEXT PRIMARY KEY,
+  name TEXT,
+  message TEXT,
+  member TEXT,
+  event TEXT,
+  ip TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);`;
+
+/**
+ * 导出 DDL 给 _middleware.js 复用，确保 Schema 单一来源。
+ */
+export const MESSAGES_DDL_SQL = DDL;
+
+async function ensureTable(env) {
+  await env.DB.prepare(DDL).run();
+  // 旧表补 event 列（幂等，仅首次执行——部署前已存在的旧表兼容）
+  try {
+    await env.DB.prepare('ALTER TABLE messages ADD COLUMN event TEXT').run();
+  } catch (e) { /* 列已存在则忽略 */ }
+}
 
 export async function onRequest(context) {
   const pre = handlePreFlight(context);
   if (pre) return pre;
   const { request, env } = context;
-  // 旧手动建表补 event 列（幂等，仅首次执行）
-  try { await ensureColumns(env); } catch (e) { /* 忽略，交由各 handler 处理 */ }
-  if (request.method === 'GET') return listMessages(env);
-  if (request.method === 'POST') return postMessage(request, env);
-  if (request.method === 'PUT') return editMessage(request, env);
-  if (request.method === 'DELETE') return deleteMessage(request, env);
-  return new Response('Method not allowed', { status: 405 });
-}
+  try { await ensureTable(env); } catch (e) { /* 忽略，交由各 handler withTable 处理 */ }
 
-// messages 表为手动建表，这里补 event 列（部署前已存在的旧表兼容）
-async function ensureColumns(env) {
-  try {
-    await env.DB.prepare('ALTER TABLE messages ADD COLUMN event TEXT').run();
-  } catch (e) { /* 列已存在则忽略 */ }
+  if (request.method === 'GET') return withTable(env, ensureTable, () => listMessages(request, env));
+  if (request.method === 'POST') return withTable(env, ensureTable, () => postMessage(request, env));
+  if (request.method === 'PUT') return withTable(env, ensureTable, () => editMessage(request, env));
+  if (request.method === 'DELETE') return withTable(env, ensureTable, () => deleteMessage(request, env));
+  return new Response('Method not allowed', { status: 405 });
 }
 
 async function postMessage(request, env) {
@@ -72,6 +92,7 @@ async function postMessage(request, env) {
 
     const id = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
     const ip = request.headers.get('cf-connecting-ip') || 'unknown';
+    // created_at 由 DDL DEFAULT (datetime('now')) 自动填充，无需手动设置
     await env.DB.prepare('INSERT INTO messages (id, name, message, member, event, ip) VALUES (?,?,?,?,?,?)')
       .bind(id, name, message, member, event, ip).run();
 
@@ -103,14 +124,14 @@ async function editMessage(request, env) {
   }
 }
 
-async function listMessages(env) {
+async function listMessages(request, env) {
   try {
     const { results } = await env.DB
       .prepare('SELECT id, name, message, member, event, created_at FROM messages ORDER BY created_at DESC LIMIT 50')
       .all();
-    return json(results);
+    return json(results, 200, { request, env });
   } catch (e) {
-    return json({ error: e.message }, 500);
+    return json({ error: e.message }, 500, { request, env });
   }
 }
 
@@ -125,4 +146,3 @@ async function deleteMessage(request, env) {
     return json({ error: e.message }, 500, { request, env });
   }
 }
-

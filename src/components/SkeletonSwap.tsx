@@ -1,18 +1,21 @@
 import { useState, useEffect } from 'react';
 
 /**
- * 骨架屏 → 真实内容的「交叉淡入」过渡组件。
+ * 骨架屏 → 真实内容的「溶解浮现」过渡组件。
  *
- * 解决硬切时的两个体感问题：
- *  1) 骨架瞬间消失、内容从 opacity:0 淡入之间有一帧「空档」（视觉抖动）；
- *  2) 骨架与内容高度不完全一致时的布局跳动。
+ * 设计理念（与 globals.css 的 --ease 统一）：
+ *  骨架不是"消失"——它轻微缩放 + 模糊 + 淡出（溶解），
+ *  内容同时以极轻微的缩放浮现，形成物理上的"蜕变"感，
+ *  而非生硬的 A 消失 → B 出现。
  *
  * 行为：
  *  - loading=true：只渲染骨架（由骨架决定容器高度）。
- *  - 数据到达（loading=false）：真实内容挂载并以其高度撑开容器，
- *    骨架以 absolute 覆盖层保持「不透明」一帧后淡出（300ms），
- *    内容同时 content-enter 淡入（450ms），形成连贯的 morph，无空档、无跳动。
- *  - reduced-motion：.content-enter 与 .skeleton::after 已在 globals.css 降级，本组件不额外处理。
+ *  - 数据到达（loading=false）：
+ *    1. 骨架先保持一帧（确保 CSS 过渡起点确立），
+ *    2. 下一帧触发 .skeleton-exit.fading（溶解：scale 0.975 + blur 3px + opacity 0，~450ms），
+ *    3. 内容同时挂载，以 .content-enter 浮现（scale 0.975→1 + blur 2px→0 + opacity 0→1，520ms），
+ *    4. 两条动画重叠 ~450ms，形成无缝 morph；500ms 后卸载骨架 DOM。
+ *  - reduced-motion：所有动画降级为即时切换，无闪烁。
  */
 export default function SkeletonSwap({
   loading,
@@ -25,7 +28,6 @@ export default function SkeletonSwap({
   children: React.ReactNode;
   className?: string;
 }) {
-  // 过渡态：数据到达后保留骨架短暂淡出，与内容淡入交叉，消除「空档」
   const [showSk, setShowSk] = useState(loading);
   const [skFading, setSkFading] = useState(false);
 
@@ -35,13 +37,13 @@ export default function SkeletonSwap({
       setSkFading(false);
       return;
     }
-    // 数据到达：保持骨架并下一帧触发淡出；内容(content-enter)同时淡入；320ms 后卸载骨架
-    setShowSk(true);
+    // 数据到达：保持骨架可见 → 下一帧触发溶解 → 500ms 后卸载
+    setSkFading(false);
     const raf = requestAnimationFrame(() => setSkFading(true));
     const t = setTimeout(() => {
       setShowSk(false);
       setSkFading(false);
-    }, 320);
+    }, 500);
     return () => {
       cancelAnimationFrame(raf);
       clearTimeout(t);
@@ -58,7 +60,7 @@ export default function SkeletonSwap({
       {showSk && (
         <div
           aria-hidden="true"
-          className={`pointer-events-none absolute inset-0 z-10 transition-opacity duration-300 ${skFading ? 'opacity-0' : 'opacity-100'}`}
+          className={`skeleton-exit pointer-events-none absolute inset-0 z-10 ${skFading ? 'fading' : ''}`}
         >
           {skeleton}
         </div>

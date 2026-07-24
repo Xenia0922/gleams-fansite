@@ -37,14 +37,14 @@ export default function FanGallery() {
     const m = new Map<string, { emoji: string; name: string; color: string }>();
     if (ssr?.membersMeta && ssr.membersMeta.length) {
       for (const mm of ssr.membersMeta) {
-        m.set(mm.id, { emoji: mm.emoji || '⭐', name: mm.name, color: mm.color || '#C2417A' });
+        m.set(mm.id, { emoji: mm.emoji || '⭐', name: mm.name, color: mm.color || MEMBER_META.other.color });
       }
     } else {
       for (const [id, meta] of Object.entries(MEMBER_META)) {
         if (id !== 'other') m.set(id, meta);
       }
     }
-    m.set('other', { emoji: '⭐', name: '多人·其他', color: '#C2417A' });
+    m.set('other', { emoji: '⭐', name: '多人·其他', color: MEMBER_META.other.color });
     return m;
   }, [ssr]);
 
