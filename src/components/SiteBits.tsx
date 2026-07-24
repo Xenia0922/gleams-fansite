@@ -16,7 +16,10 @@ function getSite(): Promise<Cfg> {
     return Promise.resolve((window as any).__SSR_DATA__.siteConfig as Cfg);
   }
   if (!cfgPromise) {
-    cfgPromise = fetch('/api/site').then(r => r.json()).catch(() => ({}) as Cfg);
+    cfgPromise = fetch('/api/site').then(r => r.json()).catch(() => {
+      cfgPromise = null; // 失败不缓存，下次重试
+      return {} as Cfg;
+    });
   }
   return cfgPromise;
 }

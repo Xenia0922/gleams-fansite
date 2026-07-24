@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useEvents } from './useEvents';
 import { tint, FALLBACK_MEMBERS } from '../utils/members';
@@ -68,11 +68,13 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
   // Emoji 反应：reactionsMap[msgId] = { reactions: [{emoji,count}], mine: [emoji] }
   const [reactionsMap, setReactionsMap] = useState<Record<string, { reactions: { emoji: string; count: number }[]; mine: string[] }>>({});
   const REACTION_EMOJIS = ['👍', '❤️', '😂', '🥰', '😢', '👏'];
+  const mountedRef = useRef(true);
 
   const fetchMessages = useCallback(async () => {
     try {
       const res = await fetch('/api/messages');
       const data = await res.json();
+      if (!mountedRef.current) return;
       if (Array.isArray(data)) {
         setMessages(data);
         // 批量获取反应统计
@@ -80,12 +82,17 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
           const ids = data.map((m: Message) => m.id).join(',');
           fetch(`/api/reactions?type=message&ids=${encodeURIComponent(ids)}`)
             .then(r => r.json())
-            .then(map => { if (map && typeof map === 'object') setReactionsMap(map); })
+            .then(map => { if (mountedRef.current && map && typeof map === 'object') setReactionsMap(map); })
             .catch(() => {});
         }
       }
     } catch { /* ignore */ }
-    setLoading(false);
+    if (mountedRef.current) setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
   }, []);
 
   useEffect(() => { fetchMessages(); }, [fetchMessages]);

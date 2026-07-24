@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import ImageLightboxOverlay from './ImageLightboxOverlay';
 import Skeleton from './Skeleton';
 import SkeletonSwap from './SkeletonSwap';
@@ -32,30 +32,37 @@ export default function GalleryGrid() {
   const [featuredFan, setFeaturedFan] = useState<FanPhoto[]>([]);
   const [membersMeta, setMembersMeta] = useState<MemberMeta[]>([]);
   const [loading, setLoading] = useState(true);
+  const mountedRef = useRef(true);
 
   const reload = useCallback(async () => {
+    const ok = () => mountedRef.current; // 精简后续内联检查
+
     // 成员 meta：SSR 优先（middleware 为 /gallery 注入），否则 fetch /api/members
     if (ssr?.membersMeta && ssr.membersMeta.length) {
+      if (!ok()) return;
       setMembersMeta(ssr.membersMeta);
     } else {
       try {
         const mr = await fetch('/api/members');
         const md = await mr.json();
+        if (!ok()) return;
         if (Array.isArray(md)) setMembersMeta(md.map((m: any) => ({ id: m.id, name: m.name, emoji: m.emoji || '', color: m.color || '' })));
       } catch {}
     }
     if (ssr?.galleryPhotos) {
+      if (!ok()) return;
       setPhotos(ssr.galleryPhotos); // SSR 已注入画廊图
       // 精选区若也已注入则直接采用，免二次 fetch（无布局跳动）
       if (ssr?.featuredFan && ssr.featuredFan.length) {
-        setFeaturedFan(ssr.featuredFan);
-        setLoading(false);
+        if (ok()) setFeaturedFan(ssr.featuredFan);
+        if (ok()) setLoading(false);
         return;
       }
       // 兼容旧部署：SSR 仅有 galleryPhotos，未注入 featuredFan，回退补拉
       try {
         const photosRes = await fetch('/api/photos');
         const photosData = await photosRes.json();
+        if (!ok()) return;
         const raw = ssr.featuredSquare || [];
         const featuredKeys: string[] = Array.isArray(raw)
           ? raw.map((e: string | { key: string }) => (typeof e === 'string' ? e : e.key))
@@ -65,7 +72,7 @@ export default function GalleryGrid() {
           setFeaturedFan(photosData.filter((p: FanPhoto) => keySet.has(p.key)));
         }
       } catch {}
-      setLoading(false);
+      if (ok()) setLoading(false);
       return;
     }
     try {
@@ -77,6 +84,7 @@ export default function GalleryGrid() {
       const galleryData = await galleryRes.json();
       const photosData = await photosRes.json();
       const siteData = await siteRes.json();
+      if (!ok()) return;
 
       if (Array.isArray(galleryData.photos)) {
         // 排除已同步到 gallery 的精选照片（它们在底部骑士团精选区展示）
@@ -109,7 +117,12 @@ export default function GalleryGrid() {
     } catch {
       /* offline */
     }
-    setLoading(false);
+    if (ok()) setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
   }, []);
 
   useEffect(() => { reload(); }, [reload]);

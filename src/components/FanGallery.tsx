@@ -26,6 +26,7 @@ export default function FanGallery() {
   const [eventFilter, setEventFilter] = useState<string | null>(null);
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
   const hasCached = useRef(false);
+  const mountedRef = useRef(true);
 
   // Emoji 反应
   const [reactionsMap, setReactionsMap] = useState<Record<string, { reactions: { emoji: string; count: number }[]; mine: string[] }>>({});
@@ -60,6 +61,7 @@ export default function FanGallery() {
       const res = await fetch('/api/photos');
       if (!res.ok) throw new Error('加载失败');
       const data = await res.json();
+      if (!mountedRef.current) return;
       if (Array.isArray(data)) {
         setPhotos(data);
         setError('');
@@ -69,14 +71,19 @@ export default function FanGallery() {
           const ids = data.map((p: Photo) => p.key).join(',');
           fetch(`/api/reactions?type=photo&ids=${encodeURIComponent(ids)}`)
             .then(r => r.json())
-            .then(map => { if (map && typeof map === 'object') setReactionsMap(map); })
+            .then(map => { if (mountedRef.current && map && typeof map === 'object') setReactionsMap(map); })
             .catch(() => {});
         }
       }
     } catch {
-      if (!hasCached.current) setError('加载失败');
+      if (mountedRef.current && !hasCached.current) setError('加载失败');
     }
-    setLoading(false);
+    if (mountedRef.current) setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
   }, []);
 
   const toggleReaction = useCallback(async (photoKey: string, emoji: string) => {
