@@ -184,8 +184,7 @@ async function listPhotos(request, env) {
 
 async function deletePhoto(request, env) {
   try {
-    const admin = request.headers.get('x-admin-code') || '';
-    if (admin !== env.ADMIN_CODE) return json({ error: '无权限' }, 403, { request, env });
+    if (!adminOk(request, env)) return json({ error: '无权限' }, 403, { request, env });
     const { key } = await request.json();
     if (!key || !key.startsWith('uploads/')) return json({ error: '无效 key' }, 400, { request, env });
     await env.PHOTOS.delete(key);

@@ -5,7 +5,7 @@
  *   图片经由现有 /api/photos?key= 提供访问（任意 key 均可 serve）。
  */
 
-import { json, handlePreFlight } from '../_shared.js';
+import { json, handlePreFlight, adminOk } from '../_shared.js';
 
 export async function onRequest(context) {
   const pre = handlePreFlight(context);
@@ -13,8 +13,7 @@ export async function onRequest(context) {
   const { request, env } = context;
   if (request.method !== 'POST') return json('Method not allowed', 405, context);
   try {
-    const admin = request.headers.get('x-admin-code') || '';
-    if (admin !== env.ADMIN_CODE) return json({ error: '无权限' }, 403, context);
+    if (!adminOk(request, env)) return json({ error: '无权限' }, 403, context);
 
     const formData = await request.formData();
     const file = formData.get('file');
