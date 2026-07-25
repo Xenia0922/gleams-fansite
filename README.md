@@ -55,12 +55,13 @@ functions/            CF Pages Functions（纯 JS，esbuild 打包）
                      gallery / site / recruits / reactions / upload
 
 scripts/
-└── copy-seeds.cjs   prebuild 钩子：src/data → functions/data 同步
+├── copy-seeds.cjs         prebuild 钩子：src/data → functions/data 同步
+└── sync-events-seed.cjs   prebuild 钩子：拉 D1 events → schedule.gen.json（需 CLOUDFLARE_* 环境变量；缺失则回退 schedule.json）
 ```
 
-**数据流**：`src/data/` 是**唯一真相源**（JSON / TS 种子）→ `prebuild` 钩子（`scripts/copy-seeds.cjs`）在构建前把它们同步进 `functions/data/`（`.ts` 去类型注解转 `.js`，供 CF Pages Functions 的 esbuild 正常打包）→ 构建期 JSON 同时作为首屏兜底（SSG）。运行时 `middleware` 按路径查询 D1 注入 `window.__SSR_DATA__` → React 岛优先读 SSR 数据（零二次加载），无 SSR 才回退 fetch。D1 表首次请求自动建表播种，无需手动 migration。
+**数据流**：`src/data/` 是**唯一真相源**（JSON / TS 种子）→ `prebuild` 钩子（`scripts/copy-seeds.cjs`）在构建前把它们同步进 `functions/data/`（`.ts` 去类型注解转 `.js`，供 CF Pages Functions 的 esbuild 正常打包）→ 构建期 JSON 同时作为首屏兜底（SSG）。此外 `prebuild` 还会跑 `scripts/sync-events-seed.cjs`，在构建期用 D1 REST API 拉最新 events 写入 `schedule.gen.json`，供 `[id].astro` 预渲染所有活动详情静态页；未配置 `CLOUDFLARE_*` 凭据时回退到提交版 `schedule.json`，功能不受影响（新活动改由 catch-all D1 兜底渲染）。运行时 `middleware` 按路径查询 D1 注入 `window.__SSR_DATA__` → React 岛优先读 SSR 数据（零二次加载），无 SSR 才回退 fetch。D1 表首次请求自动建表播种，无需手动 migration。
 
-**零二次加载架构**：所有数据岛采用「骨架优先」——`useState` 初始空 + `loading=true`，`useEffect` 按 SSR > 种子 > fetch 优先级填充，`SkeletonSwap` 实现骨架→内容交叉淡入（无空档、无布局跳动）。骨架微光为连续流光（`background-position` 匀速循环，非单条扫过即停）。
+**零二次加载架构**：所有数据岛采用「骨架优先」——`useState` 初始空 + `loading=true`，`useEffect` 按 SSR > 种子 > fetch 优先级填充，`SkeletonSwap` 实现骨架→内容交叉淡入（无空档、无布局跳动）。骨架屏高度与真实内容严格对齐（行数 / 行高 / 缺漏行如星座谈 tag、出演 chips、分区标签全部补齐），保证加载瞬间零 CLS（累计布局位移）。骨架微光为连续流光（`background-position` 匀速循环，非单条扫过即停）。
 
 **粉丝内容防护**（去暗号后分层）：
 1. Cloudflare Turnstile 人机验证（挡 bot，国内加载失败时 fail-open）
@@ -99,6 +100,10 @@ npm run preview   # 本地预览 dist/
    - `ADMIN_CODE`（后台管理 / 删除 / 上传）
    - `TURNSTILE_SITE_KEY`（Turnstile widget site key，前端渲染用）
    - `TURNSTILE_SECRET_KEY`（Turnstile siteverify secret，私密）
+   - `BUILD_HOOK_URL`（可选但推荐：admin 增/改/删 events 后自动 POST 触发 CF 重建；仅后台改动时触发，不影响访客加载速度）
+   - `CLOUDFLARE_ACCOUNT_ID`（可选：构建期 prebuild 拉 D1 种子用，账户 ID）
+   - `CLOUDFLARE_DATABASE_ID`（可选：D1 库本身的 UUID，注意非绑定名 `DB`）
+   - `CLOUDFLARE_API_TOKEN`（可选：账户级 D1 读写令牌，用于 prebuild 拉种子；缺失则回退提交版种子）
 4. 绑定：`DB`（D1 数据库）、`PHOTOS`（R2 存储桶）
 5. 部署——所有表首次 API 请求时自动创建，无需手动 migration
 
