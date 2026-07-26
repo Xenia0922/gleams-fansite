@@ -14,6 +14,7 @@ import { ensureEvents, EVENTS_DDL_SQL } from './_seed.js';
 import { listPhotosData } from './api/photos.js';
 import { MEMBER_DDL_SQL } from './api/members.js';
 import { MESSAGES_DDL_SQL } from './api/messages.js';
+import { effectiveStatus, formatVenue } from './_shared.js';
 import { marked } from 'marked';
 
 const GALLERY_DDL = `CREATE TABLE IF NOT EXISTS gallery_photos (id TEXT PRIMARY KEY, url TEXT NOT NULL, member TEXT, sort INTEGER NOT NULL DEFAULT 0, featured INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL)`;
@@ -87,14 +88,16 @@ async function getPageData(path, env) {
 
 async function fetchEvents(env) {
   const { results } = await env.DB.prepare(
-    'SELECT id,date,time,title,venue,performers,status,image FROM events ORDER BY date DESC'
+    'SELECT id,date,time,title,venue,city,performers,status,image,end_time FROM events ORDER BY date DESC'
   ).all();
   return (results || []).map((r) => {
     let performers = [];
     try {
       performers = JSON.parse(r.performers || '[]');
     } catch {}
-    return { ...r, performers };
+    const row = { ...r, performers };
+    row.status = effectiveStatus(row);
+    return row;
   });
 }
 
@@ -246,6 +249,7 @@ async function fetchPageData(path, env) {
           } catch {
             row.performers = [];
           }
+          row.status = effectiveStatus(row);
           if (row.body) {
             try {
               row.bodyHtml = marked.parse(row.body, { async: false });
@@ -293,7 +297,7 @@ function applyCountdown(html, ev) {
   );
   html = html.replace(
     /(<[^>]*data-countdown="venue"[^>]*>)([\s\S]*?)(<\/[^>]+>)/i,
-    (m, a, _c, b) => a + escapeHtml(ev.venue || '') + b
+    (m, a, _c, b) => a + escapeHtml(formatVenue(ev.city, ev.venue) || '') + b
   );
   return html;
 }

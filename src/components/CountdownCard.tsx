@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { formatVenue } from '../utils/event';
 
 interface EventRow {
   id: string;
@@ -124,7 +125,7 @@ export default function CountdownCard({ initial = [] }: { initial?: EventRow[] }
         {event?.title || ''}
       </p>
       <p className="text-[11px] text-gray-400 mb-1.5" data-countdown="venue">
-        {event?.venue || ''}
+        {formatVenue(event?.city, event?.venue) || ''}
       </p>
       <span
         className="text-xl font-black text-[var(--accent)] tabular-nums font-mono"

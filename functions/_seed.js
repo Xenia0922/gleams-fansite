@@ -20,10 +20,12 @@ const DDL = `CREATE TABLE IF NOT EXISTS events (
   time TEXT,
   title TEXT NOT NULL,
   venue TEXT,
+  city TEXT,
   performers TEXT NOT NULL DEFAULT '[]',
   status TEXT NOT NULL DEFAULT 'upcoming',
   image TEXT,
   body TEXT,
+  end_time TEXT,
   created_at TEXT NOT NULL
 );`;
 
@@ -44,15 +46,21 @@ export async function ensureEvents(env) {
     await env.DB.prepare('ALTER TABLE events ADD COLUMN body TEXT').run();
   } catch (e) { /* 列已存在则忽略 */ }
   try {
+    await env.DB.prepare('ALTER TABLE events ADD COLUMN city TEXT').run();
+  } catch (e) { /* 列已存在则忽略 */ }
+  try {
+    await env.DB.prepare('ALTER TABLE events ADD COLUMN end_time TEXT').run();
+  } catch (e) { /* 列已存在则忽略 */ }
+  try {
     const { results } = await env.DB.prepare('SELECT COUNT(*) AS c FROM events').all();
     if (results[0] && results[0].c === 0) {
       for (const e of scheduleData.events) {
         await env.DB
           .prepare(
-            `INSERT INTO events (id,date,time,title,venue,performers,status,image,body,created_at)
-             VALUES (?,?,?,?,?,?,?,?,?,?)`
+            `INSERT INTO events (id,date,time,title,venue,city,performers,status,image,body,end_time,created_at)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`
           )
-          .bind(e.id, e.date, e.time || '', e.title, e.venue || '', JSON.stringify(e.performers || []), e.status || 'past', e.image || '', EVENT_BODIES[e.id] || '', new Date().toISOString())
+          .bind(e.id, e.date, e.time || '', e.title, e.venue || '', e.city || '', JSON.stringify(e.performers || []), e.status || 'past', e.image || '', EVENT_BODIES[e.id] || '', e.end_time || '', new Date().toISOString())
           .run();
       }
     } else {

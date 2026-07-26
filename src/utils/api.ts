@@ -90,10 +90,12 @@ export interface EventData {
   time: string;
   title: string;
   venue: string;
+  city?: string;
   performers: string[];
   status: string;
   image: string;
   body?: string;
+  end_time?: string;
   created_at?: string;
 }
 

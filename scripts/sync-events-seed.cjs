@@ -58,7 +58,7 @@ async function main() {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        sql: 'SELECT id,date,time,title,venue,performers,status,image,body FROM events ORDER BY date DESC, id DESC',
+        sql: 'SELECT id,date,time,title,venue,city,performers,status,image,body,end_time FROM events ORDER BY date DESC, id DESC',
       }),
     });
     const data = await res.json();
@@ -75,15 +75,21 @@ async function main() {
       } catch {
         performers = [];
       }
+      // 有效状态：end_time 过期则自动判为 'past'（与运行时 api/middleware 一致）
+      const eff = (r.status === 'past') ? 'past'
+        : (r.end_time && !isNaN(new Date(String(r.end_time).replace(' ', 'T') + ':00+08:00').getTime()) && Date.now() > new Date(String(r.end_time).replace(' ', 'T') + ':00+08:00').getTime())
+          ? 'past' : (r.status || 'upcoming');
       events.push({
         id: r.id,
         date: r.date || '',
         time: r.time || '',
         title: r.title || '',
         venue: r.venue || '',
+        city: r.city || '',
         performers,
-        status: r.status || 'past',
+        status: eff,
         image: r.image || '',
+        end_time: r.end_time || '',
       });
       if (r.body) bodies[r.id] = r.body;
     }

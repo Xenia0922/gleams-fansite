@@ -3,6 +3,7 @@ import { getEventImage, getEventSrcSet } from '../utils/eventImages';
 import Skeleton from './Skeleton';
 import { useIslandData } from '../utils/useIslandData';
 import { PERFORMER_META } from '../utils/members';
+import { formatVenue } from '../utils/event';
 
 interface ScheduleEvent {
   id: string;
@@ -89,7 +90,7 @@ export default function ScheduleList({ initial }: { initial?: ScheduleEvent[] })
             )}
           </div>
           <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 line-clamp-2">{evt.title}</h3>
-          <p className="text-xs text-gray-400 mt-1">{evt.venue}</p>
+          <p className="text-xs text-gray-400 mt-1">{formatVenue(evt.city, evt.venue)}</p>
           {chips.length > 0 && (
             <div className="flex flex-wrap gap-x-2 gap-y-1 mt-2">
               {chips.map((c, i) => (

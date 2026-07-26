@@ -49,8 +49,9 @@ function renderDetail(row) {
   const time = row.time
     ? '<span class="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded-full">' + escapeHtml(row.time) + '</span>'
     : '';
-  const venue = row.venue
-    ? '<span class="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded-full">' + escapeHtml(row.venue) + '</span>'
+  const venueText = (row.city ? row.city + '•' + (row.venue || '') : (row.venue || '')).trim() || '';
+  const venue = venueText
+    ? '<span class="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded-full">' + escapeHtml(venueText) + '</span>'
     : '';
   const image = row.image
     ? '<img src="' + escapeAttr(row.image) + '" alt="' + escapeAttr(title) + '" class="w-full rounded-2xl object-cover max-h-[500px] bg-gray-100 dark:bg-gray-800 mb-8" loading="lazy" decoding="async" />'

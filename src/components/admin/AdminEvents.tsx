@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import ImageUpload from './ImageUpload';
+import { formatVenue } from '../../utils/event';
 
 interface EventRow {
   id: string;
@@ -7,6 +8,8 @@ interface EventRow {
   time?: string;
   title: string;
   venue?: string;
+  city?: string;
+  end_time?: string;
   performers?: string[];
   status?: string;
   image?: string;
@@ -115,8 +118,12 @@ export default function AdminEvents({ code }: { code: string }) {
             }} className={INPUT} />
           </label>
           <label className="block">
-            <span className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">时间</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">开始时间</span>
             <input value={form.time || ''} onChange={e => set('time', e.target.value)} placeholder="14:00" className={INPUT} />
+          </label>
+          <label className="block">
+            <span className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">结束时间（可选）</span>
+            <input type="datetime-local" value={(form.end_time || '').replace(' ', 'T')} onChange={e => set('end_time', e.target.value.replace('T', ' '))} className={INPUT} />
           </label>
           <label className="block">
             <span className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">状态</span>
@@ -130,10 +137,17 @@ export default function AdminEvents({ code }: { code: string }) {
           <span className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">标题</span>
           <input value={form.title || ''} onChange={e => set('title', e.target.value)} className={INPUT} />
         </label>
-        <label className="block">
-          <span className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">地点</span>
-          <input value={form.venue || ''} onChange={e => set('venue', e.target.value)} className={INPUT} />
-        </label>
+        <div className="grid grid-cols-2 gap-3">
+          <label className="block">
+            <span className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">城市</span>
+            <input value={form.city || ''} onChange={e => set('city', e.target.value)} placeholder="南宁" className={INPUT} />
+          </label>
+          <label className="block">
+            <span className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">具体地点</span>
+            <input value={form.venue || ''} onChange={e => set('venue', e.target.value)} placeholder="候朋现场" className={INPUT} />
+          </label>
+        </div>
+        <p className="text-[11px] text-gray-400 -mt-1">结束时间留空则按「状态」显示；填了且已过，会自动标记「已结束」（仅后台用，前端不展示结束时间）。</p>
         <label className="block sm:col-span-2">
           <span className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">日程详情（支持 Markdown，活动结算 / 歌单等）</span>
           <textarea
@@ -189,7 +203,7 @@ export default function AdminEvents({ code }: { code: string }) {
               {e.status === 'past' && <span className="text-[10px] bg-gray-200 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full">已结束</span>}
               {e.status === 'upcoming' && <span className="text-[10px] bg-[var(--accent)]/15 text-[var(--accent)] px-2 py-0.5 rounded-full font-semibold">即将到来</span>}
             </div>
-            <p className="text-xs text-gray-400 mt-0.5">{e.venue}</p>
+            <p className="text-xs text-gray-400 mt-0.5">{formatVenue(e.city, e.venue)}</p>
           </div>
           <button onClick={() => startEdit(e)} className="text-xs text-[var(--accent)] hover:opacity-70 px-2 py-1 rounded-full hover:bg-white/40 dark:hover:bg-white/5">编辑</button>
           <button onClick={() => del(e)} className="text-xs text-red-400 hover:text-red-600 px-2 py-1 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20">删除</button>

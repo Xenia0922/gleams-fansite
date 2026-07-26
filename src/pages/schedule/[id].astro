@@ -5,6 +5,7 @@ import genData from '../../data/schedule.gen.json';
 import site from '../../data/site.json';
 import { EVENT_BODIES } from '../../data/eventBodies';
 import { getEventImage } from '../../utils/eventImages';
+import { formatVenue } from '../../utils/event';
 import { marked } from 'marked';
 import EventDetail from '../../components/EventDetail';
 
@@ -51,8 +52,8 @@ const eventJsonLd = {
   description: event.title,
   location: {
     '@type': 'Place',
-    name: event.venue || '待定',
-    address: event.venue || '',
+    name: formatVenue(event.city, event.venue) || '待定',
+    address: formatVenue(event.city, event.venue) || '',
   },
   organizer: {
     '@type': 'Organization',

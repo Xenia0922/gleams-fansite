@@ -3,6 +3,7 @@ import { getEventImage, getEventSrcSet } from '../utils/eventImages';
 import Skeleton from './Skeleton';
 import SkeletonSwap from './SkeletonSwap';
 import { useIslandData } from '../utils/useIslandData';
+import { formatVenue } from '../utils/event';
 
 export interface EventRow {
   id: string;
@@ -120,7 +121,7 @@ export default function EventCardGrid({
                 <span className="text-xs text-gray-400 dark:text-gray-500">{d.getFullYear()}</span>
               </div>
               <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 line-clamp-2">{evt.title}</h3>
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{evt.venue}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{formatVenue(evt.city, evt.venue)}</p>
             </div>
           </a>
         );

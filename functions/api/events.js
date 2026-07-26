@@ -12,7 +12,7 @@
  * body 字段存「日程详情」Markdown 正文。
  */
 
-import { adminOk, adminGuard, json, withTable, handlePreFlight } from '../_shared.js';
+import { adminOk, adminGuard, json, withTable, handlePreFlight, effectiveStatus } from '../_shared.js';
 import { ensureEvents } from '../_seed.js';
 
 function parseEvent(row) {
@@ -22,6 +22,8 @@ function parseEvent(row) {
   } catch {
     row.performers = [];
   }
+  // 有效状态：若设置了 end_time 且已过期，自动判为 'past'（像广告到期自动结束）
+  row.status = effectiveStatus(row);
   return row;
 }
 
@@ -78,7 +80,7 @@ async function listEvents(request, env) {
   if (all && !adminOk(request, env)) return json({ error: '无权限' }, 403, { request, env });
   // 列表接口不查 body（最长 20000 字），节省带宽；单条查询（带 id）才返回 body
   const { results } = await env.DB.prepare(
-    'SELECT id,date,time,title,venue,performers,status,image FROM events ORDER BY date DESC, id DESC'
+    'SELECT id,date,time,title,venue,city,performers,status,image,end_time FROM events ORDER BY date DESC, id DESC'
   ).all();
   results.forEach(parseEvent);
   return json(results, 200, { request, env });
@@ -95,8 +97,8 @@ async function createEvent(request, env) {
     const performers = Array.isArray(b.performers) ? b.performers : [];
     await env.DB
       .prepare(
-        `INSERT INTO events (id,date,time,title,venue,performers,status,image,body,created_at)
-         VALUES (?,?,?,?,?,?,?,?,?,?)`
+        `INSERT INTO events (id,date,time,title,venue,city,performers,status,image,body,end_time,created_at)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`
       )
       .bind(
         id,
@@ -104,10 +106,12 @@ async function createEvent(request, env) {
         String(b.time || '').slice(0, 10),
         title,
         String(b.venue || '').slice(0, 80),
+        String(b.city || '').slice(0, 40),
         JSON.stringify(performers),
         b.status === 'upcoming' || b.status === 'past' ? b.status : 'upcoming',
         String(b.image || '').slice(0, 255),
         String(b.body || '').slice(0, 20000),
+        String(b.end_time || '').slice(0, 16),
         new Date().toISOString()
       )
       .run();
@@ -142,6 +146,14 @@ async function putEvent(request, env) {
     if (b.venue !== undefined) {
       sets.push('venue = ?');
       binds.push(String(b.venue || '').slice(0, 80));
+    }
+    if (b.city !== undefined) {
+      sets.push('city = ?');
+      binds.push(String(b.city || '').slice(0, 40));
+    }
+    if (b.end_time !== undefined) {
+      sets.push('end_time = ?');
+      binds.push(String(b.end_time || '').slice(0, 16));
     }
     if (b.performers !== undefined) {
       sets.push('performers = ?');

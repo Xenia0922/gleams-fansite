@@ -202,3 +202,32 @@ export async function withTable(env, ensureTable, fn) {
     throw e;
   }
 }
+
+/**
+ * 计算活动「有效状态」。
+ * - 存储状态已是 'past' → 直接返回 'past'（手动覆盖优先）。
+ * - 否则若设置了 end_time 且当前时间已过（按中国时区 +08:00 解释 end_time）→ 自动判为 'past'（像广告到期自动结束，仅后台用、前端不展示 end_time）。
+ * - 否则返回存储状态（'upcoming'）。
+ * end_time 格式："YYYY-MM-DD HH:MM"（中国本地时间，无时区标记）。
+ */
+export function effectiveStatus(row) {
+  const s = (row && row.status) || 'upcoming';
+  if (s === 'past') return 'past';
+  const et = row && row.end_time;
+  if (et) {
+    const t = new Date(String(et).replace(' ', 'T') + ':00+08:00');
+    if (!isNaN(t.getTime()) && Date.now() > t.getTime()) return 'past';
+  }
+  return s;
+}
+
+/**
+ * 拼接活动地点：城市 + "•" + 具体地点。任一为空则退化为另一项。
+ * 例：formatVenue('南宁', '候朋现场') → "南宁•候朋现场"
+ */
+export function formatVenue(city, venue) {
+  const c = (city || '').trim();
+  const v = (venue || '').trim();
+  if (c && v) return c + '•' + v;
+  return c || v || '';
+}

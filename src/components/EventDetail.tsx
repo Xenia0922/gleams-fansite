@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import StaticImageLightbox from './StaticImageLightbox';
 import Skeleton from './Skeleton';
+import { formatVenue } from '../utils/event';
 
 interface EventDetailProps {
   id: string;
@@ -113,7 +114,7 @@ export default function EventDetail({ id, event: eventProp }: EventDetailProps) 
         )}
         {ev.venue && (
           <span className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded-full">
-            {ev.venue}
+            {formatVenue(ev.city, ev.venue)}
           </span>
         )}
       </div>
