@@ -5,7 +5,8 @@
       "date": "2026-01-25",
       "time": "",
       "title": "Sunday Candy Vol.03（广州首演）",
-      "venue": "广州",
+      "city": "广州",
+      "venue": "",
       "performers": [
         "hakusai",
         "kumo",
@@ -13,6 +14,7 @@
         "huangyuyu"
       ],
       "status": "past",
+      "end_time": "",
       "image": "/images/events/live-2026-01-25.webp"
     },
     {
@@ -20,13 +22,15 @@
       "date": "2026-01-31",
       "time": "12:40",
       "title": "第一届 Comic Expo 国风动漫展（出道）",
-      "venue": "南宁北投明月荟（西乡塘区）",
+      "city": "南宁",
+      "venue": "北投明月荟（西乡塘区）",
       "performers": [
         "hakusai",
         "kumo",
         "yuzi"
       ],
       "status": "past",
+      "end_time": "",
       "image": "/images/events/live-2026-01-31.webp"
     },
     {
@@ -34,7 +38,8 @@
       "date": "2026-02-15",
       "time": "",
       "title": "桂平·ACG第七届动漫新年盛典",
-      "venue": "桂平",
+      "city": "桂平",
+      "venue": "",
       "performers": [
         "hakusai",
         "kumo",
@@ -42,6 +47,7 @@
         "huangyuyu"
       ],
       "status": "past",
+      "end_time": "",
       "image": "/images/events/live-2026-02-15.webp"
     },
     {
@@ -49,13 +55,15 @@
       "date": "2026-02-23",
       "time": "",
       "title": "Akatsuki Idol Party Vol.24 ～アイドル新年会～",
-      "venue": "南宁·候朋现场 HOPELIVE（中山路万象汇）",
+      "city": "南宁",
+      "venue": "候朋现场 HOPELIVE（中山路万象汇）",
       "performers": [
         "hakusai",
         "kumo",
         "yuzi"
       ],
       "status": "past",
+      "end_time": "",
       "image": "/images/events/live-2026-02-23.webp"
     },
     {
@@ -63,13 +71,15 @@
       "date": "2026-03-14",
       "time": "12:25",
       "title": "SUMMERL∞P MINI FES — 白情与公主有个约会",
-      "venue": "南宁·PinkNoises Live（会展动漫城）",
+      "city": "南宁",
+      "venue": "PinkNoises Live（会展动漫城）",
       "performers": [
         "hakusai",
         "kumo",
         "yuzi"
       ],
       "status": "past",
+      "end_time": "",
       "image": "/images/events/live-2026-03-14.webp"
     },
     {
@@ -77,13 +87,15 @@
       "date": "2026-03-28",
       "time": "13:30",
       "title": "Akatsuki Idol Party Vol.25",
-      "venue": "南宁·PinkNoises Live（会展动漫城）",
+      "city": "南宁",
+      "venue": "PinkNoises Live（会展动漫城）",
       "performers": [
         "hakusai",
         "kumo",
         "yuzi"
       ],
       "status": "past",
+      "end_time": "",
       "image": "/images/events/live-2026-03-28.webp"
     },
     {
@@ -91,13 +103,15 @@
       "date": "2026-04-26",
       "time": "",
       "title": "Puppy Club First Anniversary",
-      "venue": "南宁·民歌湖广场福馆 Full house",
+      "city": "南宁",
+      "venue": "民歌湖广场福馆 Full house",
       "performers": [
         "hakusai",
         "kumo",
         "yuzi"
       ],
       "status": "past",
+      "end_time": "",
       "image": "/images/events/live-2026-04-26.webp"
     },
     {
@@ -105,13 +119,15 @@
       "date": "2026-05-16",
       "time": "14:00",
       "title": "五碳糖 FES3.0 ～初夏の宴～",
-      "venue": "南宁·PinkNoises Live（会展动漫城）",
+      "city": "南宁",
+      "venue": "PinkNoises Live（会展动漫城）",
       "performers": [
         "hakusai",
         "kumo",
         "yuzi"
       ],
       "status": "past",
+      "end_time": "",
       "image": "/images/events/live-2026-05-16.webp"
     },
     {
@@ -119,13 +135,15 @@
       "date": "2026-07-04",
       "time": "",
       "title": "Nez Fes Vol.1 -初晴の約束 真夏の約束-（白菜生日SP）",
-      "venue": "南宁·PinkNoises Live（会展动漫城）",
+      "city": "南宁",
+      "venue": "PinkNoises Live（会展动漫城）",
       "performers": [
         "hakusai",
         "kumo",
         "yuzi"
       ],
       "status": "past",
+      "end_time": "",
       "image": "/images/events/live-2026-07-04.webp"
     }
   ]
