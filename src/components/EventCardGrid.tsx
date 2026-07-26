@@ -64,7 +64,7 @@ export default function EventCardGrid({
   filter,
   sortDir = 'desc',
   limit = 4,
-  fallbackImg = '/images/events/live-2026-01-31.webp',
+  fallbackImg = '/images/events/fallback.webp',
 }: EventCardGridProps) {
   // 骨架优先：初始态永远空 + loading，useIslandData 按 SSR 注入 > 构建期种子 > 一次 fetch 填充
   const { data: events, loading } = useIslandData<EventRow>({

@@ -10,7 +10,7 @@ const eventImages: Record<string, string> = {
   'live-2026-07-04': '/images/events/live-2026-07-04.webp',
 };
 
-export function getEventImage(eventId: string, fallback = '/images/events/live-2026-07-04.webp') {
+export function getEventImage(eventId: string, fallback = '/images/events/fallback.webp') {
   return eventImages[eventId] || fallback;
 }
 
