@@ -16,6 +16,43 @@ const MEMBER_LABEL: Record<string, string> = {
   other: '⭐ 多人/其他',
 };
 
+/**
+ * 待审图片直链（/api/photos?key=uploads/pending/...）会被 servePhoto 强制 403，
+ * 普通 <img> 又带不上 x-admin-code 头，所以这里用带鉴权头的 fetch 取成 blob 再渲染。
+ * 公众仍无法通过直链看到待审图（无 admin 头即 403）。
+ */
+function ModerationImage({ url, code }: { url: string; code: string }) {
+  const [src, setSrc] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    let objectUrl: string | null = null;
+    fetch(url, { headers: { 'x-admin-code': code } })
+      .then(r => {
+        if (!r.ok) throw new Error('load failed');
+        return r.blob();
+      })
+      .then(blob => {
+        objectUrl = URL.createObjectURL(blob);
+        if (active) setSrc(objectUrl);
+      })
+      .catch(() => { if (active) setFailed(true); });
+    return () => {
+      active = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [url, code]);
+
+  if (failed) {
+    return <div className="w-full h-full flex items-center justify-center text-[11px] text-red-400">图片加载失败</div>;
+  }
+  if (!src) {
+    return <div className="w-full h-full animate-pulse bg-white/10" />;
+  }
+  return <img src={src} alt="" className="w-full h-full object-cover" loading="lazy" />;
+}
+
 export default function AdminModeration({ code }: { code: string }) {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,7 +111,7 @@ export default function AdminModeration({ code }: { code: string }) {
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {photos.map(p => (
             <div key={p.key} className="relative aspect-[4/5] rounded-3xl overflow-hidden glass group">
-              <img src={p.url} alt="" className="w-full h-full object-cover" loading="lazy" />
+              <ModerationImage url={p.url} code={code} />
               {p.member && MEMBER_LABEL[p.member] && (
                 <span className="absolute top-2 left-2 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-white/75 backdrop-blur text-gray-600">
                   {MEMBER_LABEL[p.member]}
