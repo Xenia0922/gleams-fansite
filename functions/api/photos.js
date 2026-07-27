@@ -201,30 +201,50 @@ async function deletePhoto(request, env) {
   }
 }
 
-// admin 审核：approve（R2 不支持单独更新 metadata，需 get+put 重写）/ reject（删 R2 对象）
+// admin 审核：支持单张（{key, action}）与批量（{keys:[...], action}）。
+// approve 用 R2 内部 copy（秒级，不流经边缘）；reject 直接删对象。
 async function moderatePhoto(request, env) {
   const denied = await adminGuard(request, env); if (denied) return denied;
   try {
-    const { key, action } = await request.json();
-    if (!key || !key.startsWith('uploads/')) return json({ error: '无效 key' }, 400, { request, env });
+    const body = await request.json();
+    const { action } = body;
+    // 兼容单张与批量：批量优先用 keys 数组，否则退化到单个 key
+    const keys = (Array.isArray(body.keys) && body.keys.length)
+      ? body.keys.filter((k) => typeof k === 'string')
+      : (typeof body.key === 'string' && body.key ? [body.key] : []);
+    if (keys.length === 0) return json({ error: '缺少 key' }, 400, { request, env });
     if (action !== 'approve' && action !== 'reject') return json({ error: '无效操作' }, 400, { request, env });
+    if (keys.length > 100) return json({ error: '一次最多处理 100 张' }, 400, { request, env });
 
-    if (action === 'reject') {
-      await env.PHOTOS.delete(key);
-      await env.PHOTOS.delete(toThumbKey(key)).catch(() => {});
-      return json({ ok: true, action: 'rejected' }, 200, { request, env });
+    const results = [];
+    for (const k of keys) {
+      if (typeof k !== 'string' || !k.startsWith('uploads/')) {
+        results.push({ key: k, ok: false, error: '无效 key' });
+        continue;
+      }
+      try {
+        if (action === 'reject') {
+          await env.PHOTOS.delete(k);
+          await env.PHOTOS.delete(toThumbKey(k)).catch(() => {});
+          results.push({ key: k, ok: true, action: 'rejected' });
+        } else {
+          // approve：R2 内部 copy 把对象从 uploads/pending/ 拷到 uploads/（保留原 metadata），
+          // 避免 get+arrayBuffer+put 把大图（如 35MB）流经边缘内存/带宽，从十几秒降到秒级。
+          if (!k.startsWith('uploads/pending/')) { results.push({ key: k, ok: false, error: '不是待审图片' }); continue; }
+          const head = await env.PHOTOS.head(k);
+          if (!head) { results.push({ key: k, ok: false, error: '图片不存在' }); continue; }
+          const newKey = k.replace('uploads/pending/', 'uploads/');
+          await env.PHOTOS.copy(k, newKey);
+          await env.PHOTOS.delete(k);
+          await env.PHOTOS.delete(toThumbKey(k)).catch(() => {});
+          results.push({ key: k, ok: true, action: 'approved' });
+        }
+      } catch (e) {
+        results.push({ key: k, ok: false, error: e.message });
+      }
     }
-
-    // approve：用 R2 内部 copy 把对象从 uploads/pending/ 拷到 uploads/（保留原 metadata），
-    // 避免 get+arrayBuffer+put 把大图（如 35MB）流经边缘内存/带宽，从十几秒降到秒级。
-    if (!key.startsWith('uploads/pending/')) return json({ error: '不是待审图片' }, 400, { request, env });
-    const head = await env.PHOTOS.head(key);
-    if (!head) return json({ error: '图片不存在' }, 404, { request, env });
-    const newKey = key.replace('uploads/pending/', 'uploads/');
-    await env.PHOTOS.copy(key, newKey);
-    await env.PHOTOS.delete(key);
-    await env.PHOTOS.delete(toThumbKey(key)).catch(() => {});
-    return json({ ok: true, action: 'approved' }, 200, { request, env });
+    const okCount = results.filter((r) => r.ok).length;
+    return json({ ok: true, count: okCount, total: keys.length, results }, 200, { request, env });
   } catch (e) {
     return json({ error: e.message }, 500, { request, env });
   }
