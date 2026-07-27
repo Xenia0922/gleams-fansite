@@ -345,7 +345,11 @@ function applyHero(html, hero, weiboDesc) {
 export async function onRequest(context) {
   const { request, env, next } = context;
   const url = new URL(request.url);
-  const path = url.pathname;
+  // 归一化尾部斜杠：CF Pages 常将 /gallery 重定向到 /gallery/，而各页面数据分支按
+  // path === '/gallery' 精确匹配；若不归一化，/gallery/ 请求会跳过画廊专属数据注入
+  // （galleryPhotos/featuredFan），导致客户端回退 fetch（二次加载）。统一去尾斜杠，
+  // 根路径保留 '/'。同时修好 /members/、/fans/ 的同款隐患。
+  const path = url.pathname.replace(/\/+$/, '') || '/';
 
   // 只处理 HTML 页面请求
   const isPage =
