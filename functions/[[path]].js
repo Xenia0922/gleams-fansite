@@ -92,6 +92,25 @@ function localShell(title) {
   );
 }
 
+/**
+ * 兜底外壳（增强）：当 next() 抛异常/返回非 HTML（resp 为 null）时，
+ * 复用站点 404 页作为外壳（含完整 CSS / Header / Footer），避免动态日程详情渲染成「零样式」页。
+ * 向自身 /404 发起同域子请求——该路径不匹配 /schedule/:id 正则，会直接 next() 返回静态 404.html，
+ * 不会递归进入本 catch-all，安全无环。仅在取不到时才退回 localShell()。
+ */
+async function fetchShell(baseUrl) {
+  try {
+    const r = await fetch(new URL('/404', baseUrl));
+    if (r && r.ok) {
+      const t = await r.text();
+      if (/<main[\s>]/i.test(t)) return t;
+    }
+  } catch (e) {
+    console.error('[path] fetchShell failed', e && e.message);
+  }
+  return null;
+}
+
 export async function onRequest(context) {
   const { request, env, next } = context;
   try {
@@ -135,7 +154,7 @@ export async function onRequest(context) {
       } catch (_) {}
     }
     if (!shellText) {
-      shellText = localShell(row.title || id);
+      shellText = (await fetchShell(url)) || localShell(row.title || id);
     }
     if (!shellText) return resp || notFound();
 
