@@ -5,6 +5,7 @@ import { FALLBACK_MEMBERS, tint } from '../utils/members';
 
 const MAX_FILES = 9;
 const MAX_SIZE = 35 * 1024 * 1024;
+const MAX_TOTAL = 95 * 1024 * 1024; // 9 张合计上限（CF 请求体 ~100MB，留余量）
 const ALLOWED = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 interface Item { id: string; file: File; preview: string; }
@@ -58,6 +59,14 @@ export default function FanUpload() {
       if (!ALLOWED.includes(f.type)) { setMsg('❌ 仅支持 JPG/PNG/WEBP/GIF'); return; }
       if (f.size > MAX_SIZE) { setMsg('❌ 单张图片不能超过 35MB'); return; }
       accepted.push(f);
+    }
+    // 总大小保护：CF Pages Functions 请求体上限约 100MB，9 张合计留余量 ≤95MB，
+    // 避免「选满 9 张大图、上传中途被 413 拒」的糟心体验（onload 已补 413 提示）。
+    const existing = itemsRef.current.reduce((s, it) => s + it.file.size, 0);
+    const incoming = accepted.reduce((s, f) => s + f.size, 0);
+    if (existing + incoming > MAX_TOTAL) {
+      setMsg('❌ 9 张总大小不能超过约 95MB（服务器上限 100MB），请压缩图片或减少张数');
+      return;
     }
     setItems(prev => {
       const next = [...prev, ...accepted.map(f => ({ id: (crypto as any).randomUUID(), file: f, preview: URL.createObjectURL(f) }))];
