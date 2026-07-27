@@ -201,12 +201,27 @@ export default function GalleryGrid() {
       <SkeletonSwap
         loading={loading}
         skeleton={
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3" aria-hidden="true">
-            {/* 数量对齐内容：优先 SSR 注入的 galleryPhotos 真实张数，消除“骨架 8 张 / 内容 N 张”的回抽 */}
-            {Array.from({ length: (ssr?.galleryPhotos?.length) || 8 }).map((_, i) => (
-              <Skeleton key={i} className="aspect-[4/5] rounded-3xl" />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3" aria-hidden="true">
+              {/* 数量对齐内容：优先 SSR 注入的 galleryPhotos 真实张数，消除“骨架 8 张 / 内容 N 张”的回抽 */}
+              {Array.from({ length: (ssr?.galleryPhotos?.length) || 8 }).map((_, i) => (
+                <Skeleton key={i} className="aspect-[4/5] rounded-3xl" />
+              ))}
+            </div>
+            {(ssr?.featuredFan?.length > 0) && (
+              <div className="mt-12" aria-hidden="true">
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="text-sm font-bold text-[var(--accent)]">骑士团精选</span>
+                  <span className="text-xs text-gray-400">{ssr.featuredFan.length} 张</span>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {Array.from({ length: ssr.featuredFan.length }).map((_, i) => (
+                    <Skeleton key={i} className="aspect-[4/5] rounded-3xl ring-2 ring-[var(--accent)]/30" />
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
         }
       >
         <div className="space-y-8">
@@ -246,22 +261,21 @@ export default function GalleryGrid() {
             ))}
           {photos.length === 0 && <div className="text-center py-16 text-gray-400">画廊还空着，敬请期待</div>}
         </div>
-      </SkeletonSwap>
 
-      {/* 骑士团精选 — 来自广场返图 */}
-      {!loading && visibleFeaturedFan.length > 0 && (
-        <div className="mt-12">
-          <div className="flex items-center gap-3 mb-4">
-            <span className="text-sm font-bold text-[var(--accent)]">骑士团精选</span>
-            <span className="text-xs text-gray-400">{visibleFeaturedFan.length} 张</span>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {visibleFeaturedFan.map((p, i) => (
-              <div
-                key={p.key}
-                className="relative aspect-[4/5] rounded-3xl overflow-hidden glass cursor-pointer group ring-2 ring-[var(--accent)]"
-                onClick={() => setFanLightboxIdx(i)}
-              >
+        {/* 骑士团精选 — 来自广场返图（loading 态已由上方骨架统一占位，这里仅在有图时渲染，随主网格一起淡入，不再突兀弹出） */}
+        {visibleFeaturedFan.length > 0 && (
+          <div className="mt-12">
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-sm font-bold text-[var(--accent)]">骑士团精选</span>
+              <span className="text-xs text-gray-400">{visibleFeaturedFan.length} 张</span>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {visibleFeaturedFan.map((p, i) => (
+                <div
+                  key={p.key}
+                  className="relative aspect-[4/5] rounded-3xl overflow-hidden glass cursor-pointer group ring-2 ring-[var(--accent)] bg-gray-100 dark:bg-gray-800"
+                  onClick={() => setFanLightboxIdx(i)}
+                >
                 <img
                   src={p.thumbUrl || p.url}
                   alt=""
@@ -269,11 +283,12 @@ export default function GalleryGrid() {
                   loading="lazy"
                   decoding="async"
                 />
-              </div>
-            ))}
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </SkeletonSwap>
 
       {lightboxIdx !== null && (
         <ImageLightboxOverlay
