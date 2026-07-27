@@ -29,8 +29,10 @@ export default function FanUpload() {
   const [nickname, setNickname] = useState('');
   const [items, setItems] = useState<Item[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0); // 上传进度 0-100
   const [msg, setMsg] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
+  const xhrRef = useRef<XMLHttpRequest | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mountedRef = useRef(true);
 
@@ -44,6 +46,7 @@ export default function FanUpload() {
 
   useEffect(() => () => {
     if (timerRef.current) clearTimeout(timerRef.current);
+    if (xhrRef.current) xhrRef.current.abort();
     itemsRef.current.forEach(it => URL.revokeObjectURL(it.preview));
     mountedRef.current = false;
   }, []);
@@ -76,7 +79,7 @@ export default function FanUpload() {
     });
   };
 
-  const handleUpload = async () => {
+  const handleUpload = () => {
     if (items.length === 0) return;
     if (turnstileReady && !turnstileToken) {
       setMsg('❌ 请先完成人机验证');
@@ -84,32 +87,71 @@ export default function FanUpload() {
     }
     setUploading(true);
     setMsg('');
+    setProgress(0);
     const fd = new FormData();
     items.forEach(it => fd.append('files', it.file));
     fd.append('member', member);
     fd.append('nickname', nickname || '匿名骑士');
     fd.append('event', event);
     if (turnstileToken) fd.append('turnstileToken', turnstileToken);
-    try {
-      const res = await fetch('/api/photos', { method: 'POST', body: fd });
-      const data = await res.json();
-      if (data.ok) {
+
+    // 用 XMLHttpRequest 而非 fetch：fetch 不支持上传进度回调，大图在慢网络下
+    // 会长时间停在「上传中」且无任何反馈；XHR 能拿到真实百分比，并支持超时兜底。
+    const xhr = new XMLHttpRequest();
+    xhrRef.current = xhr;
+    xhr.open('POST', '/api/photos');
+    xhr.timeout = 120000; // 120s 超时，避免永久转圈
+
+    xhr.upload.onprogress = (e: ProgressEvent) => {
+      if (e.lengthComputable) {
+        const pct = Math.min(99, Math.round((e.loaded / e.total) * 100));
+        if (mountedRef.current) setProgress(pct);
+      }
+    };
+
+    xhr.onload = () => {
+      if (!mountedRef.current) return;
+      let data: any = null;
+      try { data = JSON.parse(xhr.responseText); } catch { /* 非 JSON 响应 */ }
+      if (xhr.status === 413) {
+        setMsg('❌ 文件总大小超过服务器上限（约 100MB），请减少张数或压缩图片');
+      } else if (data && data.ok) {
+        setProgress(100);
         setMsg(data.pending
           ? `✅ 已上传 ${data.count || items.length} 张，审核通过后会在广场展示，感谢分享！`
           : `✅ 已上传 ${data.count || items.length} 张，感谢分享！`);
         items.forEach(it => URL.revokeObjectURL(it.preview));
         setItems([]);
         setTurnstileToken('');
-        // 刷新浏览区的画廊
         window.dispatchEvent(new Event('tab-browse-visible'));
         timerRef.current = setTimeout(() => { if (mountedRef.current) setMsg(''); }, 4000);
+      } else if (data && data.error) {
+        setMsg('❌ ' + data.error);
       } else {
-        setMsg('❌ ' + (data.error || '上传失败'));
+        setMsg(`❌ 上传失败（HTTP ${xhr.status}）`);
       }
-    } catch {
-      setMsg('❌ 网络错误');
-    }
-    setUploading(false);
+      setUploading(false);
+    };
+
+    xhr.onerror = () => {
+      if (!mountedRef.current) return;
+      setMsg('❌ 网络错误，请检查连接后重试');
+      setUploading(false);
+    };
+
+    xhr.ontimeout = () => {
+      if (!mountedRef.current) return;
+      setMsg('❌ 上传超时（120 秒）。大图在弱网下较慢，请压缩图片或稍后重试');
+      setUploading(false);
+    };
+
+    xhr.onabort = () => {
+      if (!mountedRef.current) return;
+      setMsg('已取消上传');
+      setUploading(false);
+    };
+
+    xhr.send(fd);
   };
 
   const selCls = 'w-full px-4 py-2 rounded-full text-sm text-center bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 outline-none focus:border-[var(--accent)] transition-colors';
@@ -188,8 +230,22 @@ export default function FanUpload() {
           disabled={items.length === 0 || uploading || (turnstileReady && !turnstileToken)}
           className="btn-pink mt-4 text-sm disabled:opacity-50"
         >
-          {uploading ? '上传中...' : `上传 ${items.length > 0 ? items.length + ' 张' : ''}`.trim()}
+          {uploading ? `上传中 ${progress}%` : `上传 ${items.length > 0 ? items.length + ' 张' : ''}`.trim()}
         </button>
+
+        {uploading && (
+          <div className="mt-3" aria-live="polite">
+            <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-white/10 overflow-hidden">
+              <div
+                className="h-full bg-[var(--accent)] transition-all duration-200 ease-out"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <p className="text-xs text-gray-400 mt-1">
+              {progress < 100 ? `上传中… ${progress}%（大图在弱网下较慢，请耐心等待）` : '处理中…'}
+            </p>
+          </div>
+        )}
 
         {msg && (
           <p className={`mt-3 text-sm ${msg.startsWith('❌') ? 'text-red-400' : msg.startsWith('⚠️') ? 'text-amber-500' : 'text-green-500'}`}>
