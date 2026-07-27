@@ -16,7 +16,7 @@ export async function onRequest(context) {
   const url = new URL(request.url);
 
   if (request.method === 'GET' && url.searchParams.has('key')) {
-    return servePhoto(env, url.searchParams.get('key'));
+    return servePhoto(request, env, url.searchParams.get('key'));
   }
 
   if (request.method === 'GET') {
@@ -125,10 +125,11 @@ async function uploadPhoto(request, env) {
   }
 }
 
-async function servePhoto(env, key) {
-  // 审核防护：待审图片（uploads/pending/ 前缀）即使拿到了直链 URL，也未通过管理员审核，
-  // 不应被公开访问。列表接口已排除 pending，这里再兜底拦一次直链，避免"审核只挡列表不挡直链"。
-  if (typeof key === 'string' && key.startsWith('uploads/pending/')) {
+async function servePhoto(request, env, key) {
+  // 审核防护：待审图片（uploads/pending/ 前缀）默认禁止公开直链访问，
+  // 避免"审核只挡列表不挡直链"。但已登录 admin（携带有效 x-admin-code）需预览以完成审核，故放行。
+  const isPending = typeof key === 'string' && key.startsWith('uploads/pending/');
+  if (isPending && !adminOk(request, env)) {
     return new Response('Forbidden', { status: 403 });
   }
   try {
