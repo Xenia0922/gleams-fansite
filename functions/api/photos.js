@@ -1,7 +1,7 @@
 /**
  * GET  /api/photos?key=xxx        — 读取单张图片
  * GET  /api/photos                 — 列出已审核照片（粉丝上传默认 pending，admin ?all=1 看全部）
- * POST /api/photos                 — 上传照片（最多 9 张，单张 ≤23MB，粉丝需 Turnstile + 审核后才公开）
+ * POST /api/photos                 — 上传照片（最多 9 张，单张 ≤35MB，粉丝需 Turnstile + 审核后才公开）
  * PUT  /api/photos                 — admin 审核（approve/reject，需 ADMIN_CODE）
  * DELETE /api/photos               — 删除照片（需 ADMIN_CODE）
  */
@@ -40,7 +40,7 @@ export async function onRequest(context) {
 
 const THUMB_SUFFIX = '_thumb';
 const MAX_FILES = 9;
-const MAX_SIZE = 23 * 1024 * 1024;
+const MAX_SIZE = 35 * 1024 * 1024;
 const ALLOWED = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 function isThumbKey(key) {
@@ -74,7 +74,7 @@ async function uploadPhoto(request, env) {
     // 逐张校验类型与大小
     for (const f of files) {
       if (!ALLOWED.includes(f.type)) return json({ error: '仅支持 JPG/PNG/WEBP/GIF' }, 400, { request, env });
-      if (f.size > MAX_SIZE) return json({ error: '单张图片不能超过 23MB' }, 400, { request, env });
+      if (f.size > MAX_SIZE) return json({ error: '单张图片不能超过 35MB' }, 400, { request, env });
     }
 
     // 限流（粉丝）：5 秒内本 IP 上传图片总数不超过 MAX_FILES

@@ -4,7 +4,7 @@ import Turnstile from './Turnstile';
 import { FALLBACK_MEMBERS, tint } from '../utils/members';
 
 const MAX_FILES = 9;
-const MAX_SIZE = 23 * 1024 * 1024;
+const MAX_SIZE = 35 * 1024 * 1024;
 const ALLOWED = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 interface Item { id: string; file: File; preview: string; }
@@ -53,7 +53,7 @@ export default function FanUpload() {
     const accepted: File[] = [];
     for (const f of Array.from(list)) {
       if (!ALLOWED.includes(f.type)) { setMsg('❌ 仅支持 JPG/PNG/WEBP/GIF'); return; }
-      if (f.size > MAX_SIZE) { setMsg('❌ 单张图片不能超过 23MB'); return; }
+      if (f.size > MAX_SIZE) { setMsg('❌ 单张图片不能超过 35MB'); return; }
       accepted.push(f);
     }
     setItems(prev => {
@@ -151,7 +151,7 @@ export default function FanUpload() {
         />
         <label htmlFor="fan-upload-input" className="cursor-pointer inline-flex flex-col items-center gap-3">
           <div className="w-20 h-20 rounded-3xl glass flex items-center justify-center text-3xl">📸</div>
-          <span className="text-sm text-gray-400">点击选择照片（最多 9 张，单张 ≤23MB）</span>
+          <span className="text-sm text-gray-400">点击选择照片（最多 9 张，单张 ≤35MB）</span>
         </label>
 
         {items.length > 0 && (
