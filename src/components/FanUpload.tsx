@@ -40,6 +40,7 @@ export default function FanUpload() {
   // Turnstile：site key 硬编码在组件内（公开值），未配置 secret 时后端 fail-open
   const [turnstileToken, setTurnstileToken] = useState('');
   const [turnstileReady, setTurnstileReady] = useState(false);
+  const [resetNonce, setResetNonce] = useState(0); // 上传成功后 +1 触发 Turnstile 重新验证
 
   // 清理：组件卸载时撤销已选择的文件预览对象的 URL 下
   const itemsRef = useRef(items);
@@ -132,6 +133,7 @@ export default function FanUpload() {
         items.forEach(it => URL.revokeObjectURL(it.preview));
         setItems([]);
         setTurnstileToken('');
+        setResetNonce(n => n + 1); // 触发 Turnstile widget 重新验证（避免按钮卡死）
         window.dispatchEvent(new Event('tab-browse-visible'));
         timerRef.current = setTimeout(() => { if (mountedRef.current) setMsg(''); }, 4000);
       } else if (data && data.error) {
@@ -231,7 +233,7 @@ export default function FanUpload() {
         />
 
         <div className="mt-4">
-          <Turnstile onToken={setTurnstileToken} onReady={() => setTurnstileReady(true)} />
+          <Turnstile onToken={setTurnstileToken} onReady={() => setTurnstileReady(true)} resetKey={resetNonce} />
         </div>
 
         <button

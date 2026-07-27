@@ -31,7 +31,7 @@ function loadScript(): Promise<void> {
  * 注：用 explicit render（turnstile.render）而非 declarative cf-turnstile div，
  * 因为 React 重渲染会导致 declarative widget 丢失。action 参数与 data-action 等价。
  */
-export default function Turnstile({ onToken, onReady }: { onToken: (t: string) => void; onReady?: () => void }) {
+export default function Turnstile({ onToken, onReady, resetKey }: { onToken: (t: string) => void; onReady?: () => void; resetKey?: number }) {
   const ssr = typeof window !== 'undefined' ? (window as any).__SSR_DATA__ : null;
   const siteKey: string | null = ssr?.turnstileSiteKey || null;
   const containerRef = useRef<HTMLDivElement>(null);
@@ -65,6 +65,14 @@ export default function Turnstile({ onToken, onReady }: { onToken: (t: string) =
       }
     };
   }, [siteKey]);
+
+  // 外部触发重置：上传成功后父组件清空 token 并要求重新验证。
+  // 若只清空 token 不重置，widget 不会自动重验，按钮会因 (turnstileReady && !turnstileToken)
+  // 永久禁用——这正是「传一次就点不了」的根因。reset 会重新渲染挑战，验证后回调新 token。
+  useEffect(() => {
+    if (resetKey == null || !widgetId.current || !window.turnstile) return;
+    try { window.turnstile.reset(widgetId.current); } catch {}
+  }, [resetKey]);
 
   if (!siteKey) return null; // 未配置时不渲染
   return <div ref={containerRef} className="flex justify-center" data-action="turnstile-spin-v2" />;
