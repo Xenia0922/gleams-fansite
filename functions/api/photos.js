@@ -215,19 +215,15 @@ async function moderatePhoto(request, env) {
       return json({ ok: true, action: 'rejected' }, 200, { request, env });
     }
 
-    // approve：从 uploads/pending/{member}/... copy 到 uploads/{member}/...，删 pending key
-    const obj = await env.PHOTOS.get(key);
-    if (!obj) return json({ error: '图片不存在' }, 404, { request, env });
-    const body = await obj.arrayBuffer();
+    // approve：用 R2 内部 copy 把对象从 uploads/pending/ 拷到 uploads/（保留原 metadata），
+    // 避免 get+arrayBuffer+put 把大图（如 35MB）流经边缘内存/带宽，从十几秒降到秒级。
+    if (!key.startsWith('uploads/pending/')) return json({ error: '不是待审图片' }, 400, { request, env });
+    const head = await env.PHOTOS.head(key);
+    if (!head) return json({ error: '图片不存在' }, 404, { request, env });
     const newKey = key.replace('uploads/pending/', 'uploads/');
-    await env.PHOTOS.put(newKey, body, {
-      httpMetadata: obj.httpMetadata,
-      customMetadata: { ...(obj.customMetadata || {}), status: 'approved' },
-    });
-    if (newKey !== key) {
-      await env.PHOTOS.delete(key);
-      await env.PHOTOS.delete(toThumbKey(key)).catch(() => {});
-    }
+    await env.PHOTOS.copy(key, newKey);
+    await env.PHOTOS.delete(key);
+    await env.PHOTOS.delete(toThumbKey(key)).catch(() => {});
     return json({ ok: true, action: 'approved' }, 200, { request, env });
   } catch (e) {
     return json({ error: e.message }, 500, { request, env });
