@@ -345,6 +345,14 @@ function applyHero(html, hero, weiboDesc) {
 export async function onRequest(context) {
   const { request, env, next } = context;
   const url = new URL(request.url);
+  // www → apex 301 跳转：在 Pages 运行时内执行，绕开「Pages 自定义域名盖过 zone 级
+  // Redirect Rule / _redirects」的问题。host 为 www 时第一件事就 301 走人，保留路径与查询参数。
+  if (url.hostname === 'www.gleams.vip') {
+    return new Response(null, {
+      status: 301,
+      headers: { Location: `https://gleams.vip${url.pathname}${url.search}` },
+    });
+  }
   // 归一化尾部斜杠：CF Pages 常将 /gallery 重定向到 /gallery/，而各页面数据分支按
   // path === '/gallery' 精确匹配；若不归一化，/gallery/ 请求会跳过画廊专属数据注入
   // （galleryPhotos/featuredFan），导致客户端回退 fetch（二次加载）。统一去尾斜杠，
