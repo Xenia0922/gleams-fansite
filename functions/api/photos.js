@@ -132,6 +132,37 @@ async function servePhoto(request, env, key) {
   if (isPending && !adminOk(request, env)) {
     return new Response('Forbidden', { status: 403 });
   }
+
+  // 缩略图：用 Cloudflare Image Resizing 在边缘按需缩放（零存储、CDN 缓存、format=auto 出 webp/avif）。
+  // 网格用 ?w=600 请求小图，灯箱用不带 w 的原图。未开通 Image Resizing 时 cf 选项被忽略、
+  // 下面 try 失败则降级为原图，不影响功能。
+  const url = new URL(request.url);
+  const wParam = url.searchParams.get('w') || url.searchParams.get('width');
+  const width = wParam ? Math.min(parseInt(wParam, 10) || 0, 1200) : 0;
+  if (width > 0) {
+    try {
+      const originUrl = new URL(request.url);
+      originUrl.searchParams.delete('w');
+      originUrl.searchParams.delete('width');
+      const headers = {};
+      const code = request.headers.get('x-admin-code');
+      if (code) headers['x-admin-code'] = code; // 待审图需带 admin 头才能取到原图再缩放
+      const resized = await fetch(originUrl.toString(), {
+        cf: { image: { width, fit: 'scale-down', format: 'auto' } },
+        headers,
+      });
+      if (resized.ok && (resized.headers.get('content-type') || '').startsWith('image/')) {
+        const out = new Headers(resized.headers);
+        out.set('Cache-Control', 'public, max-age=31536000, immutable');
+        out.set('X-Content-Type-Options', 'nosniff');
+        out.set('Access-Control-Allow-Origin', '*');
+        return new Response(resized.body, { status: 200, headers: out });
+      }
+    } catch {
+      /* 降级为原图 */
+    }
+  }
+
   try {
     const obj = await env.PHOTOS.get(key);
     if (!obj) return new Response('Not found', { status: 404 });
@@ -168,6 +199,8 @@ export async function listPhotosData(env, approvedOnly = true) {
         return {
           key: o.key,
           url: `/api/photos?key=${encodeURIComponent(o.key)}`,
+          // 网格缩略图：边缘按需缩放（servePhoto 处理 ?w=）。灯箱仍用原图 url。
+          thumbUrl: `/api/photos?key=${encodeURIComponent(o.key)}&w=600`,
           uploaded: o.uploaded,
           member,
           event: o.customMetadata?.event || null,
