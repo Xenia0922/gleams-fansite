@@ -16,7 +16,7 @@ import { rateAllow, rateLog } from './api/_rate.js';
  * - 未配置：默认为 ['https://gleams.vip']，额外放行 localhost（dev）
  * - 跨域不通过时：返回 *（对非 GET 请求会失败）— 保留 GET 默认行为以兼容 SSR 中间件注入
  */
-const DEFAULT_ALLOWED_ORIGINS = ['https://gleams.vip'];
+const DEFAULT_ALLOWED_ORIGINS = ['https://gleams.vip', 'https://www.gleams.vip'];
 const DEV_ALLOWED_ORIGINS = ['http://localhost:4321', 'http://localhost:3000', 'http://127.0.0.1:4321'];
 
 function parseAllowedOrigins(env) {
