@@ -64,7 +64,13 @@ export default function GalleryGrid() {
     // SSR 已注入画廊图 + 骑士团精选（middleware 为 /gallery 注入 galleryPhotos 与 featuredFan），免二次 fetch
     if (ssr?.galleryPhotos) {
       if (!ok()) return;
-      setPhotos(ssr.galleryPhotos);
+      // 排除已同步到「广场精选」的画廊照片（它们在底部精选区单独展示），避免同一张图重复出现
+      const fgSet = ssr.featuredGalleryIds && ssr.featuredGalleryIds.length
+        ? new Set(ssr.featuredGalleryIds as string[])
+        : null;
+      setPhotos(fgSet
+        ? ssr.galleryPhotos.filter((p: Photo) => !fgSet.has(p.id))
+        : ssr.galleryPhotos);
       // featuredFan 始终由 SSR 注入（可能为空数组），直接采用，丢弃已失效的 featuredSquare 兜底
       setFeaturedFan(Array.isArray(ssr.featuredFan) ? ssr.featuredFan : []);
       if (ok()) setLoading(false);
@@ -181,6 +187,13 @@ export default function GalleryGrid() {
 
   const idxOf = (id: string) => visibleFlat.findIndex((p) => p.id === id);
 
+  // 骨架张数对齐「实际可见」的画廊照片（已排除广场精选同步项），消除骨架/内容张数回抽
+  const ssrGalleryLen = ssr?.galleryPhotos
+    ? (ssr.featuredGalleryIds?.length
+        ? ssr.galleryPhotos.length - ssr.featuredGalleryIds.length
+        : ssr.galleryPhotos.length)
+    : 8;
+
   // 精选区也响应成员筛选
   const visibleFeaturedFan = useMemo(
     () => (filter === 'all' ? featuredFan : featuredFan.filter((p) => p.member === filter)),
@@ -216,7 +229,7 @@ export default function GalleryGrid() {
           <>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3" aria-hidden="true">
               {/* 数量对齐内容：优先 SSR 注入的 galleryPhotos 真实张数，消除“骨架 8 张 / 内容 N 张”的回抽 */}
-              {Array.from({ length: (ssr?.galleryPhotos?.length) || 8 }).map((_, i) => (
+              {Array.from({ length: ssrGalleryLen }).map((_, i) => (
                 <Skeleton key={i} className="aspect-[4/5] rounded-3xl" />
               ))}
             </div>
