@@ -107,19 +107,23 @@ export default function AdminEvents({ code }: { code: string }) {
             <input disabled={editing.id !== 'new'} value={form.id || ''} onChange={e => set('id', e.target.value.trim())} placeholder="live-2026-08-01" className={INPUT} />
           </label>
           <label className="block">
-            <span className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">日期</span>
-            <input type="date" value={form.date || ''} onChange={e => {
-              const d = e.target.value;
-              set('date', d);
-              // 新日程或 ID 以 live- 开头：自动同步为 live-YYYY-MM-DD
-              if (editing?.id === 'new' || (form.id && /^live-/.test(form.id))) {
-                set('id', 'live-' + d);
-              }
-            }} className={INPUT} />
-          </label>
-          <label className="block">
             <span className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">开始时间</span>
-            <input value={form.time || ''} onChange={e => set('time', e.target.value)} placeholder="14:00" className={INPUT} />
+            <input
+              type="datetime-local"
+              value={form.date && form.time ? `${form.date}T${form.time}` : ''}
+              onChange={e => {
+                const v = e.target.value;
+                if (!v) return;
+                const [d, t] = v.split('T');
+                set('date', d);
+                set('time', t || '');
+                // 新日程或 ID 以 live- 开头：自动同步为 live-YYYY-MM-DD
+                if (editing?.id === 'new' || (form.id && /^live-/.test(form.id))) {
+                  set('id', 'live-' + d);
+                }
+              }}
+              className={INPUT}
+            />
           </label>
           <label className="block">
             <span className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">结束时间（可选）</span>

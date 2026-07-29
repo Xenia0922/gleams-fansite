@@ -77,16 +77,16 @@ export default function EventCardGrid({
   const skeletonCount = Math.min((initial || []).filter(e => e.status === filter).length || limit, limit);
 
   const filtered = useMemo(() => {
+    // 同日起始时间参与排序，避免「同天多场」顺序错乱
+    const t = (e: EventRow) => new Date(`${e.date}T${e.time || '00:00'}`).getTime();
     const list = [...events]
       .filter((e) => e.status === filter)
       .sort((a, b) => {
-        const diff = new Date(sortDir === 'asc' ? a.date : b.date).getTime() -
-                     new Date(sortDir === 'asc' ? b.date : a.date).getTime();
-        return sortDir === 'asc' ? -diff : diff;
+        const base = t(a) - t(b);
+        // asc: 近→远（即将到来最近在前）；desc: 远→近（过往行程最新在前）
+        return sortDir === 'asc' ? base : -base;
       })
       .slice(0, limit);
-    // 最终按展示顺序：past 用降序（最新在前），upcoming 用升序（最近在前）
-    // sort 已经处理，这里只需保持
     return list;
   }, [events, filter, sortDir, limit]);
 

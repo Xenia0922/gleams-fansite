@@ -139,16 +139,21 @@ async function servePhoto(request, env, key) {
   const url = new URL(request.url);
   const wParam = url.searchParams.get('w') || url.searchParams.get('width');
   const width = wParam ? Math.min(parseInt(wParam, 10) || 0, 1200) : 0;
+  const qParam = url.searchParams.get('q');
+  const quality = qParam ? Math.min(Math.max(parseInt(qParam, 10) || 0, 1), 100) : 0;
   if (width > 0) {
     try {
       const originUrl = new URL(request.url);
       originUrl.searchParams.delete('w');
       originUrl.searchParams.delete('width');
+      originUrl.searchParams.delete('q');
       const headers = {};
       const code = request.headers.get('x-admin-code');
       if (code) headers['x-admin-code'] = code; // 待审图需带 admin 头才能取到原图再缩放
+      const imageOpts = { width, fit: 'scale-down', format: 'auto' };
+      if (quality > 0) imageOpts.quality = quality; // ?q= 显式质量（默认 0=跟随 CF auto）
       const resized = await fetch(originUrl.toString(), {
-        cf: { image: { width, fit: 'scale-down', format: 'auto' } },
+        cf: { image: imageOpts },
         headers,
       });
       if (resized.ok && (resized.headers.get('content-type') || '').startsWith('image/')) {
@@ -199,8 +204,8 @@ export async function listPhotosData(env, approvedOnly = true) {
         return {
           key: o.key,
           url: `/api/photos?key=${encodeURIComponent(o.key)}`,
-          // 网格缩略图：边缘按需缩放（servePhoto 处理 ?w=）。灯箱仍用原图 url。
-          thumbUrl: `/api/photos?key=${encodeURIComponent(o.key)}&w=600`,
+          // 网格缩略图：边缘按需缩放（servePhoto 处理 ?w=&q=，更高压缩）。灯箱仍用原图 url。
+          thumbUrl: `/api/photos?key=${encodeURIComponent(o.key)}&w=480&q=72`,
           uploaded: o.uploaded,
           member,
           event: o.customMetadata?.event || null,

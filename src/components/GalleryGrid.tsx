@@ -3,10 +3,10 @@ import ImageLightboxOverlay from './ImageLightboxOverlay';
 import Skeleton from './Skeleton';
 import SkeletonSwap from './SkeletonSwap';
 
-// 网格用缩略图（边缘按需缩放，servePhoto 处理 ?w=）；外部链接或无 w 参数时回退原图。
+// 网格用缩略图（边缘按需缩放，servePhoto 处理 ?w=&q=，更高压缩）；外部链接或无 w 参数时回退原图。
 function thumbOf(url: string): string {
   if (!url) return url;
-  if (url.startsWith('/api/photos')) return url + (url.includes('?') ? '&' : '?') + 'w=600';
+  if (url.startsWith('/api/photos')) return url + (url.includes('?') ? '&' : '?') + 'w=480&q=72';
   return url;
 }
 
