@@ -225,6 +225,13 @@ async function fetchPageData(path, env) {
         const featuredKeys = Array.isArray(featuredSquare)
           ? featuredSquare.map((e) => (typeof e === 'string' ? e : e.key)).filter(Boolean)
           : [];
+        // 供公开画廊排除成员网格中的「广场精选」同步照片（与前端 fetch 回退逻辑一致），
+        // 避免一张图既进成员分组、又在精选区各显示一次。
+        data.featuredGalleryIds = Array.isArray(featuredSquare)
+          ? featuredSquare
+              .filter((e) => e && typeof e !== 'string' && e.galleryId)
+              .map((e) => e.galleryId)
+          : [];
         if (featuredKeys.length) {
           const photos = await listPhotosData(env);
           const keySet = new Set(featuredKeys);
