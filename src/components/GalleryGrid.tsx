@@ -3,10 +3,15 @@ import ImageLightboxOverlay from './ImageLightboxOverlay';
 import Skeleton from './Skeleton';
 import SkeletonSwap from './SkeletonSwap';
 
-// 网格用缩略图（边缘按需缩放，servePhoto 处理 ?w=&q=，更高压缩）；外部链接或无 w 参数时回退原图。
+// 网格用缩略图：用 /cdn-cgi/image/ 边缘缩放（实测 Function 内 cf.image 递归抓取不生效，cdn-cgi 包裹原图 URL 才生效）。
+// 客户端用 window.location.origin，SSR 兜底 https://gleams.vip；外部链接/原图回退。
 function thumbOf(url: string): string {
   if (!url) return url;
-  if (url.startsWith('/api/photos')) return url + (url.includes('?') ? '&' : '?') + 'w=480&q=72';
+  if (url.startsWith('/api/photos')) {
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://gleams.vip';
+    const opts = 'width=480,quality=72,format=auto,fit=scale-down';
+    return `/cdn-cgi/image/${opts}/${origin}${url}`;
+  }
   return url;
 }
 

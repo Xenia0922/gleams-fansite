@@ -204,8 +204,9 @@ export async function listPhotosData(env, approvedOnly = true) {
         return {
           key: o.key,
           url: `/api/photos?key=${encodeURIComponent(o.key)}`,
-          // 网格缩略图：边缘按需缩放（servePhoto 处理 ?w=&q=，更高压缩）。灯箱仍用原图 url。
-          thumbUrl: `/api/photos?key=${encodeURIComponent(o.key)}&w=480&q=72`,
+          // 网格缩略图：用 /cdn-cgi/image/ 边缘缩放（实测 Function 内 cf.image 递归抓取不生效，cdn-cgi 包裹原图 URL 才生效）。
+          // 灯箱仍用原图 url（p.url）。options 与下方 GalleryGrid.thumbOf 保持一致。
+          thumbUrl: `/cdn-cgi/image/width=480,quality=72,format=auto,fit=scale-down/https://gleams.vip/api/photos?key=${encodeURIComponent(o.key)}`,
           uploaded: o.uploaded,
           member,
           event: o.customMetadata?.event || null,
