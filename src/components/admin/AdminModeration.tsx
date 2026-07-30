@@ -61,16 +61,16 @@ export default function AdminModeration({ code }: { code: string }) {
   const [selected, setSelected] = useState<string[]>([]);
   const [batchBusy, setBatchBusy] = useState(false);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const res = await fetch('/api/photos?all=1', { headers: { 'x-admin-code': code } });
       const data = await res.json();
       if (Array.isArray(data)) {
         setPhotos(data.filter((p: Photo) => p.status === 'pending'));
       }
-    } catch { setErr('加载失败'); }
-    setLoading(false);
+    } catch { if (!silent) setErr('加载失败'); }
+    if (!silent) setLoading(false);
   }, [code]);
 
   useEffect(() => { load(); }, [load]);
@@ -89,6 +89,7 @@ export default function AdminModeration({ code }: { code: string }) {
       if (data.ok) {
         setPhotos(prev => prev.filter(p => p.key !== key));
         setSelected(prev => prev.filter(k => k !== key));
+        load(true); // 静默重新拉取，确保与服务端真实状态一致（服务端已写后校验，此处防边缘情况）
       } else {
         setErr(data.error || '操作失败');
       }
@@ -118,6 +119,7 @@ export default function AdminModeration({ code }: { code: string }) {
         const okKeys = (data.results || []).filter((r: { ok: boolean }) => r.ok).map((r: { key: string }) => r.key);
         setPhotos(prev => prev.filter(p => !okKeys.includes(p.key)));
         setSelected([]);
+        load(true); // 静默重新拉取，确保与服务端真实状态一致
       } else {
         setErr(data?.error || '批量操作失败');
       }
