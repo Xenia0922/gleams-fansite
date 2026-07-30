@@ -267,23 +267,51 @@ async function moderatePhoto(request, env) {
           await env.PHOTOS.delete(toThumbKey(k)).catch(() => {});
           results.push({ key: k, ok: true, action: 'rejected' });
         } else {
-          // approve：R2 内部 copy 把对象从 uploads/pending/ 拷到 uploads/（保留原 metadata），
-          // 避免 get+arrayBuffer+put 把大图（如 35MB）流经边缘内存/带宽，从十几秒降到秒级。
+          // approve：把对象从 uploads/pending/ 移到 uploads/（公开）。
+          // 弃用 R2 copy：实测部分 Pages 运行时 copy 会「resolve 但不落盘」，导致审核看似通过、
+          // 刷新后又回到待审、广场也空。改为 get+put（与粉丝上传同一套 put，已验证可靠）+ 写后 head
+          // 校验，只有目标确实存在才宣布成功，否则返回具体错误让前端显示而非乐观移除。
           if (!k.startsWith('uploads/pending/')) { results.push({ key: k, ok: false, error: '不是待审图片' }); continue; }
-          const head = await env.PHOTOS.head(k);
-          if (!head) { results.push({ key: k, ok: false, error: '图片不存在' }); continue; }
           const newKey = k.replace('uploads/pending/', 'uploads/');
-          await env.PHOTOS.copy(k, newKey);
-          await env.PHOTOS.delete(k);
-          await env.PHOTOS.delete(toThumbKey(k)).catch(() => {});
-          results.push({ key: k, ok: true, action: 'approved' });
+          let approved = false;
+          let errMsg = '';
+          try {
+            const obj = await env.PHOTOS.get(k);
+            if (!obj) {
+              errMsg = '图片不存在或已处理';
+            } else {
+              // 流式 put 到公开前缀（同 bucket 不同前缀，沿用上传时验证过的 put 路径）
+              await env.PHOTOS.put(newKey, obj.body, {
+                httpMetadata: obj.httpMetadata,
+                customMetadata: obj.customMetadata,
+              });
+              // 校验目标已落盘（用 head 而非 list，避免 list 最终一致性延迟造成误判）
+              const dest = await env.PHOTOS.head(newKey);
+              if (dest) {
+                approved = true;
+              } else {
+                errMsg = '发布失败：目标未写入，请重试';
+              }
+            }
+          } catch (e) {
+            errMsg = (e && e.message) || '发布失败';
+          }
+          if (approved) {
+            // 删除待审原图与缩略图（best-effort：目标已公开，删失败也不影响展示）
+            await env.PHOTOS.delete(k).catch(() => {});
+            await env.PHOTOS.delete(toThumbKey(k)).catch(() => {});
+            results.push({ key: k, ok: true, action: 'approved' });
+          } else {
+            results.push({ key: k, ok: false, error: errMsg || '发布失败' });
+          }
         }
       } catch (e) {
         results.push({ key: k, ok: false, error: e.message });
       }
     }
     const okCount = results.filter((r) => r.ok).length;
-    return json({ ok: true, count: okCount, total: keys.length, results }, 200, { request, env });
+    // ok 仅在「全部处理成功」时为 true；部分失败也回报具体错误，前端据此只移除成功的、并提示失败项。
+    return json({ ok: okCount === keys.length, count: okCount, total: keys.length, results }, 200, { request, env });
   } catch (e) {
     return json({ error: e.message }, 500, { request, env });
   }
