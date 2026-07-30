@@ -68,7 +68,11 @@ export default function AdminPanel() {
     if (!stored) return;
     (async () => {
       try {
-        const res = await fetch('/api/recruits?all=1', { headers: { 'x-admin-code': stored } });
+        const res = await fetch('/api/admin-auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-admin-code': stored },
+          body: '{}',
+        });
         if (res.ok) {
           setCode(stored);
           setAuthed(true);
@@ -98,7 +102,11 @@ export default function AdminPanel() {
     setErr('');
     setChecking(true);
     try {
-      const res = await fetch('/api/recruits?all=1', { headers: { 'x-admin-code': c } });
+      const res = await fetch('/api/admin-auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-code': c },
+        body: '{}',
+      });
       if (res.ok) {
         localStorage.setItem('gleams-admin', c);
         clearAttempts();
