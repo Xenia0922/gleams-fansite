@@ -37,7 +37,7 @@ export default function FanUpload() {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mountedRef = useRef(true);
 
-  // Turnstile：site key 硬编码在组件内（公开值），未配置 secret 时后端 fail-open
+  // Turnstile：site key 由 middleware 注入 __SSR_DATA__.turnstileSiteKey（见 Turnstile.tsx），未配置 secret 时后端 fail-open
   const [turnstileToken, setTurnstileToken] = useState('');
   const [turnstileReady, setTurnstileReady] = useState(false);
   const [resetNonce, setResetNonce] = useState(0); // 上传成功后 +1 触发 Turnstile 重新验证

@@ -63,11 +63,11 @@ async function ensureTablesOnce(env) {
 
 // 读取（命中则用缓存，未命中才真正查 D1）。
 // 仅在「查到了多于 turnstileSiteKey 的数据」时才缓存，避免把 D1 瞬时故障的空结果缓存住。
-async function getPageData(path, env) {
+async function getPageData(path, env, origin) {
   const now = Date.now();
   const hit = pageCache.get(path);
   if (hit && now - hit.ts < PAGE_CACHE_TTL) return hit.data;
-  const data = await fetchPageData(path, env);
+  const data = await fetchPageData(path, env, origin);
   if (Object.keys(data).length > 1) {
     if (pageCache.size > 64) {
       // 简单淘汰最旧项，避免无限增长
@@ -101,7 +101,7 @@ async function fetchEvents(env) {
   });
 }
 
-async function fetchPageData(path, env) {
+async function fetchPageData(path, env, origin) {
   const data = {};
   data.turnstileSiteKey = env.TURNSTILE_SITE_KEY || null;
 
@@ -201,7 +201,7 @@ async function fetchPageData(path, env) {
     })());
     tasks.push((async () => {
       try {
-        data.photos = await listPhotosData(env, true); // 仅已审核（pending 不对外）
+        data.photos = await listPhotosData(env, true, new URL(request.url).origin); // 仅已审核（pending 不对外）
       } catch {}
     })());
   }
@@ -233,7 +233,7 @@ async function fetchPageData(path, env) {
               .map((e) => e.galleryId)
           : [];
         if (featuredKeys.length) {
-          const photos = await listPhotosData(env);
+          const photos = await listPhotosData(env, true, new URL(request.url).origin);
           const keySet = new Set(featuredKeys);
           data.featuredFan = photos.filter((p) => keySet.has(p.key));
         } else {
@@ -397,7 +397,7 @@ export async function onRequest(context) {
 
   try {
     await ensureTablesOnce(env);
-    const pageData = await getPageData(path, env);
+    const pageData = await getPageData(path, env, new URL(request.url).origin);
 
     if (Object.keys(pageData).length === 0) return response;
 

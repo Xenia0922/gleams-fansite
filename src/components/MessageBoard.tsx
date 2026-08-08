@@ -6,6 +6,7 @@ import EmojiPickerPopover from './EmojiPickerPopover';
 import Skeleton from './Skeleton';
 import SkeletonSwap from './SkeletonSwap';
 import Turnstile from './Turnstile';
+import { fetchReactionMap, type ReactionBatch } from '../utils/api';
 
 // 与返图发布页（FanUpload）同款下拉/输入框样式，保证两套表单视觉一致
 const selCls = 'w-full px-4 py-2 rounded-full text-sm text-center bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 outline-none focus:border-[var(--accent)] transition-colors';
@@ -62,12 +63,12 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
   const [eventFilter, setEventFilter] = useState<string | null>(null);
   const [popoverMsgId, setPopoverMsgId] = useState<string | null>(null);
 
-  // Turnstile：site key 硬编码在组件内（公开值），未配置 secret 时后端 fail-open
+  // Turnstile：site key 由 middleware 注入 __SSR_DATA__.turnstileSiteKey（见 Turnstile.tsx），未配置 secret 时后端 fail-open
   const [turnstileToken, setTurnstileToken] = useState('');
   const [turnstileReady, setTurnstileReady] = useState(false);
 
   // Emoji 反应：reactionsMap[msgId] = { reactions: [{emoji,count}], mine: [emoji] }
-  const [reactionsMap, setReactionsMap] = useState<Record<string, { reactions: { emoji: string; count: number }[]; mine: string[] }>>({});
+  const [reactionsMap, setReactionsMap] = useState<ReactionBatch>({});
   const REACTION_EMOJIS = ['👍', '❤️', '😂', '🥰', '😢', '👏'];
   const mountedRef = useRef(true);
 
@@ -81,10 +82,8 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
       messagesLoadedRef.current = true;
       setLoadError('');
       setLoading(false);
-      const ids = ssrData.messages.map((m: Message) => m.id).join(',');
-      fetch(`/api/reactions?type=message&ids=${encodeURIComponent(ids)}`)
-        .then(r => r.json())
-        .then(map => { if (mountedRef.current && map && typeof map === 'object') setReactionsMap(map); })
+      fetchReactionMap('message', ssrData.messages.map((m: Message) => m.id))
+        .then(map => { if (mountedRef.current) setReactionsMap(map); })
         .catch(() => {});
       return;
     }
@@ -97,10 +96,8 @@ export default function MessageBoard({ readonly }: { readonly?: boolean }) {
         messagesLoadedRef.current = true;
         setLoadError('');
         if (data.length) {
-          const ids = data.map((m: Message) => m.id).join(',');
-          fetch(`/api/reactions?type=message&ids=${encodeURIComponent(ids)}`)
-            .then(r => r.json())
-            .then(map => { if (mountedRef.current && map && typeof map === 'object') setReactionsMap(map); })
+          fetchReactionMap('message', data.map((m: Message) => m.id))
+            .then(map => { if (mountedRef.current) setReactionsMap(map); })
             .catch(() => {});
         }
       }

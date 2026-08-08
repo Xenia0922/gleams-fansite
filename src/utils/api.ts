@@ -184,3 +184,29 @@ export function fetchRecruits(all?: boolean) {
 export function fetchPhotos() {
   return apiFetch<PhotoData[]>('/api/photos');
 }
+
+// ---------- 表情反应（批量查询） ----------
+
+export interface ReactionBatch {
+  [id: string]: { reactions: { emoji: string; count: number }[]; mine: string[] };
+}
+
+/**
+ * 批量查询反应，按 CHUNK 分片请求，避免 ids 拼接超长 URL（上千条时 URL 超限会被拒）。
+ * 逐片合并结果；某片失败静默跳过（局部数据缺失可容忍，不阻塞主体内容）。
+ */
+export async function fetchReactionMap(type: 'message' | 'photo', ids: string[]): Promise<ReactionBatch> {
+  const CHUNK = 100;
+  const merged: ReactionBatch = {};
+  if (!ids.length) return merged;
+  for (let i = 0; i < ids.length; i += CHUNK) {
+    const chunk = ids.slice(i, i + CHUNK);
+    try {
+      const res = await fetch(`/api/reactions?type=${type}&ids=${encodeURIComponent(chunk.join(','))}`);
+      if (!res.ok) continue;
+      const map = await res.json();
+      if (map && typeof map === 'object') Object.assign(merged, map);
+    } catch { /* 单片失败跳过 */ }
+  }
+  return merged;
+}

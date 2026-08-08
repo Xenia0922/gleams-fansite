@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import ImageLightboxOverlay from './ImageLightboxOverlay';
 import { useEvents } from './useEvents';
+import { fetchReactionMap, type ReactionBatch } from '../utils/api';
 import { MEMBER_META } from '../utils/members';
 import EmojiPickerPopover from './EmojiPickerPopover';
 import Skeleton from './Skeleton';
@@ -29,7 +30,7 @@ export default function FanGallery() {
   const mountedRef = useRef(true);
 
   // Emoji 反应
-  const [reactionsMap, setReactionsMap] = useState<Record<string, { reactions: { emoji: string; count: number }[]; mine: string[] }>>({});
+  const [reactionsMap, setReactionsMap] = useState<ReactionBatch>({});
   const REACTION_EMOJIS = ['👍', '❤️', '😂', '🥰', '😢', '👏'];
 
   // 动态成员 meta：优先 SSR 注入，fallback 硬编码 MEMBER_META（向后兼容）
@@ -65,10 +66,8 @@ export default function FanGallery() {
       setError('');
       hasCached.current = true;
       setLoading(false);
-      const ids = ssrData.photos.map((p: Photo) => p.key).join(',');
-      fetch(`/api/reactions?type=photo&ids=${encodeURIComponent(ids)}`)
-        .then(r => r.json())
-        .then(map => { if (mountedRef.current && map && typeof map === 'object') setReactionsMap(map); })
+      fetchReactionMap('photo', ssrData.photos.map((p: Photo) => p.key))
+        .then(map => { if (mountedRef.current) setReactionsMap(map); })
         .catch(() => {});
       return;
     }
@@ -82,10 +81,8 @@ export default function FanGallery() {
         setError('');
         hasCached.current = true;
         if (data.length) {
-          const ids = data.map((p: Photo) => p.key).join(',');
-          fetch(`/api/reactions?type=photo&ids=${encodeURIComponent(ids)}`)
-            .then(r => r.json())
-            .then(map => { if (mountedRef.current && map && typeof map === 'object') setReactionsMap(map); })
+          fetchReactionMap('photo', data.map((p: Photo) => p.key))
+            .then(map => { if (mountedRef.current) setReactionsMap(map); })
             .catch(() => {});
         }
       }

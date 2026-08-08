@@ -133,41 +133,8 @@ async function servePhoto(request, env, key) {
     return new Response('Forbidden', { status: 403 });
   }
 
-  // 缩略图：用 Cloudflare Image Resizing 在边缘按需缩放（零存储、CDN 缓存、format=auto 出 webp/avif）。
-  // 网格用 ?w=600 请求小图，灯箱用不带 w 的原图。未开通 Image Resizing 时 cf 选项被忽略、
-  // 下面 try 失败则降级为原图，不影响功能。
-  const url = new URL(request.url);
-  const wParam = url.searchParams.get('w') || url.searchParams.get('width');
-  const width = wParam ? Math.min(parseInt(wParam, 10) || 0, 1200) : 0;
-  const qParam = url.searchParams.get('q');
-  const quality = qParam ? Math.min(Math.max(parseInt(qParam, 10) || 0, 1), 100) : 0;
-  if (width > 0) {
-    try {
-      const originUrl = new URL(request.url);
-      originUrl.searchParams.delete('w');
-      originUrl.searchParams.delete('width');
-      originUrl.searchParams.delete('q');
-      const headers = {};
-      const code = request.headers.get('x-admin-code');
-      if (code) headers['x-admin-code'] = code; // 待审图需带 admin 头才能取到原图再缩放
-      const imageOpts = { width, fit: 'scale-down', format: 'auto' };
-      if (quality > 0) imageOpts.quality = quality; // ?q= 显式质量（默认 0=跟随 CF auto）
-      const resized = await fetch(originUrl.toString(), {
-        cf: { image: imageOpts },
-        headers,
-      });
-      if (resized.ok && (resized.headers.get('content-type') || '').startsWith('image/')) {
-        const out = new Headers(resized.headers);
-        out.set('Cache-Control', 'public, max-age=31536000, immutable');
-        out.set('X-Content-Type-Options', 'nosniff');
-        out.set('Access-Control-Allow-Origin', '*');
-        return new Response(resized.body, { status: 200, headers: out });
-      }
-    } catch {
-      /* 降级为原图 */
-    }
-  }
-
+  // 缩略图：前端统一用 /cdn-cgi/image/ 边缘缩放（实测 Function 内 cf.image 递归抓取不生效，
+  // 已废弃本函数的 ?w= 缩放分支），此处只负责按 key 直出原图。
   try {
     const obj = await env.PHOTOS.get(key);
     if (!obj) return new Response('Not found', { status: 404 });
@@ -188,13 +155,27 @@ async function servePhoto(request, env, key) {
  * 审核状态用 key 前缀区分：uploads/pending/{member}/... = 待审，uploads/{member}/... = 已通过。
  * 不依赖 R2 customMetadata（list 不保证返回 customMetadata，曾导致审核过滤失效）。
  * @param approvedOnly true 时只返回已审核（不含 uploads/pending/ 前缀）；false 时返回全部。
+ * @param origin 构建 /cdn-cgi/image/ 缩略图的站点来源（默认 https://gleams.vip；preview 部署传当前 origin，避免指回生产域名）。
  * 同时被 GET /api/photos（包装成 JSON）与 _middleware.js（SSR 注入 featuredFan）复用。
  */
-export async function listPhotosData(env, approvedOnly = true) {
+export async function listPhotosData(env, approvedOnly = true, origin = 'https://gleams.vip') {
   try {
     // include: ['customMetadata'] 必须显式声明：R2 list 默认不返回 customMetadata，
     // 否则 event 等字段全部为空，场次筛选/徽标失效（曾误判为数据丢失）。
-    const { objects } = await env.PHOTOS.list({ limit: 1000, prefix: 'uploads/', include: ['customMetadata'] });
+    // 分页循环：list 单次最多返回 1000 条，超过后必须用 cursor 翻页，
+    // 否则照片数超 1000 时旧照片会从列表静默消失（画廊/广场/审核页全丢）。
+    const objects = [];
+    let cursor;
+    do {
+      const page = await env.PHOTOS.list({
+        limit: 1000,
+        prefix: 'uploads/',
+        include: ['customMetadata'],
+        ...(cursor ? { cursor } : {}),
+      });
+      objects.push(...page.objects);
+      cursor = page.truncated ? page.cursor : undefined;
+    } while (cursor);
     return objects
       .filter(o => !isThumbKey(o.key))
       .filter(o => !approvedOnly || !o.key.startsWith('uploads/pending/'))
@@ -208,7 +189,7 @@ export async function listPhotosData(env, approvedOnly = true) {
           url: `/api/photos?key=${encodeURIComponent(o.key)}`,
           // 网格缩略图：用 /cdn-cgi/image/ 边缘缩放（实测 Function 内 cf.image 递归抓取不生效，cdn-cgi 包裹原图 URL 才生效）。
           // 灯箱仍用原图 url（p.url）。options 与下方 GalleryGrid.thumbOf 保持一致。
-          thumbUrl: `/cdn-cgi/image/width=480,quality=72,format=auto,fit=scale-down/https://gleams.vip/api/photos?key=${encodeURIComponent(o.key)}`,
+          thumbUrl: `/cdn-cgi/image/width=480,quality=72,format=auto,fit=scale-down/${origin}/api/photos?key=${encodeURIComponent(o.key)}`,
           uploaded: o.uploaded,
           member,
           event: o.customMetadata?.event || null,
@@ -226,7 +207,7 @@ async function listPhotos(request, env) {
   const all = url.searchParams.get('all') === '1';
   // admin 可看全部（含 pending）；公开只返回 approved
   const approvedOnly = !all || !adminOk(request, env);
-  return json(await listPhotosData(env, approvedOnly), 200, { request, env });
+  return json(await listPhotosData(env, approvedOnly, new URL(request.url).origin), 200, { request, env });
 }
 
 async function deletePhoto(request, env) {
