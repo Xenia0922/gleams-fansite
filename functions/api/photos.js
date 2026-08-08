@@ -192,7 +192,9 @@ async function servePhoto(request, env, key) {
  */
 export async function listPhotosData(env, approvedOnly = true) {
   try {
-    const { objects } = await env.PHOTOS.list({ limit: 1000, prefix: 'uploads/' });
+    // include: ['customMetadata'] 必须显式声明：R2 list 默认不返回 customMetadata，
+    // 否则 event 等字段全部为空，场次筛选/徽标失效（曾误判为数据丢失）。
+    const { objects } = await env.PHOTOS.list({ limit: 1000, prefix: 'uploads/', include: ['customMetadata'] });
     return objects
       .filter(o => !isThumbKey(o.key))
       .filter(o => !approvedOnly || !o.key.startsWith('uploads/pending/'))
